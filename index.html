@@ -4,7 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>起始页</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <style>
+        :root {
+            --bg-fallback: #1a1a2e;
+            --icon-opacity-rest: 0.28;
+            --icon-opacity-hover: 1;
+            --transition-speed: 0.35s;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,34 +25,25 @@
         body {
             width: 100vw;
             height: 100vh;
+            background-color: var(--bg-fallback);
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: background-image 0.5s ease;
+            background-attachment: fixed;
+            transition: background-image 0.6s ease;
             cursor: default;
-            background-color: #1a1a2e;
-        }
-
-        /* 默认壁纸先显示缓存或纯色背景 */
-        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* 初始无背景图，由JS动态设置 */
             background-image: none;
         }
 
-        /* 触发区域 */
-        .settings-trigger {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 80px;
-            height: 80px;
-            z-index: 99;
-        }
-
-        /* 设置图标 - 默认完全不可见 */
+        /* ========== 设置图标 ========== */
         .settings-icon {
             position: fixed;
-            top: 24px;
-            right: 24px;
+            top: 22px;
+            right: 22px;
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -49,50 +51,81 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease, background 0.3s ease, transform 0.3s ease;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(12px);
-        }
-
-        .settings-trigger:hover + .settings-icon,
-        .settings-icon:hover {
-            opacity: 1;
+            opacity: var(--icon-opacity-rest);
             visibility: visible;
+            background: rgba(28, 28, 30, 0.35);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: opacity var(--transition-speed) ease,
+                background var(--transition-speed) ease,
+                transform var(--transition-speed) ease,
+                border-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            outline: none;
         }
 
-        .settings-icon:hover {
-            background: rgba(0, 0, 0, 0.45);
+        .settings-icon:hover,
+        .settings-icon.is-visible {
+            opacity: var(--icon-opacity-hover);
+            background: rgba(28, 28, 30, 0.6);
+            border-color: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+            transform: rotate(30deg);
+        }
+
+        .settings-icon:active {
+            transform: rotate(30deg) scale(0.92);
+            transition: transform 0.12s ease;
+        }
+
+        /* 面板打开时图标保持高亮 */
+        .settings-icon.is-panel-open {
+            opacity: var(--icon-opacity-hover);
+            background: rgba(28, 28, 30, 0.65);
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             transform: rotate(60deg);
         }
 
         .settings-icon svg {
             width: 18px;
             height: 18px;
-            fill: rgba(255, 255, 255, 0.85);
+            fill: rgba(255, 255, 255, 0.88);
             pointer-events: none;
+            transition: fill var(--transition-speed) ease;
         }
 
-        /* 设置面板 */
+        .settings-icon:hover svg,
+        .settings-icon.is-visible svg,
+        .settings-icon.is-panel-open svg {
+            fill: rgba(255, 255, 255, 0.98);
+        }
+
+        /* ========== 设置面板 ========== */
         .settings-panel {
             position: fixed;
-            top: 80px;
-            right: 24px;
-            background: rgba(30, 30, 30, 0.85);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            top: 78px;
+            right: 22px;
+            background: rgba(28, 28, 30, 0.82);
+            -webkit-backdrop-filter: blur(28px);
+            backdrop-filter: blur(28px);
             border-radius: 16px;
-            padding: 24px;
-            min-width: 240px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 22px 20px 18px;
+            min-width: 248px;
+            box-shadow: 0 8px 36px rgba(0, 0, 0, 0.4);
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-8px) scale(0.96);
+            transform: translateY(-10px) scale(0.94);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 99;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .settings-panel.active {
@@ -102,31 +135,52 @@
         }
 
         .settings-panel h3 {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 13px;
             font-weight: 500;
-            margin-bottom: 18px;
-            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            letter-spacing: 0.4px;
+            text-align: center;
+        }
+
+        .settings-panel .wallpaper-info {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 14px;
+            letter-spacing: 0.3px;
+            line-height: 1.4;
+            min-height: 16px;
+            transition: color 0.3s ease;
         }
 
         .upload-btn {
             display: block;
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.12);
+            padding: 11px 16px;
+            background: rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.9);
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
             cursor: pointer;
             font-size: 13px;
             text-align: center;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
             font-family: inherit;
             letter-spacing: 0.3px;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         .upload-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-btn:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
         }
 
         .reset-btn {
@@ -141,157 +195,572 @@
             font-size: 12px;
             text-align: center;
             margin-top: 10px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             font-family: inherit;
             letter-spacing: 0.3px;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         .reset-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.72);
             border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
         }
 
         input[type="file"] {
             display: none;
         }
+
+        /* ========== 响应式微调 ========== */
+        @media (max-width: 480px) {
+            .settings-icon {
+                top: 16px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+            }
+            .settings-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+            .settings-panel {
+                top: 66px;
+                right: 10px;
+                min-width: 220px;
+                padding: 18px 16px 14px;
+                border-radius: 14px;
+            }
+            .settings-panel h3 {
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+            .upload-btn {
+                font-size: 12px;
+                padding: 10px 14px;
+            }
+            .reset-btn {
+                font-size: 11px;
+                padding: 9px 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- 触发区域 -->
-    <div class="settings-trigger"></div>
-
     <!-- 设置图标 -->
-    <div class="settings-icon" id="settingsIcon" title="设置壁纸">
-        <svg viewBox="0 0 24 24">
-            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-        </svg>
-    </div>
+    <button
+    class="settings-icon"
+    id="settingsIcon"
+    title="壁纸设置"
+    aria-label="打开壁纸设置面板"
+>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+    </svg>
+</button>
 
-    <!-- 设置面板 -->
-    <div class="settings-panel" id="settingsPanel">
-        <h3>壁纸设置</h3>
-        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-            选择本地壁纸
-        </button>
-        <input type="file" id="fileInput" accept="image/*" onchange="setWallpaper(event)">
-        <button class="reset-btn" onclick="resetWallpaper()">
-            恢复Bing每日壁纸
-        </button>
-    </div>
+<!-- 设置面板 -->
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-label="壁纸设置面板">
+    <h3>🖼️ 壁纸设置</h3>
+    <p class="wallpaper-info" id="wallpaperInfo"></p>
+    <button class="upload-btn" id="uploadBtn">
+        📁 选择本地壁纸
+    </button>
+    <input type="file" id="fileInput" accept="image/*">
+    <button class="reset-btn" id="resetBtn">
+        🔄 恢复 Bing 每日壁纸
+    </button>
+</div>
 
-    <script>
-        const BING_API = 'https://bing.img.run/1920x1080.php';
-        const CACHE_KEY = 'wallpaper_cache';
-        const CACHE_DATE_KEY = 'wallpaper_cache_date';
+<script>
+    (function() {
+        // ============ 配置 ============
+        const BING_API_JSON =
+            'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN';
+        const BING_IMAGE_BASE = 'https://www.bing.com';
+        // 备用图片服务（直接返回图片，不需要解析JSON）
+        const FALLBACK_IMAGE_URL = 'https://bing.img.run/1920x1080.php';
+        // 第二个备用
+        const FALLBACK_IMAGE_URL_2 = 'https://bing.biturl.cc/1920x1080';
 
-        // 启动时加载壁纸
+        const CACHE_KEY_URL = 'wallpaper_bing_url';
+        const CACHE_KEY_DATE = 'wallpaper_bing_date';
+        const CUSTOM_KEY = 'wallpaper_custom';
+        const CUSTOM_SOURCE_KEY = 'wallpaper_custom_source'; // 'local' | 'bing'
+
+        // ============ DOM引用 ============
+        const settingsIcon = document.getElementById('settingsIcon');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const resetBtn = document.getElementById('resetBtn');
+        const wallpaperInfo = document.getElementById('wallpaperInfo');
+        const body = document.body;
+
+        let isPanelOpen = false;
+        let hidePanelTimeout = null;
+        let currentSource = 'bing'; // 'bing' | 'local'
+        let bingUrlCache = null;
+
+        // ============ 工具函数 ============
+        function getTodayString() {
+            return new Date().toDateString();
+        }
+
+        function updateWallpaperInfoText() {
+            if (!wallpaperInfo) return;
+            if (currentSource === 'local') {
+                wallpaperInfo.textContent = '当前：📷 本地壁纸';
+            } else {
+                wallpaperInfo.textContent = '当前：🌄 Bing 每日壁纸';
+            }
+        }
+
+        // ============ 壁纸设置 ============
+        function setBodyBackground(url) {
+            if (!url) {
+                body.style.backgroundImage = 'none';
+                return;
+            }
+            body.style.backgroundImage = `url(${url})`;
+        }
+
+        /**
+         * 从Bing官方API获取今日图片URL
+         * 带超时和多重备用
+         */
+        async function fetchBingImageUrl() {
+            // 尝试Bing官方JSON API
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(BING_API_JSON, {
+                    signal: controller.signal,
+                    method: 'GET',
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                if (data && data.images && data.images.length > 0) {
+                    const imagePath = data.images[0].url;
+                    // 拼接完整URL
+                    const fullUrl = imagePath.startsWith('http') ?
+                        imagePath :
+                        BING_IMAGE_BASE + imagePath;
+                    // 尝试获取UHD版本（如果存在）
+                    const uhdUrl = fullUrl.replace('1920x1080', 'UHD');
+                    return { url: fullUrl, uhdUrl: uhdUrl, source: 'bing-official' };
+                }
+                throw new Error('No images in response');
+            } catch (err) {
+                console.warn('Bing官方API获取失败:', err.message);
+            }
+
+            // 备用方案1：直接使用图片服务URL
+            // 这些服务直接返回图片，我们无法提前验证，但可以作为background-image使用
+            const fallbackUrl = FALLBACK_IMAGE_URL + '?t=' + Date.now();
+            console.log('使用备用图片服务:', fallbackUrl);
+            return { url: fallbackUrl, uhdUrl: null, source: 'fallback-1' };
+        }
+
+        /**
+         * 预加载图片并判断UHD是否可用
+         */
+        function preloadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(url);
+                img.onerror = () => reject(new Error('Image load failed: ' + url));
+                img.src = url;
+                // 10秒超时
+                setTimeout(() => reject(new Error('Image load timeout')), 10000);
+            });
+        }
+
+        /**
+         * 加载壁纸 - 核心逻辑
+         */
         async function loadWallpaper() {
-            const savedWallpaper = localStorage.getItem('wallpaper');
-            
-            // 如果有用户手动设置的壁纸，优先使用
-            if (savedWallpaper && savedWallpaper.startsWith('data:')) {
-                document.body.style.backgroundImage = `url(${savedWallpaper})`;
-                // 后台更新Bing缓存
-                updateBingCache();
+            // 1. 检查用户自定义壁纸
+            const customWallpaper = localStorage.getItem(CUSTOM_KEY);
+            const customSource = localStorage.getItem(CUSTOM_SOURCE_KEY);
+
+            if (customWallpaper && customSource === 'local') {
+                // 用户上传了本地壁纸
+                currentSource = 'local';
+                setBodyBackground(customWallpaper);
+                updateWallpaperInfoText();
+                // 后台静默更新Bing缓存（不影响当前显示）
+                updateBingUrlCache().catch(() => {});
                 return;
             }
 
-            // 检查今日缓存
-            const cachedImage = localStorage.getItem(CACHE_KEY);
-            const cacheDate = localStorage.getItem(CACHE_DATE_KEY);
-            const today = new Date().toDateString();
+            // 2. 用户没有自定义壁纸，使用Bing
+            currentSource = 'bing';
+            updateWallpaperInfoText();
 
-            if (cachedImage && cacheDate === today) {
-                // 今天已经缓存，直接使用
-                document.body.style.backgroundImage = `url(${cachedImage})`;
-            } else if (cachedImage) {
-                // 有旧缓存，先用着，后台更新
-                document.body.style.backgroundImage = `url(${cachedImage})`;
-                updateBingCache();
-            } else {
-                // 首次使用，直接加载Bing
-                document.body.style.backgroundImage = `url(${BING_API})`;
-                updateBingCache();
+            const cachedUrl = localStorage.getItem(CACHE_KEY_URL);
+            const cachedDate = localStorage.getItem(CACHE_KEY_DATE);
+            const today = getTodayString();
+
+            // 2a. 今日缓存可用
+            if (cachedUrl && cachedDate === today) {
+                bingUrlCache = cachedUrl;
+                setBodyBackground(cachedUrl);
+                // 静默预加载UHD版本（可选优化）
+                return;
             }
-        }
 
-        // 后台缓存Bing图片（转成base64存localStorage）
-        function updateBingCache() {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
+            // 2b. 有旧缓存，先显示
+            if (cachedUrl) {
+                bingUrlCache = cachedUrl;
+                setBodyBackground(cachedUrl);
+            }
+
+            // 2c. 获取最新Bing图片
+            try {
+                const result = await fetchBingImageUrl();
+                // 尝试加载图片验证URL有效性
+                let finalUrl = result.url;
                 try {
-                    const base64 = canvas.toDataURL('image/jpeg', 0.9);
-                    localStorage.setItem(CACHE_KEY, base64);
-                    localStorage.setItem(CACHE_DATE_KEY, new Date().toDateString());
-                } catch(e) {
-                    // localStorage满了就跳过缓存
-                    console.log('缓存失败，空间不足');
+                    await preloadImage(result.url);
+                } catch (e) {
+                    // 主URL加载失败，尝试UHD
+                    if (result.uhdUrl) {
+                        try {
+                            await preloadImage(result.uhdUrl);
+                            finalUrl = result.uhdUrl;
+                        } catch (e2) {
+                            // UHD也失败，尝试第二个备用
+                            try {
+                                await preloadImage(FALLBACK_IMAGE_URL_2);
+                                finalUrl = FALLBACK_IMAGE_URL_2;
+                            } catch (e3) {
+                                throw new Error('所有图片源均不可用');
+                            }
+                        }
+                    } else {
+                        // 没有UHD备用，尝试第二个备用服务
+                        try {
+                            await preloadImage(FALLBACK_IMAGE_URL_2);
+                            finalUrl = FALLBACK_IMAGE_URL_2;
+                        } catch (e2) {
+                            throw new Error('所有图片源均不可用');
+                        }
+                    }
                 }
-            };
-            img.src = BING_API + '&t=' + Date.now();
-        }
 
-        function init() {
-            loadWallpaper();
+                // 更新显示和缓存
+                bingUrlCache = finalUrl;
+                setBodyBackground(finalUrl);
+                localStorage.setItem(CACHE_KEY_URL, finalUrl);
+                localStorage.setItem(CACHE_KEY_DATE, today);
+                localStorage.setItem(CUSTOM_SOURCE_KEY, 'bing');
 
-            const settingsIcon = document.getElementById('settingsIcon');
-            const settingsPanel = document.getElementById('settingsPanel');
-            let hideTimeout;
-
-            settingsIcon.addEventListener('click', (e) => {
-                e.stopPropagation();
-                settingsPanel.classList.toggle('active');
-            });
-
-            settingsPanel.addEventListener('mouseenter', () => {
-                clearTimeout(hideTimeout);
-            });
-
-            settingsPanel.addEventListener('mouseleave', () => {
-                hideTimeout = setTimeout(() => {
-                    settingsPanel.classList.remove('active');
-                }, 400);
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!settingsPanel.contains(e.target) && e.target !== settingsIcon) {
-                    settingsPanel.classList.remove('active');
+            } catch (err) {
+                console.error('Bing壁纸加载失败:', err.message);
+                // 如果已有缓存显示着就继续用，否则使用备用URL
+                if (!bingUrlCache) {
+                    // 最后尝试：直接使用备用URL（不预加载验证）
+                    const lastFallback = FALLBACK_IMAGE_URL + '?t=' + Date.now();
+                    bingUrlCache = lastFallback;
+                    setBodyBackground(lastFallback);
+                    localStorage.setItem(CACHE_KEY_URL, lastFallback);
+                    localStorage.setItem(CACHE_KEY_DATE, today);
                 }
-            });
-
-            settingsPanel.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
-
-        function setWallpaper(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const imageData = e.target.result;
-                    document.body.style.backgroundImage = `url(${imageData})`;
-                    localStorage.setItem('wallpaper', imageData);
-                    document.getElementById('settingsPanel').classList.remove('active');
-                };
-                reader.readAsDataURL(file);
             }
         }
 
-        function resetWallpaper() {
-            localStorage.removeItem('wallpaper');
-            document.getElementById('settingsPanel').classList.remove('active');
+        /**
+         * 后台更新Bing URL缓存（不改变当前壁纸显示）
+         */
+        async function updateBingUrlCache() {
+            try {
+                const result = await fetchBingImageUrl();
+                // 简单验证
+                const img = new Image();
+                img.src = result.url;
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = () => reject(new Error('preload fail'));
+                    setTimeout(() => reject(new Error('timeout')), 6000);
+                });
+                const today = getTodayString();
+                localStorage.setItem(CACHE_KEY_URL, result.url);
+                localStorage.setItem(CACHE_KEY_DATE, today);
+                bingUrlCache = result.url;
+            } catch (e) {
+                console.warn('后台更新Bing缓存失败:', e.message);
+            }
+        }
+
+        // ============ 用户操作 ============
+        function setCustomWallpaper(imageDataUrl) {
+            setBodyBackground(imageDataUrl);
+            localStorage.setItem(CUSTOM_KEY, imageDataUrl);
+            localStorage.setItem(CUSTOM_SOURCE_KEY, 'local');
+            currentSource = 'local';
+            bingUrlCache = null;
+            updateWallpaperInfoText();
+            closePanel();
+        }
+
+        function resetToBingWallpaper() {
+            // 清除自定义壁纸
+            localStorage.removeItem(CUSTOM_KEY);
+            localStorage.removeItem(CUSTOM_SOURCE_KEY);
+            // 清除Bing缓存日期，强制重新获取
+            localStorage.removeItem(CACHE_KEY_DATE);
+            localStorage.removeItem(CACHE_KEY_URL);
+            currentSource = 'bing';
+            bingUrlCache = null;
+            updateWallpaperInfoText();
+            closePanel();
+            // 重新加载
             loadWallpaper();
         }
 
-        init();
-    </script>
+        // ============ 面板控制 ============
+        function openPanel() {
+            if (isPanelOpen) return;
+            isPanelOpen = true;
+            settingsPanel.classList.add('active');
+            settingsIcon.classList.add('is-panel-open');
+            updateWallpaperInfoText();
+            clearTimeout(hidePanelTimeout);
+        }
+
+        function closePanel() {
+            if (!isPanelOpen) return;
+            isPanelOpen = false;
+            settingsPanel.classList.remove('active');
+            settingsIcon.classList.remove('is-panel-open');
+            clearTimeout(hidePanelTimeout);
+        }
+
+        function togglePanel() {
+            if (isPanelOpen) {
+                closePanel();
+            } else {
+                openPanel();
+            }
+        }
+
+        // ============ 设置图标可见性管理 ============
+        let iconVisibleTimeout = null;
+        let mouseNearIcon = false;
+
+        function showSettingsIcon() {
+            settingsIcon.classList.add('is-visible');
+            clearTimeout(iconVisibleTimeout);
+        }
+
+        function hideSettingsIcon() {
+            if (isPanelOpen) return; // 面板打开时不隐藏
+            iconVisibleTimeout = setTimeout(() => {
+                if (!mouseNearIcon && !isPanelOpen) {
+                    settingsIcon.classList.remove('is-visible');
+                }
+            }, 1500);
+        }
+
+        function isNearTopRight(x, y) {
+            // 检测坐标是否在右上角120x120区域
+            const threshold = 120;
+            const winW = window.innerWidth;
+            return x > winW - threshold && y < threshold;
+        }
+
+        // ============ 事件监听 ============
+        // 设置图标点击
+        settingsIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanel();
+        });
+
+        // 鼠标在图标上
+        settingsIcon.addEventListener('mouseenter', () => {
+            mouseNearIcon = true;
+            showSettingsIcon();
+            clearTimeout(hidePanelTimeout);
+        });
+
+        settingsIcon.addEventListener('mouseleave', () => {
+            mouseNearIcon = false;
+            if (!isPanelOpen) {
+                hideSettingsIcon();
+            }
+            // 面板打开时，鼠标离开图标后延迟关闭面板
+            if (isPanelOpen) {
+                hidePanelTimeout = setTimeout(() => {
+                    closePanel();
+                }, 600);
+            }
+        });
+
+        // 全局鼠标移动 - 检测是否靠近右上角
+        document.addEventListener('mousemove', (e) => {
+            if (isNearTopRight(e.clientX, e.clientY)) {
+                showSettingsIcon();
+            } else if (!mouseNearIcon && !isPanelOpen) {
+                hideSettingsIcon();
+            }
+        });
+
+        // 移动端触摸 - 点击右上角区域显示图标
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                if (isNearTopRight(touch.clientX, touch.clientY) && !isPanelOpen) {
+                    showSettingsIcon();
+                    // 3秒后自动隐藏
+                    clearTimeout(iconVisibleTimeout);
+                    iconVisibleTimeout = setTimeout(() => {
+                        if (!mouseNearIcon && !isPanelOpen) {
+                            settingsIcon.classList.remove('is-visible');
+                        }
+                    }, 3000);
+                }
+            }
+        }, { passive: true });
+
+        // 面板鼠标进入
+        settingsPanel.addEventListener('mouseenter', () => {
+            clearTimeout(hidePanelTimeout);
+            mouseNearIcon = true;
+        });
+
+        // 面板鼠标离开
+        settingsPanel.addEventListener('mouseleave', () => {
+            mouseNearIcon = false;
+            hidePanelTimeout = setTimeout(() => {
+                closePanel();
+                hideSettingsIcon();
+            }, 500);
+        });
+
+        // 面板内点击阻止冒泡
+        settingsPanel.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // 点击页面其他区域关闭面板
+        document.addEventListener('click', (e) => {
+            if (isPanelOpen &&
+                !settingsPanel.contains(e.target) &&
+                e.target !== settingsIcon &&
+                !settingsIcon.contains(e.target)) {
+                closePanel();
+                hideSettingsIcon();
+            }
+        });
+
+        // ESC关闭面板
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isPanelOpen) {
+                closePanel();
+                hideSettingsIcon();
+            }
+        });
+
+        // 上传按钮
+        uploadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        // 文件选择
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+
+            // 验证文件大小（限制20MB）
+            if (file.size > 20 * 1024 * 1024) {
+                alert('图片文件不能超过20MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                setCustomWallpaper(imageData);
+            };
+            reader.onerror = function() {
+                alert('读取图片失败，请重试');
+            };
+            reader.readAsDataURL(file);
+
+            // 清除input以允许重新选择相同文件
+            fileInput.value = '';
+        });
+
+        // 重置按钮
+        resetBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetToBingWallpaper();
+        });
+
+        // 窗口大小改变时更新
+        window.addEventListener('resize', () => {
+            // 确保背景覆盖
+            if (body.style.backgroundImage && body.style.backgroundImage !== 'none') {
+                body.style.backgroundSize = 'cover';
+                body.style.backgroundPosition = 'center';
+            }
+        });
+
+        // ============ 键盘快捷键 ============
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Shift+W 或 Cmd+Shift+W 切换壁纸设置面板
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') {
+                e.preventDefault();
+                togglePanel();
+            }
+        });
+
+        // ============ 初始化 ============
+        function init() {
+            // 如果用户之前设置了自定义壁纸，读取状态
+            const savedSource = localStorage.getItem(CUSTOM_SOURCE_KEY);
+            if (savedSource === 'local' && localStorage.getItem(CUSTOM_KEY)) {
+                currentSource = 'local';
+            } else {
+                currentSource = 'bing';
+            }
+            updateWallpaperInfoText();
+
+            // 加载壁纸
+            loadWallpaper();
+
+            // 初始时图标以默认opacity显示（约3秒后若鼠标不在附近则保持rest状态）
+            // 不做额外操作，CSS变量控制默认可见度
+
+            console.log('✅ 起始页已就绪');
+            console.log('   💡 提示：鼠标移至右上角查看设置');
+            console.log('   ⌨️  快捷键 Ctrl+Shift+W 打开设置');
+        }
+
+        // 启动
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
 </body>
 </html>
