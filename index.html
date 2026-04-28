@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>起始页</title>
+    <!-- 🔒 锁定页面为浅色模式，Dark Reader 全局跳过 -->
+    <meta name="darkreader-lock" content="light">
     <!-- 允许加载任何图片源，避免浏览器安全策略误拦 -->
     <meta http-equiv="Content-Security-Policy" content="img-src * data: blob:;">
     <style>
@@ -23,14 +25,14 @@
         body {
             width: 100vw;
             height: 100vh;
-            background-color: var(--bg-fallback); /* 纯色降级背景 */
+            background-color: var(--bg-fallback);
             cursor: default;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* 壁纸独立层，不受 Dark Reader 影响 */
+        /* 壁纸独立层 */
         .wallpaper-layer {
             position: fixed;
             top: 0;
@@ -275,7 +277,6 @@
             const CUSTOM_KEY = 'wallpaper_custom';
             const CUSTOM_SOURCE_KEY = 'wallpaper_custom_source';
 
-            // DOM 元素
             const wallpaperLayer = document.getElementById('wallpaperLayer');
             const settingsIcon = document.getElementById('settingsIcon');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -284,18 +285,16 @@
             const resetBtn = document.getElementById('resetBtn');
             const wallpaperInfo = document.getElementById('wallpaperInfo');
 
-            let currentSource = 'bing'; // 'bing' | 'local'
+            let currentSource = 'bing';
             let isPanelOpen = false;
             let hidePanelTimeout = null;
             let iconVisibleTimeout = null;
             let mouseNearIcon = false;
 
-            // ========== 工具函数 ==========
             function getToday() {
                 return new Date().toDateString();
             }
 
-            // 修改：操作独立背景层
             function setBackground(url) {
                 if (url) {
                     wallpaperLayer.style.backgroundImage = `url(${url})`;
@@ -311,7 +310,6 @@
                     : '当前：🌄 Bing 每日壁纸';
             }
 
-            // 测试图片URL是否可访问（预加载）
             function testImageUrl(url) {
                 return new Promise((resolve) => {
                     const img = new Image();
@@ -331,35 +329,29 @@
                 });
             }
 
-            // 从 Bing 官方 API 获取今日图片完整 URL
             async function fetchBingOfficialUrl() {
                 const response = await fetch(BING_API);
                 if (!response.ok) throw new Error('Bing API 返回错误');
                 const data = await response.json();
                 if (!data?.images?.length) throw new Error('无图片数据');
                 let imagePath = data.images[0].url;
-                // 如果返回的是相对路径，补全域名
                 if (!imagePath.startsWith('http')) {
                     imagePath = BING_BASE + imagePath;
                 }
                 return imagePath;
             }
 
-            // ========== 壁纸加载核心 ==========
             async function loadWallpaper() {
-                // 1. 用户自定义壁纸优先
                 const customData = localStorage.getItem(CUSTOM_KEY);
                 const customSource = localStorage.getItem(CUSTOM_SOURCE_KEY);
                 if (customData && customSource === 'local') {
                     currentSource = 'local';
                     setBackground(customData);
                     updateInfoText();
-                    // 后台静默更新Bing缓存（不影响当前）
                     updateBingUrlCacheInBackground().catch(() => {});
                     return;
                 }
 
-                // 2. Bing 壁纸模式
                 currentSource = 'bing';
                 updateInfoText();
 
@@ -367,57 +359,48 @@
                 const cachedDate = localStorage.getItem(CACHE_KEY_DATE);
                 const today = getToday();
 
-                // 2a. 今天的缓存URL可用
                 if (cachedUrl && cachedDate === today) {
                     setBackground(cachedUrl);
                     return;
                 }
 
-                // 2b. 有旧缓存（昨天或更早），先用着，避免空白
                 if (cachedUrl) {
                     setBackground(cachedUrl);
                 }
 
-                // 2c. 获取最新 Bing 图片 URL 并缓存
-                try {
-                    const newUrl = await fetchBingOfficialUrl();
-                    // 预加载成功才更新背景
-                    const loaded = await testImageUrl(newUrl);
-                    if (!loaded) throw new Error('图片预加载失败');
-
-                    localStorage.setItem(CACHE_KEY_URL, newUrl);
-                    localStorage.setItem(CACHE_KEY_DATE, today);
-
-                    if (currentSource === 'bing') {
-                        setBackground(newUrl);
-                    }
-                } catch (err) {
-                    console.warn('获取最新 Bing 壁纸失败，保留当前显示:', err.message);
-                    // 如果没有背景（连旧缓存都没有），回退到缓存或空白
-                    if (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none') {
-                        if (cachedUrl) {
-                            setBackground(cachedUrl);
-                        } else {
-                            // 极端情况，设置纯色背景
-                            setBackground('');
-                        }
-                    }
-                }
-            }
-
-            // 后台更新 Bing URL 缓存
-            async function updateBingUrlCacheInBackground() {
-                const today = getToday();
-                if (localStorage.getItem(CACHE_KEY_DATE) === today && localStorage.getItem(CACHE_KEY_URL)) {
-                    return; // 今日已缓存
-                }
                 try {
                     const newUrl = await fetchBingOfficialUrl();
                     const loaded = await testImageUrl(newUrl);
                     if (loaded) {
                         localStorage.setItem(CACHE_KEY_URL, newUrl);
                         localStorage.setItem(CACHE_KEY_DATE, today);
-                        // 如果当前恰好是 Bing 模式且背景为空（罕见），帮它显示
+                        if (currentSource === 'bing') {
+                            setBackground(newUrl);
+                        }
+                    } else {
+                        throw new Error('图片预加载失败');
+                    }
+                } catch (err) {
+                    console.warn('获取最新 Bing 壁纸失败，保留当前显示:', err.message);
+                    if (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none') {
+                        if (cachedUrl) {
+                            setBackground(cachedUrl);
+                        } else {
+                            setBackground('');
+                        }
+                    }
+                }
+            }
+
+            async function updateBingUrlCacheInBackground() {
+                const today = getToday();
+                if (localStorage.getItem(CACHE_KEY_DATE) === today && localStorage.getItem(CACHE_KEY_URL)) return;
+                try {
+                    const newUrl = await fetchBingOfficialUrl();
+                    const loaded = await testImageUrl(newUrl);
+                    if (loaded) {
+                        localStorage.setItem(CACHE_KEY_URL, newUrl);
+                        localStorage.setItem(CACHE_KEY_DATE, today);
                         if (currentSource === 'bing' && (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none')) {
                             setBackground(newUrl);
                         }
@@ -427,7 +410,6 @@
                 }
             }
 
-            // ========== 用户操作 ==========
             function setCustomWallpaper(imageDataUrl) {
                 setBackground(imageDataUrl);
                 localStorage.setItem(CUSTOM_KEY, imageDataUrl);
@@ -440,7 +422,6 @@
             function resetToBingWallpaper() {
                 localStorage.removeItem(CUSTOM_KEY);
                 localStorage.removeItem(CUSTOM_SOURCE_KEY);
-                // 清除缓存日期，强制重新获取
                 localStorage.removeItem(CACHE_KEY_DATE);
                 localStorage.removeItem(CACHE_KEY_URL);
                 currentSource = 'bing';
@@ -449,7 +430,6 @@
                 loadWallpaper();
             }
 
-            // ========== 面板交互 (保持不变) ==========
             function openPanel() {
                 if (isPanelOpen) return;
                 isPanelOpen = true;
@@ -490,7 +470,6 @@
                 return x > window.innerWidth - threshold && y < threshold;
             }
 
-            // ========== 事件绑定 ==========
             settingsIcon.addEventListener('click', (e) => {
                 e.stopPropagation();
                 togglePanel();
@@ -595,13 +574,12 @@
                 resetToBingWallpaper();
             });
 
-            // ========== 启动 ==========
             function init() {
                 const savedSource = localStorage.getItem(CUSTOM_SOURCE_KEY);
                 currentSource = (savedSource === 'local' && localStorage.getItem(CUSTOM_KEY)) ? 'local' : 'bing';
                 updateInfoText();
                 loadWallpaper();
-                console.log('✅ 起始页已就绪（独立壁纸层 + Bing 官方源）');
+                console.log('✅ 起始页已就绪（Dark Reader 已屏蔽）');
             }
 
             if (document.readyState === 'loading') {
