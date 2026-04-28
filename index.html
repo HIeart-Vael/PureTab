@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>起始页</title>
+    <title>PureTab</title>
     <style>
         * {
             margin: 0;
@@ -17,17 +17,11 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: background-image 0.5s ease;
             cursor: default;
             background-color: #1a1a2e;
         }
 
-        /* 默认壁纸先显示缓存或纯色背景 */
-        body {
-            background-image: none;
-        }
-
-        /* 触发区域 */
+        /* 触发区域 - 右上角 */
         .settings-trigger {
             position: fixed;
             top: 0;
@@ -37,7 +31,7 @@
             z-index: 99;
         }
 
-        /* 设置图标 - 默认完全不可见 */
+        /* 设置图标 */
         .settings-icon {
             position: fixed;
             top: 24px;
@@ -51,9 +45,10 @@
             cursor: pointer;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease, background 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.3s ease, visibility 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
             z-index: 100;
-            background: rgba(0, 0, 0, 0.25);
+            background-color: rgba(0, 0, 0, 0.25);
+            -webkit-backdrop-filter: blur(12px);
             backdrop-filter: blur(12px);
         }
 
@@ -64,7 +59,7 @@
         }
 
         .settings-icon:hover {
-            background: rgba(0, 0, 0, 0.45);
+            background-color: rgba(0, 0, 0, 0.45);
             transform: rotate(60deg);
         }
 
@@ -80,9 +75,9 @@
             position: fixed;
             top: 80px;
             right: 24px;
-            background: rgba(30, 30, 30, 0.85);
-            backdrop-filter: blur(24px);
+            background-color: rgba(30, 30, 30, 0.85);
             -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px);
             border-radius: 16px;
             padding: 24px;
             min-width: 240px;
@@ -113,27 +108,27 @@
             display: block;
             width: 100%;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.12);
+            background-color: rgba(255, 255, 255, 0.12);
             color: rgba(255, 255, 255, 0.9);
             border: none;
             border-radius: 10px;
             cursor: pointer;
             font-size: 13px;
             text-align: center;
-            transition: background 0.2s;
-            font-family: inherit;
+            transition: background-color 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             letter-spacing: 0.3px;
         }
 
         .upload-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
         .reset-btn {
             display: block;
             width: 100%;
             padding: 10px 16px;
-            background: transparent;
+            background-color: transparent;
             color: rgba(255, 255, 255, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
@@ -142,12 +137,12 @@
             text-align: center;
             margin-top: 10px;
             transition: all 0.2s;
-            font-family: inherit;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             letter-spacing: 0.3px;
         }
 
         .reset-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background-color: rgba(255, 255, 255, 0.08);
             color: rgba(255, 255, 255, 0.7);
             border-color: rgba(255, 255, 255, 0.2);
         }
@@ -181,7 +176,8 @@
     </div>
 
     <script>
-        const BING_API = 'https://bing.img.run/1920x1080.php';
+        // 使用原生Bing壁纸API (HTTPS)
+        const BING_API = 'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1';
         const CACHE_KEY = 'wallpaper_cache';
         const CACHE_DATE_KEY = 'wallpaper_cache_date';
 
@@ -211,13 +207,41 @@
                 updateBingCache();
             } else {
                 // 首次使用，直接加载Bing
-                document.body.style.backgroundImage = `url(${BING_API})`;
-                updateBingCache();
+                await loadBingWallpaper();
             }
         }
 
-        // 后台缓存Bing图片（转成base64存localStorage）
+        // 从Bing API获取壁纸
+        async function loadBingWallpaper() {
+            try {
+                const response = await fetch(BING_API);
+                const data = await response.json();
+                if (data.images && data.images[0]) {
+                    const imageUrl = 'https://www.bing.com' + data.images[0].url;
+                    document.body.style.backgroundImage = `url(${imageUrl})`;
+                    // 缓存当前图片
+                    cacheImage(imageUrl);
+                }
+            } catch(e) {
+                console.log('Bing壁纸加载失败，使用默认背景');
+            }
+        }
+
+        // 后台缓存Bing图片
         function updateBingCache() {
+            fetch(BING_API)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.images && data.images[0]) {
+                        const imageUrl = 'https://www.bing.com' + data.images[0].url;
+                        cacheImage(imageUrl);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // 缓存图片到localStorage
+        function cacheImage(imageUrl) {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = function() {
@@ -231,11 +255,13 @@
                     localStorage.setItem(CACHE_KEY, base64);
                     localStorage.setItem(CACHE_DATE_KEY, new Date().toDateString());
                 } catch(e) {
-                    // localStorage满了就跳过缓存
                     console.log('缓存失败，空间不足');
                 }
             };
-            img.src = BING_API + '&t=' + Date.now();
+            img.onerror = function() {
+                console.log('图片加载失败，无法缓存');
+            };
+            img.src = imageUrl;
         }
 
         function init() {
