@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>起始页</title>
-    <!-- 锁定页面为浅色模式，Dark Reader 全局跳过 -->
     <meta name="darkreader-lock" content="light">
-    <!-- 允许加载任何图片源，避免浏览器安全策略误拦 -->
     <meta http-equiv="Content-Security-Policy" content="img-src * data: blob:;">
     <style>
         :root {
@@ -15,250 +13,123 @@
             --icon-opacity-hover: 1;
             --transition-speed: 0.35s;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            width: 100vw;
-            height: 100vh;
+            width: 100vw; height: 100vh;
             background-color: var(--bg-fallback);
             cursor: default;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
-
-        /* 壁纸独立层 */
         .wallpaper-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-size: cover; background-position: center;
             background-repeat: no-repeat;
             transition: background-image 0.6s ease;
             z-index: -1;
             background-color: var(--bg-fallback);
         }
-
-        /* 设置图标 */
         .settings-icon {
-            position: fixed;
-            top: 22px;
-            right: 22px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 100;
+            position: fixed; top: 22px; right: 22px;
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 100;
             opacity: var(--icon-opacity-rest);
-            visibility: visible;
             background: rgba(28, 28, 30, 0.35);
-            -webkit-backdrop-filter: blur(14px);
             backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: opacity var(--transition-speed) ease,
-                background var(--transition-speed) ease,
-                transform var(--transition-speed) ease,
-                border-color var(--transition-speed) ease,
-                box-shadow var(--transition-speed) ease;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            outline: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: opacity var(--transition-speed) ease, background var(--transition-speed) ease, transform var(--transition-speed) ease, border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            -webkit-tap-highlight-color: transparent; user-select: none; outline: none;
         }
-
-        .settings-icon:hover,
-        .settings-icon.is-visible {
+        .settings-icon:hover, .settings-icon.is-visible {
             opacity: var(--icon-opacity-hover);
-            background: rgba(28, 28, 30, 0.6);
-            border-color: rgba(255, 255, 255, 0.22);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+            background: rgba(28,28,30,0.6);
+            border-color: rgba(255,255,255,0.22);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
             transform: rotate(30deg);
         }
-
-        .settings-icon:active {
-            transform: rotate(30deg) scale(0.92);
-            transition: transform 0.12s ease;
-        }
-
+        .settings-icon:active { transform: rotate(30deg) scale(0.92); transition: transform 0.12s ease; }
         .settings-icon.is-panel-open {
             opacity: var(--icon-opacity-hover);
-            background: rgba(28, 28, 30, 0.65);
-            border-color: rgba(255, 255, 255, 0.28);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            background: rgba(28,28,30,0.65);
+            border-color: rgba(255,255,255,0.28);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
             transform: rotate(60deg);
         }
-
         .settings-icon svg {
-            width: 18px;
-            height: 18px;
-            fill: rgba(255, 255, 255, 0.88);
-            pointer-events: none;
+            width: 18px; height: 18px;
+            fill: rgba(255,255,255,0.88); pointer-events: none;
             transition: fill var(--transition-speed) ease;
         }
-
-        .settings-icon:hover svg,
-        .settings-icon.is-visible svg,
-        .settings-icon.is-panel-open svg {
-            fill: rgba(255, 255, 255, 0.98);
+        .settings-icon:hover svg, .settings-icon.is-visible svg, .settings-icon.is-panel-open svg {
+            fill: rgba(255,255,255,0.98);
         }
-
-        /* 设置面板 */
         .settings-panel {
-            position: fixed;
-            top: 78px;
-            right: 22px;
-            background: rgba(28, 28, 30, 0.82);
-            -webkit-backdrop-filter: blur(28px);
+            position: fixed; top: 78px; right: 22px;
+            background: rgba(28,28,30,0.82);
             backdrop-filter: blur(28px);
-            border-radius: 16px;
-            padding: 22px 20px 18px;
+            border-radius: 16px; padding: 22px 20px 18px;
             min-width: 248px;
-            box-shadow: 0 8px 36px rgba(0, 0, 0, 0.4);
-            opacity: 0;
-            visibility: hidden;
+            box-shadow: 0 8px 36px rgba(0,0,0,0.4);
+            opacity: 0; visibility: hidden;
             transform: translateY(-10px) scale(0.94);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
             z-index: 99;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            user-select: none;
+            border: 1px solid rgba(255,255,255,0.1); user-select: none;
         }
-
         .settings-panel.active {
-            opacity: 1;
-            visibility: visible;
+            opacity: 1; visibility: visible;
             transform: translateY(0) scale(1);
         }
-
         .settings-panel h3 {
-            color: rgba(255, 255, 255, 0.88);
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            letter-spacing: 0.4px;
-            text-align: center;
+            color: rgba(255,255,255,0.88);
+            font-size: 13px; font-weight: 500;
+            margin-bottom: 16px; letter-spacing: 0.4px; text-align: center;
         }
-
         .settings-panel .wallpaper-info {
-            color: rgba(255, 255, 255, 0.45);
-            font-size: 11px;
-            text-align: center;
-            margin-bottom: 14px;
-            letter-spacing: 0.3px;
-            line-height: 1.4;
-            min-height: 16px;
+            color: rgba(255,255,255,0.45);
+            font-size: 11px; text-align: center;
+            margin-bottom: 14px; letter-spacing: 0.3px; min-height: 16px;
         }
-
+        .upload-btn, .reset-btn {
+            display: block; width: 100%; padding: 11px 16px;
+            cursor: pointer; font-size: 13px; text-align: center;
+            transition: all 0.2s ease; font-family: inherit;
+            letter-spacing: 0.3px; -webkit-tap-highlight-color: transparent;
+            outline: none; border-radius: 10px;
+        }
         .upload-btn {
-            display: block;
-            width: 100%;
-            padding: 11px 16px;
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            text-align: center;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            letter-spacing: 0.3px;
-            -webkit-tap-highlight-color: transparent;
-            outline: none;
+            background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.08);
         }
-
-        .upload-btn:hover {
-            background: rgba(255, 255, 255, 0.18);
-            border-color: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .upload-btn:active {
-            transform: scale(0.97);
-        }
-
+        .upload-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.18); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+        .upload-btn:active { transform: scale(0.97); }
         .reset-btn {
-            display: block;
-            width: 100%;
-            padding: 10px 16px;
-            background: transparent;
-            color: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 12px;
-            text-align: center;
-            margin-top: 10px;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            letter-spacing: 0.3px;
-            -webkit-tap-highlight-color: transparent;
-            outline: none;
+            background: transparent; color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.1); margin-top: 10px; font-size: 12px;
         }
-
-        .reset-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-            color: rgba(255, 255, 255, 0.72);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .reset-btn:active {
-            transform: scale(0.97);
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
+        .reset-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.72); border-color: rgba(255,255,255,0.2); }
+        .reset-btn:active { transform: scale(0.97); }
+        input[type="file"] { display: none; }
         @media (max-width: 480px) {
-            .settings-icon {
-                top: 16px;
-                right: 16px;
-                width: 40px;
-                height: 40px;
-            }
-            .settings-icon svg {
-                width: 16px;
-                height: 16px;
-            }
-            .settings-panel {
-                top: 66px;
-                right: 10px;
-                min-width: 220px;
-                padding: 18px 16px 14px;
-                border-radius: 14px;
-            }
-            .upload-btn {
-                font-size: 12px;
-                padding: 10px 14px;
-            }
-            .reset-btn {
-                font-size: 11px;
-                padding: 9px 14px;
-            }
+            .settings-icon { top: 16px; right: 16px; width: 40px; height: 40px; }
+            .settings-icon svg { width: 16px; height: 16px; }
+            .settings-panel { top: 66px; right: 10px; min-width: 220px; padding: 18px 16px 14px; border-radius: 14px; }
+            .upload-btn { font-size: 12px; padding: 10px 14px; }
+            .reset-btn { font-size: 11px; padding: 9px 14px; }
         }
     </style>
 </head>
 <body>
-    <!-- 壁纸独立层 -->
     <div class="wallpaper-layer" id="wallpaperLayer"></div>
 
-    <button class="settings-icon" id="settingsIcon" title="壁纸设置" aria-label="打开壁纸设置面板">
+    <button class="settings-icon" id="settingsIcon" title="壁纸设置" aria-label="打开设置面板">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
         </svg>
     </button>
 
-    <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="壁纸设置面板">
+    <div class="settings-panel" id="settingsPanel">
         <h3>🖼️ 壁纸设置</h3>
         <p class="wallpaper-info" id="wallpaperInfo"></p>
         <button class="upload-btn" id="uploadBtn">📁 选择本地壁纸</button>
@@ -268,7 +139,6 @@
 
     <script>
         (function() {
-            // ========== 配置：使用图片直链服务（无需CORS） ==========
             const BING_SERVICE_PRIMARY = 'https://bing.img.run/1920x1080.php';
             const BING_SERVICE_FALLBACK = 'https://bing.biturl.cc/1920x1080';
 
@@ -287,68 +157,43 @@
 
             let currentSource = 'bing';
             let isPanelOpen = false;
-            let hidePanelTimeout = null;
-            let iconVisibleTimeout = null;
+            let hidePanelTimeout, iconVisibleTimeout;
             let mouseNearIcon = false;
 
-            function getToday() {
-                return new Date().toDateString();
-            }
+            function getToday() { return new Date().toDateString(); }
 
             function setBackground(url) {
-                if (url) {
-                    wallpaperLayer.style.backgroundImage = `url(${url})`;
-                } else {
-                    wallpaperLayer.style.backgroundImage = 'none';
-                }
+                wallpaperLayer.style.backgroundImage = url ? `url(${url})` : 'none';
             }
 
             function updateInfoText() {
-                if (!wallpaperInfo) return;
-                wallpaperInfo.textContent = currentSource === 'local' 
-                    ? '当前：📷 本地壁纸' 
-                    : '当前：🌄 Bing 每日壁纸';
+                if (wallpaperInfo) {
+                    wallpaperInfo.textContent = currentSource === 'local' ? '当前：📷 本地壁纸' : '当前：🌄 Bing 每日壁纸';
+                }
             }
 
-            // 测试图片URL是否可访问（纯Img加载，不受CORS限制）
             function testImageUrl(url) {
-                return new Promise((resolve) => {
+                return new Promise(resolve => {
                     const img = new Image();
-                    const timeout = setTimeout(() => {
-                        img.src = '';
-                        resolve(false);
-                    }, 8000);
-                    img.onload = () => {
-                        clearTimeout(timeout);
-                        resolve(true);
-                    };
-                    img.onerror = () => {
-                        clearTimeout(timeout);
-                        resolve(false);
-                    };
+                    const timeout = setTimeout(() => { img.src = ''; resolve(false); }, 8000);
+                    img.onload = () => { clearTimeout(timeout); resolve(true); };
+                    img.onerror = () => { clearTimeout(timeout); resolve(false); };
                     img.src = url;
                 });
             }
 
-            // 获取一个可用的Bing图片URL（带时间戳防缓存）
             async function fetchAvailableBingUrl() {
-                const candidates = [BING_SERVICE_PRIMARY, BING_SERVICE_FALLBACK];
-                for (const baseUrl of candidates) {
+                for (const baseUrl of [BING_SERVICE_PRIMARY, BING_SERVICE_FALLBACK]) {
                     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-                    const ok = await testImageUrl(url);
-                    if (ok) {
-                        return url;
-                    }
+                    if (await testImageUrl(url)) return url;
                     console.warn('图片源不可用:', baseUrl);
                 }
                 throw new Error('所有 Bing 图片源均无法加载');
             }
 
-            // ========== 壁纸加载核心 ==========
             async function loadWallpaper() {
                 const customData = localStorage.getItem(CUSTOM_KEY);
-                const customSource = localStorage.getItem(CUSTOM_SOURCE_KEY);
-                if (customData && customSource === 'local') {
+                if (customData && localStorage.getItem(CUSTOM_SOURCE_KEY) === 'local') {
                     currentSource = 'local';
                     setBackground(customData);
                     updateInfoText();
@@ -363,28 +208,21 @@
                 const cachedDate = localStorage.getItem(CACHE_KEY_DATE);
                 const today = getToday();
 
-                // 今天的缓存URL可用
                 if (cachedUrl && cachedDate === today) {
                     setBackground(cachedUrl);
                     return;
                 }
 
-                // 有旧缓存先显示
-                if (cachedUrl) {
-                    setBackground(cachedUrl);
-                }
+                if (cachedUrl) setBackground(cachedUrl);
 
-                // 获取最新图片
                 try {
                     const newUrl = await fetchAvailableBingUrl();
                     localStorage.setItem(CACHE_KEY_URL, newUrl);
                     localStorage.setItem(CACHE_KEY_DATE, today);
-                    if (currentSource === 'bing') {
-                        setBackground(newUrl);
-                    }
+                    if (currentSource === 'bing') setBackground(newUrl);
                 } catch (err) {
-                    console.warn('获取最新 Bing 壁纸失败，保留当前显示:', err.message);
-                    // 完全没有背景时回退到主服务（不带时间戳）
+                    console.warn('获取 Bing 壁纸失败:', err.message);
+                    // 如果没有背景显示，强行使用主服务（不带时间戳）
                     if (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none') {
                         setBackground(BING_SERVICE_PRIMARY);
                         localStorage.setItem(CACHE_KEY_URL, BING_SERVICE_PRIMARY);
@@ -393,7 +231,6 @@
                 }
             }
 
-            // 后台更新缓存
             async function updateBingUrlCacheInBackground() {
                 const today = getToday();
                 if (localStorage.getItem(CACHE_KEY_DATE) === today && localStorage.getItem(CACHE_KEY_URL)) return;
@@ -404,9 +241,7 @@
                     if (currentSource === 'bing' && (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none')) {
                         setBackground(newUrl);
                     }
-                } catch (e) {
-                    console.warn('后台更新 Bing URL 失败:', e.message);
-                }
+                } catch (e) { console.warn('后台更新失败:', e.message); }
             }
 
             function setCustomWallpaper(imageDataUrl) {
@@ -426,9 +261,12 @@
                 currentSource = 'bing';
                 updateInfoText();
                 closePanel();
+                // 先清空背景，强制 loadWallpaper 立即设置新图
+                setBackground('');
                 loadWallpaper();
             }
 
+            // ---------- 面板交互 (保持不变) ----------
             function openPanel() {
                 if (isPanelOpen) return;
                 isPanelOpen = true;
@@ -437,7 +275,6 @@
                 updateInfoText();
                 clearTimeout(hidePanelTimeout);
             }
-
             function closePanel() {
                 if (!isPanelOpen) return;
                 isPanelOpen = false;
@@ -445,58 +282,30 @@
                 settingsIcon.classList.remove('is-panel-open');
                 clearTimeout(hidePanelTimeout);
             }
-
-            function togglePanel() {
-                isPanelOpen ? closePanel() : openPanel();
-            }
-
-            function showIcon() {
-                settingsIcon.classList.add('is-visible');
-                clearTimeout(iconVisibleTimeout);
-            }
-
+            function togglePanel() { isPanelOpen ? closePanel() : openPanel(); }
+            function showIcon() { settingsIcon.classList.add('is-visible'); clearTimeout(iconVisibleTimeout); }
             function hideIcon() {
                 if (isPanelOpen) return;
                 iconVisibleTimeout = setTimeout(() => {
-                    if (!mouseNearIcon && !isPanelOpen) {
-                        settingsIcon.classList.remove('is-visible');
-                    }
+                    if (!mouseNearIcon && !isPanelOpen) settingsIcon.classList.remove('is-visible');
                 }, 1500);
             }
+            function isNearTopRight(x, y) { return x > window.innerWidth - 120 && y < 120; }
 
-            function isNearTopRight(x, y) {
-                const threshold = 120;
-                return x > window.innerWidth - threshold && y < threshold;
-            }
-
-            settingsIcon.addEventListener('click', (e) => {
-                e.stopPropagation();
-                togglePanel();
-            });
-
+            settingsIcon.addEventListener('click', e => { e.stopPropagation(); togglePanel(); });
             settingsIcon.addEventListener('mouseenter', () => {
-                mouseNearIcon = true;
-                showIcon();
-                clearTimeout(hidePanelTimeout);
+                mouseNearIcon = true; showIcon(); clearTimeout(hidePanelTimeout);
             });
-
             settingsIcon.addEventListener('mouseleave', () => {
                 mouseNearIcon = false;
                 if (!isPanelOpen) hideIcon();
-                if (isPanelOpen) {
-                    hidePanelTimeout = setTimeout(closePanel, 600);
-                }
+                if (isPanelOpen) hidePanelTimeout = setTimeout(closePanel, 600);
             });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isNearTopRight(e.clientX, e.clientY)) {
-                    showIcon();
-                } else if (!mouseNearIcon && !isPanelOpen) {
-                    hideIcon();
-                }
+            document.addEventListener('mousemove', e => {
+                if (isNearTopRight(e.clientX, e.clientY)) showIcon();
+                else if (!mouseNearIcon && !isPanelOpen) hideIcon();
             });
-
-            document.addEventListener('touchstart', (e) => {
+            document.addEventListener('touchstart', e => {
                 if (e.touches.length === 1) {
                     const t = e.touches[0];
                     if (isNearTopRight(t.clientX, t.clientY) && !isPanelOpen) {
@@ -508,84 +317,48 @@
                     }
                 }
             }, { passive: true });
-
-            settingsPanel.addEventListener('mouseenter', () => {
-                clearTimeout(hidePanelTimeout);
-                mouseNearIcon = true;
-            });
-
+            settingsPanel.addEventListener('mouseenter', () => { clearTimeout(hidePanelTimeout); mouseNearIcon = true; });
             settingsPanel.addEventListener('mouseleave', () => {
                 mouseNearIcon = false;
-                hidePanelTimeout = setTimeout(() => {
-                    closePanel();
-                    hideIcon();
-                }, 500);
+                hidePanelTimeout = setTimeout(() => { closePanel(); hideIcon(); }, 500);
             });
-
-            settingsPanel.addEventListener('click', (e) => e.stopPropagation());
-
-            document.addEventListener('click', (e) => {
-                if (isPanelOpen && 
-                    !settingsPanel.contains(e.target) && 
-                    e.target !== settingsIcon && 
-                    !settingsIcon.contains(e.target)) {
-                    closePanel();
-                    hideIcon();
+            settingsPanel.addEventListener('click', e => e.stopPropagation());
+            document.addEventListener('click', e => {
+                if (isPanelOpen && !settingsPanel.contains(e.target) && e.target !== settingsIcon && !settingsIcon.contains(e.target)) {
+                    closePanel(); hideIcon();
                 }
             });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && isPanelOpen) {
-                    closePanel();
-                    hideIcon();
-                }
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && isPanelOpen) { closePanel(); hideIcon(); }
                 if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') {
-                    e.preventDefault();
-                    togglePanel();
+                    e.preventDefault(); togglePanel();
                 }
             });
-
-            uploadBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', (event) => {
+            uploadBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+            fileInput.addEventListener('change', event => {
                 const file = event.target.files[0];
                 if (!file) return;
-                if (!file.type.startsWith('image/')) {
-                    alert('请选择图片文件');
-                    return;
-                }
-                if (file.size > 20 * 1024 * 1024) {
-                    alert('图片文件不能超过20MB');
-                    return;
-                }
+                if (!file.type.startsWith('image/')) { alert('请选择图片文件'); return; }
+                if (file.size > 20 * 1024 * 1024) { alert('图片不能超过20MB'); return; }
                 const reader = new FileReader();
-                reader.onload = (e) => setCustomWallpaper(e.target.result);
+                reader.onload = e => setCustomWallpaper(e.target.result);
                 reader.onerror = () => alert('读取图片失败');
                 reader.readAsDataURL(file);
                 fileInput.value = '';
             });
+            resetBtn.addEventListener('click', e => { e.stopPropagation(); resetToBingWallpaper(); });
 
-            resetBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                resetToBingWallpaper();
-            });
-
+            // 启动
             function init() {
                 const savedSource = localStorage.getItem(CUSTOM_SOURCE_KEY);
                 currentSource = (savedSource === 'local' && localStorage.getItem(CUSTOM_KEY)) ? 'local' : 'bing';
                 updateInfoText();
                 loadWallpaper();
-                console.log('✅ 起始页已就绪（图片直链版，无CORS问题）');
+                console.log('✅ 起始页已就绪（热恢复版）');
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+            else init();
         })();
     </script>
 </body>
