@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,119 +14,434 @@
             --icon-opacity-hover: 1;
             --transition-speed: 0.35s;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            width: 100vw; height: 100vh;
+            width: 100vw;
+            height: 100vh;
             background-color: var(--bg-fallback);
             cursor: default;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
         }
+
         .wallpaper-layer {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-size: cover; background-position: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
             transition: background-image 0.6s ease;
             z-index: -1;
             background-color: var(--bg-fallback);
         }
+
+        .search-bar {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 560px;
+            max-width: 90vw;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 28px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .search-bar.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 18px;
+            padding: 14px 0;
+            caret-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-engine-icon {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: opacity 0.2s, transform 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-engine-icon:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .search-engine-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+        }
+
         .settings-icon {
-            position: fixed; top: 22px; right: 22px;
-            width: 44px; height: 44px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 100;
+            position: fixed;
+            top: 22px;
+            right: 22px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
             opacity: var(--icon-opacity-rest);
             background: rgba(28, 28, 30, 0.35);
             backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: opacity var(--transition-speed) ease, background var(--transition-speed) ease, transform var(--transition-speed) ease, border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
-            -webkit-tap-highlight-color: transparent; user-select: none; outline: none;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
         }
-        .settings-icon:hover, .settings-icon.is-visible {
+
+        .settings-icon:hover,
+        .settings-icon.is-visible {
             opacity: var(--icon-opacity-hover);
-            background: rgba(28,28,30,0.6);
-            border-color: rgba(255,255,255,0.22);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+            background: rgba(28, 28, 30, 0.6);
+            border-color: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
             transform: rotate(30deg);
         }
-        .settings-icon:active { transform: rotate(30deg) scale(0.92); transition: transform 0.12s ease; }
+
+        .settings-icon:active {
+            transform: rotate(30deg) scale(0.92);
+            transition: transform 0.12s ease;
+        }
+
         .settings-icon.is-panel-open {
             opacity: var(--icon-opacity-hover);
-            background: rgba(28,28,30,0.65);
-            border-color: rgba(255,255,255,0.28);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            background: rgba(28, 28, 30, 0.65);
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             transform: rotate(60deg);
         }
+
         .settings-icon svg {
-            width: 18px; height: 18px;
-            fill: rgba(255,255,255,0.88); pointer-events: none;
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.88);
+            pointer-events: none;
             transition: fill var(--transition-speed) ease;
         }
-        .settings-icon:hover svg, .settings-icon.is-visible svg, .settings-icon.is-panel-open svg {
-            fill: rgba(255,255,255,0.98);
+
+        .settings-icon:hover svg,
+        .settings-icon.is-visible svg,
+        .settings-icon.is-panel-open svg {
+            fill: rgba(255, 255, 255, 0.98);
         }
+
         .settings-panel {
-            position: fixed; top: 78px; right: 22px;
-            background: rgba(28,28,30,0.82);
-            backdrop-filter: blur(28px);
-            border-radius: 16px; padding: 22px 20px 18px;
-            min-width: 248px;
-            box-shadow: 0 8px 36px rgba(0,0,0,0.4);
-            opacity: 0; visibility: hidden;
+            position: fixed;
+            top: 78px;
+            right: 22px;
+            background: rgba(18, 18, 20, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 16px;
+            padding: 22px 20px 18px;
+            min-width: 270px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            visibility: hidden;
             transform: translateY(-10px) scale(0.94);
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 99;
-            border: 1px solid rgba(255,255,255,0.1); user-select: none;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            user-select: none;
         }
+
         .settings-panel.active {
-            opacity: 1; visibility: visible;
+            opacity: 1;
+            visibility: visible;
             transform: translateY(0) scale(1);
         }
+
         .settings-panel h3 {
-            color: rgba(255,255,255,0.88);
-            font-size: 13px; font-weight: 500;
-            margin-bottom: 16px; letter-spacing: 0.4px; text-align: center;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            letter-spacing: 0.5px;
+            text-align: center;
         }
+
         .settings-panel .wallpaper-info {
-            color: rgba(255,255,255,0.45);
-            font-size: 11px; text-align: center;
-            margin-bottom: 14px; letter-spacing: 0.3px; min-height: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 0.3px;
+            min-height: 18px;
         }
-        .upload-btn, .reset-btn {
-            display: block; width: 100%; padding: 11px 16px;
-            cursor: pointer; font-size: 13px; text-align: center;
-            transition: all 0.2s ease; font-family: inherit;
-            letter-spacing: 0.3px; -webkit-tap-highlight-color: transparent;
-            outline: none; border-radius: 10px;
-        }
-        .upload-btn {
-            background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .upload-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.18); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
-        .upload-btn:active { transform: scale(0.97); }
+
+        .upload-btn,
         .reset-btn {
-            background: transparent; color: rgba(255,255,255,0.5);
-            border: 1px solid rgba(255,255,255,0.1); margin-top: 10px; font-size: 12px;
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            border-radius: 10px;
         }
-        .reset-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.72); border-color: rgba(255,255,255,0.2); }
-        .reset-btn:active { transform: scale(0.97); }
-        input[type="file"] { display: none; }
+
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .reset-btn {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 8px;
+            font-size: 11px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.75);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .advanced-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .advanced-toggle {
+            flex: 1;
+            display: block;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            border-radius: 10px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .advanced-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .github-icon-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            text-decoration: none;
+        }
+
+        .github-icon-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .github-icon-link svg {
+            width: 20px;
+            height: 20px;
+            fill: rgba(255, 255, 255, 0.5);
+            transition: fill 0.2s ease;
+        }
+
+        .github-icon-link:hover svg {
+            fill: rgba(255, 255, 255, 0.9);
+        }
+
+        .advanced-section {
+            margin-top: 14px;
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            padding: 16px 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .advanced-section.show {
+            display: flex;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .setting-row label {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .setting-row select,
+        .setting-row input[type="range"],
+        .setting-row input[type="number"] {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: white;
+            padding: 6px 10px;
+            font-size: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .setting-row select:hover,
+        .setting-row input:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-row select option {
+            background: #222;
+            color: white;
+        }
+
+        .setting-row input[type="range"] {
+            width: 90px;
+            padding: 0;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            border: none;
+        }
+
+        .setting-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .setting-row input[type="number"] {
+            width: 65px;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
         @media (max-width: 480px) {
-            .settings-icon { top: 16px; right: 16px; width: 40px; height: 40px; }
-            .settings-icon svg { width: 16px; height: 16px; }
-            .settings-panel { top: 66px; right: 10px; min-width: 220px; padding: 18px 16px 14px; border-radius: 14px; }
-            .upload-btn { font-size: 12px; padding: 10px 14px; }
-            .reset-btn { font-size: 11px; padding: 9px 14px; }
+            .settings-icon {
+                top: 16px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .settings-panel {
+                top: 66px;
+                right: 10px;
+                min-width: 230px;
+                padding: 18px 16px 14px;
+            }
+
+            .upload-btn {
+                font-size: 12px;
+                padding: 10px 14px;
+            }
+
+            .reset-btn {
+                font-size: 11px;
+                padding: 9px 14px;
+            }
+
+            .search-bar {
+                width: 90vw;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="wallpaper-layer" id="wallpaperLayer"></div>
 
+    <div class="search-bar" id="searchBar">
+        <input type="text" id="searchInput" placeholder="在 Web 中搜索…" autocomplete="off">
+        <div class="search-engine-icon" id="searchEngineIcon" title="点击切换搜索引擎 | 回车搜索"></div>
+    </div>
+
     <button class="settings-icon" id="settingsIcon" title="壁纸设置" aria-label="打开设置面板">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            <path
+                d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
         </svg>
     </button>
 
@@ -135,18 +451,59 @@
         <button class="upload-btn" id="uploadBtn">📁 选择本地壁纸</button>
         <input type="file" id="fileInput" accept="image/*">
         <button class="reset-btn" id="resetBtn">🔄 恢复 Bing 每日壁纸</button>
+        <!-- <button class="advanced-toggle" id="advancedToggle">⚙️ 高级选项</button> -->
+        <div class="advanced-toggle-row">
+            <button class="advanced-toggle" id="advancedToggle">⚙️ 高级选项</button>
+            <a class="github-icon-link" href="https://github.com/HIeart-Vael/PureTab" target="_blank"
+                rel="noopener noreferrer" title="GitHub 项目">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                </svg>
+            </a>
+        </div>
+        <div class="advanced-section" id="advancedSection">
+            <div class="setting-row">
+                <label>搜索栏模式</label>
+                <select id="searchModeSelect">
+                    <option value="hover">鼠标触发</option>
+                    <option value="always">常驻显示</option>
+                    <option value="never">始终隐藏</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <label>齿轮不透明度</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="range" id="iconOpacityRange" min="0" max="1" step="0.01" value="0.28">
+                    <input type="number" id="iconOpacityNumber" min="0" max="1" step="0.01" value="0.28">
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>搜索引擎</label>
+                <select id="searchEngineSelect">
+                    <option value="google">Google</option>
+                    <option value="bing">Bing</option>
+                    <option value="baidu">百度</option>
+                    <option value="duckduckgo">DuckDuckGo</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <script>
-        (function() {
+        (function () {
+            // ========== 配置 ==========
             const BING_SERVICE_PRIMARY = 'https://bing.img.run/1920x1080.php';
             const BING_SERVICE_FALLBACK = 'https://bing.biturl.cc/1920x1080';
-
             const CACHE_KEY_URL = 'wallpaper_bing_url';
             const CACHE_KEY_DATE = 'wallpaper_bing_date';
             const CUSTOM_KEY = 'wallpaper_custom';
             const CUSTOM_SOURCE_KEY = 'wallpaper_custom_source';
+            const SEARCH_MODE_KEY = 'search_mode';
+            const ICON_OPACITY_KEY = 'icon_opacity';
+            const SEARCH_ENGINE_KEY = 'search_engine';
 
+            // DOM
             const wallpaperLayer = document.getElementById('wallpaperLayer');
             const settingsIcon = document.getElementById('settingsIcon');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -154,24 +511,41 @@
             const fileInput = document.getElementById('fileInput');
             const resetBtn = document.getElementById('resetBtn');
             const wallpaperInfo = document.getElementById('wallpaperInfo');
+            const searchBar = document.getElementById('searchBar');
+            const searchInput = document.getElementById('searchInput');
+            const searchEngineIcon = document.getElementById('searchEngineIcon');
+            const advancedToggle = document.getElementById('advancedToggle');
+            const advancedSection = document.getElementById('advancedSection');
+            const searchModeSelect = document.getElementById('searchModeSelect');
+            const iconOpacityRange = document.getElementById('iconOpacityRange');
+            const iconOpacityNumber = document.getElementById('iconOpacityNumber');
+            const searchEngineSelect = document.getElementById('searchEngineSelect');
 
             let currentSource = 'bing';
             let isPanelOpen = false;
             let hidePanelTimeout, iconVisibleTimeout;
             let mouseNearIcon = false;
+            let searchMode = 'hover';
+            let currentIconOpacity = 0.28;
+            let currentEngine = 'google';
+            let currentEngineIndex = 0; // 用于循环切换引擎
+            let searchTimeout;
+            let mouseOnSearchBar = false;
+
+            // 搜索引擎列表及对应图标 (简洁风，确保显示)
+            const ENGINE_LIST = ['google', 'bing', 'baidu', 'duckduckgo'];
+            const ENGINE_ICONS = {
+                google: `<svg height="1em" style="flex:none;line-height:1" viewBox="0 0 24 24" width="1em" ><title>Google</title><path d="M23 12.245c0-.905-.075-1.565-.236-2.25h-10.54v4.083h6.186c-.124 1.014-.797 2.542-2.294 3.569l-.021.136 3.332 2.53.23.022C21.779 18.417 23 15.593 23 12.245z" fill="#4285F4"></path><path d="M12.225 23c3.03 0 5.574-.978 7.433-2.665l-3.542-2.688c-.948.648-2.22 1.1-3.891 1.1a6.745 6.745 0 01-6.386-4.572l-.132.011-3.465 2.628-.045.124C4.043 20.531 7.835 23 12.225 23z" fill="#34A853"></path><path d="M5.84 14.175A6.65 6.65 0 015.463 12c0-.758.138-1.491.361-2.175l-.006-.147-3.508-2.67-.115.054A10.831 10.831 0 001 12c0 1.772.436 3.447 1.197 4.938l3.642-2.763z" fill="#FBBC05"></path><path d="M12.225 5.253c2.108 0 3.529.892 4.34 1.638l3.167-3.031C17.787 2.088 15.255 1 12.225 1 7.834 1 4.043 3.469 2.197 7.062l3.63 2.763a6.77 6.77 0 016.398-4.572z" fill="#EB4335"></path></svg>`,
+                bing: `<svg height="1em" style="flex:none;line-height:1" viewBox="0 0 24 24" width="1em" ><title>Bing</title><path d="M11.97 7.569a.92.92 0 00-.805.863c-.013.195-.01.209.43 1.347 1 2.59 1.242 3.214 1.283 3.302.099.213.237.413.41.592.134.138.222.212.37.311.26.176.39.224 1.405.527.989.295 1.529.49 1.994.723.603.302 1.024.644 1.29 1.051.191.292.36.815.434 1.342.029.206.029.661 0 .847a2.491 2.491 0 01-.376 1.026c-.1.151-.065.126.081-.058.415-.52.838-1.408 1.054-2.213a6.728 6.728 0 00.102-3.012 6.626 6.626 0 00-3.291-4.53 104.157 104.157 0 00-1.322-.698l-.254-.133a737.941 737.941 0 01-1.575-.827c-.548-.29-.78-.406-.846-.426a1.376 1.376 0 00-.29-.045l-.093.01z" fill="url(#lobe-icons-bing-0-_R_0_)"></path><path d="M13.164 17.24a4.385 4.385 0 00-.202.125 511.45 511.45 0 00-1.795 1.115 163.087 163.087 0 01-.989.614l-.463.288a99.198 99.198 0 01-1.502.941c-.326.2-.704.334-1.09.387-.18.024-.52.024-.7 0a2.807 2.807 0 01-1.318-.538 3.665 3.665 0 01-.543-.545 2.837 2.837 0 01-.506-1.141 2.161 2.161 0 00-.041-.182c-.008-.008.006.138.032.33.027.199.085.487.147.733.482 1.907 1.85 3.457 3.705 4.195a6.31 6.31 0 001.658.412c.22.025.844.035 1.074.017 1.054-.08 1.972-.393 2.913-.992a325.28 325.28 0 01.937-.596l.384-.244.684-.435.234-.149.009-.005.025-.017.013-.007.172-.11.597-.38c.76-.481.987-.65 1.34-.998.148-.146.37-.394.381-.425.002-.007.042-.068.088-.136a2.49 2.49 0 00.373-1.023 4.181 4.181 0 000-.847 4.336 4.336 0 00-.318-1.137c-.224-.472-.7-.9-1.383-1.245a2.972 2.972 0 00-.406-.181c-.01 0-.646.392-1.413.87a7089.171 7089.171 0 00-1.658 1.031l-.439.274z" fill="url(#lobe-icons-bing-1-_R_0_)" fill-rule="nonzero"></path><path d="M4.003 14.946l.004 3.33.042.193c.134.604.366 1.04.77 1.445a2.701 2.701 0 001.955.814c.536 0 1-.135 1.479-.43l.703-.435.556-.346V8.003c0-2.306-.004-3.675-.012-3.782a2.734 2.734 0 00-.797-1.765c-.145-.144-.268-.24-.637-.496A1780.102 1780.102 0 015.762.362C5.406.115 5.38.098 5.271.059a.943.943 0 00-1.254.696C4.003.818 4 1.659 4 6.223v5.394H4l.003 3.329z" fill="url(#lobe-icons-bing-2-_R_0_)" fill-rule="nonzero"></path><defs><radialGradient cx="93.717%" cy="77.818%" fx="93.717%" fy="77.818%" gradientTransform="scale(-1 -.7146) rotate(49.288 2.035 -2.198)" id="lobe-icons-bing-0-_R_0_" r="143.691%"><stop offset="0%" stop-color="#00CACC"></stop><stop offset="100%" stop-color="#048FCE"></stop></radialGradient><radialGradient cx="13.893%" cy="71.448%" fx="13.893%" fy="71.448%" gradientTransform="scale(.6042 1) rotate(-23.34 .184 .494)" id="lobe-icons-bing-1-_R_0_" r="149.21%"><stop offset="0%" stop-color="#00BBEC"></stop><stop offset="100%" stop-color="#2756A9"></stop></radialGradient><linearGradient id="lobe-icons-bing-2-_R_0_" x1="50%" x2="50%" y1="0%" y2="100%"><stop offset="0%" stop-color="#00BBEC"></stop><stop offset="100%" stop-color="#2756A9"></stop></linearGradient></defs></svg>`,
+                baidu: `<svg height="1em" style="flex:none;line-height:1" viewBox="0 0 24 24" width="1em" ><title>Baidu</title><path d="M8.859 11.735c1.017-1.71 4.059-3.083 6.202.286 1.579 2.284 4.284 4.397 4.284 4.397s2.027 1.601.73 4.684c-1.24 2.956-5.64 1.607-6.005 1.49l-.024-.009s-1.746-.568-3.776-.112c-2.026.458-3.773.286-3.773.286l-.045-.001c-.328-.01-2.38-.187-3.001-2.968-.675-3.028 2.365-4.687 2.592-4.968.226-.288 1.802-1.37 2.816-3.085zm.986 1.738v2.032h-1.64s-1.64.138-2.213 2.014c-.2 1.252.177 1.99.242 2.148.067.157.596 1.073 1.927 1.342h3.078v-7.514l-1.394-.022zm3.588 2.191l-1.44.024v3.956s.064.985 1.44 1.344h3.541v-5.3h-1.528v3.979h-1.46s-.466-.068-.553-.447v-3.556zM9.82 16.715v3.06H8.58s-.863-.045-1.126-1.049c-.136-.445.02-.959.088-1.16.063-.203.353-.671.951-.85H9.82zm9.525-9.036c2.086 0 2.646 2.06 2.646 2.742 0 .688.284 3.597-2.309 3.655-2.595.057-2.704-1.77-2.704-3.08 0-1.374.277-3.317 2.367-3.317zM4.24 6.08c1.523-.135 2.645 1.55 2.762 2.513.07.625.393 3.486-1.975 4-2.364.515-3.244-2.249-2.984-3.544 0 0 .28-2.797 2.197-2.969zm8.847-1.483c.14-1.31 1.69-3.316 2.931-3.028 1.236.285 2.367 1.944 2.137 3.37-.224 1.428-1.345 3.313-3.095 3.082-1.748-.226-2.143-1.823-1.973-3.424zM9.425 1c1.307 0 2.364 1.519 2.364 3.398 0 1.879-1.057 3.4-2.364 3.4s-2.367-1.521-2.367-3.4C7.058 2.518 8.118 1 9.425 1z" fill="#2932E1" fill-rule="nonzero"></path></svg>`,
+                duckduckgo: `<svg viewBox="0 0 122.88 122.88"><defs><style>.a{fill:#d53;}.b{fill:#fff;}.c{fill:#ddd;}.d{fill:#fc0;}.e{fill:#6b5;}.f{fill:#4a4;}.g{fill:#148;}</style></defs><title>duckduckgo</title><path class="a" d="M122.88,61.44a61.44,61.44,0,1,0-61.44,61.44,61.44,61.44,0,0,0,61.44-61.44Z"/><path class="b" d="M114.37,61.44a52.92,52.92,0,1,0-15.5,37.43,52.76,52.76,0,0,0,15.5-37.43Zm-13.12-39.8A56.29,56.29,0,1,1,61.44,5.15a56.12,56.12,0,0,1,39.81,16.49Z"/><path class="c" d="M43.24,30.15C26.17,34.13,32.43,58,32.43,58l10.81,52.9,4,1.71-4-82.49Zm-4-10.24H34.7L41,22.19s-6.26,0-6.26,4C48.36,25.6,54.61,29,54.61,29l-15.36-9.1Zm0,0Z"/><path class="b" d="M75.66,115.48S62,93.87,62,79.64c0-26.73,17.63-4,17.63-25S62,28.44,62,28.44c-8.53-10.8-25-8.53-25-8.53l4,2.28s-4,1.13-5.12,2.27,10.81-1.7,15.93,2.85C30.72,29,34.13,46.08,34.13,46.08l11.95,68.27,29.58,1.13Zm0,0Z"/><path class="d" d="M75.66,60.87l21.62-5.69C116.62,58,80.78,68.84,78.51,68.27c-17.07-2.85-12,11.37,8.53,6.82s5.12,11.38-13.65,5.12c-26.74-7.39-12.52-20.48,2.27-19.34Z"/><path class="e" d="M70,105.81l1.14-1.7c12.52,4.55,13.09,6.25,12.52-5.12s0-11.38-13.09-1.71c0-2.84-7.39-1.71-8.53,0-11.95-5.12-13.09-6.83-12.52,1.14,1.14,16.5.57,13.65,11.95,8l8.53-.57Zm0,0Z"/><path class="f" d="M60.87,99.56v6.82c.57,1.14,9.67,1.14,9.67-1.14s-4.55,1.71-7.39.57S62,98.42,62,98.42l-1.14,1.14Zm0,0Z"/><path class="g" d="M48.36,43.24c-2.85-3.42-10.24-.57-8.54,4,.57-2.28,4.55-5.69,8.54-4Zm18.2,0c.57-3.42,6.26-4,8-.57a8,8,0,0,0-8,.57Zm-18.77,9.1a1.14,1.14,0,1,1,0,.57v-.57Zm-4.55,2.27a4,4,0,1,0,0-.57v.57Zm29.58-4a1.14,1.14,0,1,1,0,.57v-.57ZM69.4,52.91a3.42,3.42,0,1,0,0-.57v.57Zm0,0Z"/></svg>`
+            };
 
             function getToday() { return new Date().toDateString(); }
-
-            function setBackground(url) {
-                wallpaperLayer.style.backgroundImage = url ? `url(${url})` : 'none';
-            }
-
+            function setBackground(url) { wallpaperLayer.style.backgroundImage = url ? `url(${url})` : 'none'; }
             function updateInfoText() {
-                if (wallpaperInfo) {
-                    wallpaperInfo.textContent = currentSource === 'local' ? '当前：📷 本地壁纸' : '当前：🌄 Bing 每日壁纸';
-                }
+                if (wallpaperInfo) wallpaperInfo.textContent = currentSource === 'local' ? '当前：📷 本地壁纸' : '当前：🌄 Bing 每日壁纸';
             }
-
             function testImageUrl(url) {
                 return new Promise(resolve => {
                     const img = new Image();
@@ -181,12 +555,10 @@
                     img.src = url;
                 });
             }
-
             async function fetchAvailableBingUrl() {
                 for (const baseUrl of [BING_SERVICE_PRIMARY, BING_SERVICE_FALLBACK]) {
                     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
                     if (await testImageUrl(url)) return url;
-                    console.warn('图片源不可用:', baseUrl);
                 }
                 throw new Error('所有 Bing 图片源均无法加载');
             }
@@ -197,24 +569,16 @@
                     currentSource = 'local';
                     setBackground(customData);
                     updateInfoText();
-                    updateBingUrlCacheInBackground().catch(() => {});
+                    updateBingUrlCacheInBackground().catch(() => { });
                     return;
                 }
-
                 currentSource = 'bing';
                 updateInfoText();
-
                 const cachedUrl = localStorage.getItem(CACHE_KEY_URL);
                 const cachedDate = localStorage.getItem(CACHE_KEY_DATE);
                 const today = getToday();
-
-                if (cachedUrl && cachedDate === today) {
-                    setBackground(cachedUrl);
-                    return;
-                }
-
+                if (cachedUrl && cachedDate === today) { setBackground(cachedUrl); return; }
                 if (cachedUrl) setBackground(cachedUrl);
-
                 try {
                     const newUrl = await fetchAvailableBingUrl();
                     localStorage.setItem(CACHE_KEY_URL, newUrl);
@@ -222,7 +586,6 @@
                     if (currentSource === 'bing') setBackground(newUrl);
                 } catch (err) {
                     console.warn('获取 Bing 壁纸失败:', err.message);
-                    // 如果没有背景显示，强行使用主服务（不带时间戳）
                     if (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none') {
                         setBackground(BING_SERVICE_PRIMARY);
                         localStorage.setItem(CACHE_KEY_URL, BING_SERVICE_PRIMARY);
@@ -230,7 +593,6 @@
                     }
                 }
             }
-
             async function updateBingUrlCacheInBackground() {
                 const today = getToday();
                 if (localStorage.getItem(CACHE_KEY_DATE) === today && localStorage.getItem(CACHE_KEY_URL)) return;
@@ -241,9 +603,8 @@
                     if (currentSource === 'bing' && (!wallpaperLayer.style.backgroundImage || wallpaperLayer.style.backgroundImage === 'none')) {
                         setBackground(newUrl);
                     }
-                } catch (e) { console.warn('后台更新失败:', e.message); }
+                } catch (e) { }
             }
-
             function setCustomWallpaper(imageDataUrl) {
                 setBackground(imageDataUrl);
                 localStorage.setItem(CUSTOM_KEY, imageDataUrl);
@@ -252,7 +613,6 @@
                 updateInfoText();
                 closePanel();
             }
-
             function resetToBingWallpaper() {
                 localStorage.removeItem(CUSTOM_KEY);
                 localStorage.removeItem(CUSTOM_SOURCE_KEY);
@@ -261,12 +621,9 @@
                 currentSource = 'bing';
                 updateInfoText();
                 closePanel();
-                // 先清空背景，强制 loadWallpaper 立即设置新图
-                setBackground('');
                 loadWallpaper();
             }
 
-            // ---------- 面板交互 (保持不变) ----------
             function openPanel() {
                 if (isPanelOpen) return;
                 isPanelOpen = true;
@@ -288,23 +645,137 @@
                 if (isPanelOpen) return;
                 iconVisibleTimeout = setTimeout(() => {
                     if (!mouseNearIcon && !isPanelOpen) settingsIcon.classList.remove('is-visible');
-                }, 1500);
+                }, 300);
             }
             function isNearTopRight(x, y) { return x > window.innerWidth - 120 && y < 120; }
 
+            function isInCenterArea(x, y) {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                return x > w * 0.3 && x < w * 0.7 && y > h * 0.45 && y < h * 0.65;
+            }
+
+            function showSearchBar() {
+                if (searchMode === 'never') return;
+                if (searchMode === 'always') {
+                    searchBar.classList.add('visible');
+                    return;
+                }
+                clearTimeout(searchTimeout);
+                searchBar.classList.add('visible');
+            }
+            function hideSearchBar() {
+                if (searchMode === 'always') return;
+                // 如果输入框聚焦，不隐藏
+                if (document.activeElement === searchInput) return;
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    if (!mouseOnSearchBar && document.activeElement !== searchInput) {
+                        searchBar.classList.remove('visible');
+                    }
+                }, 100);
+            }
+            function applySearchMode(mode) {
+                searchMode = mode;
+                if (mode === 'always') searchBar.classList.add('visible');
+                else searchBar.classList.remove('visible');
+            }
+
+            // 切换搜索引擎 (点击图标时)
+            function switchToNextEngine() {
+                currentEngineIndex = (currentEngineIndex + 1) % ENGINE_LIST.length;
+                const newEngine = ENGINE_LIST[currentEngineIndex];
+                applySearchEngine(newEngine);
+                searchEngineSelect.value = newEngine;
+                saveAdvancedSettings();
+            }
+
+            function applySearchEngine(engine) {
+                currentEngine = engine;
+                currentEngineIndex = ENGINE_LIST.indexOf(engine);
+                searchEngineIcon.innerHTML = ENGINE_ICONS[engine] || ENGINE_ICONS.google;
+                searchEngineSelect.value = engine;
+            }
+
+            function performSearch(query) {
+                if (!query.trim()) return;
+                const engines = {
+                    google: `https://www.google.com/search?q=`,
+                    bing: `https://www.bing.com/search?q=`,
+                    baidu: `https://www.baidu.com/s?wd=`,
+                    duckduckgo: `https://duckduckgo.com/?q=`
+                };
+                window.open(engines[currentEngine] + encodeURIComponent(query), '_self');
+            }
+
+            function applyIconOpacity(opacity) {
+                currentIconOpacity = parseFloat(opacity);
+                document.documentElement.style.setProperty('--icon-opacity-rest', currentIconOpacity);
+                iconOpacityRange.value = currentIconOpacity;
+                iconOpacityNumber.value = currentIconOpacity;
+            }
+
+            function loadAdvancedSettings() {
+                const savedMode = localStorage.getItem(SEARCH_MODE_KEY) || 'hover';
+                const savedOpacity = localStorage.getItem(ICON_OPACITY_KEY) || '0.28';
+                const savedEngine = localStorage.getItem(SEARCH_ENGINE_KEY) || 'google';
+                searchModeSelect.value = savedMode;
+                applySearchMode(savedMode);
+                applyIconOpacity(savedOpacity);
+                applySearchEngine(savedEngine);
+                searchEngineSelect.value = savedEngine;
+            }
+            function saveAdvancedSettings() {
+                localStorage.setItem(SEARCH_MODE_KEY, searchModeSelect.value);
+                localStorage.setItem(ICON_OPACITY_KEY, currentIconOpacity);
+                localStorage.setItem(SEARCH_ENGINE_KEY, currentEngine);
+            }
+
+            // 事件绑定
             settingsIcon.addEventListener('click', e => { e.stopPropagation(); togglePanel(); });
-            settingsIcon.addEventListener('mouseenter', () => {
-                mouseNearIcon = true; showIcon(); clearTimeout(hidePanelTimeout);
-            });
+            settingsIcon.addEventListener('mouseenter', () => { mouseNearIcon = true; showIcon(); clearTimeout(hidePanelTimeout); });
             settingsIcon.addEventListener('mouseleave', () => {
                 mouseNearIcon = false;
                 if (!isPanelOpen) hideIcon();
                 if (isPanelOpen) hidePanelTimeout = setTimeout(closePanel, 600);
             });
+
             document.addEventListener('mousemove', e => {
                 if (isNearTopRight(e.clientX, e.clientY)) showIcon();
                 else if (!mouseNearIcon && !isPanelOpen) hideIcon();
+                if (isInCenterArea(e.clientX, e.clientY)) showSearchBar();
+                else hideSearchBar();
             });
+
+            searchBar.addEventListener('mouseenter', () => {
+                mouseOnSearchBar = true;
+                clearTimeout(searchTimeout);
+            });
+            searchBar.addEventListener('mouseleave', () => {
+                mouseOnSearchBar = false;
+                if (searchMode === 'hover' && document.activeElement !== searchInput) {
+                    searchTimeout = setTimeout(() => {
+                        if (!mouseOnSearchBar && document.activeElement !== searchInput) {
+                            searchBar.classList.remove('visible');
+                        }
+                    }, 300);
+                }
+            });
+
+            // 输入框焦点处理：聚焦时保持显示，失焦时根据条件隐藏
+            searchInput.addEventListener('focus', () => {
+                searchBar.classList.add('visible');
+                clearTimeout(searchTimeout);
+            });
+            searchInput.addEventListener('blur', () => {
+                // 失焦后延迟检查，若鼠标不在搜索栏上则隐藏
+                setTimeout(() => {
+                    if (!mouseOnSearchBar && searchMode === 'hover' && document.activeElement !== searchInput) {
+                        searchBar.classList.remove('visible');
+                    }
+                }, 100);
+            });
+
             document.addEventListener('touchstart', e => {
                 if (e.touches.length === 1) {
                     const t = e.touches[0];
@@ -317,6 +788,7 @@
                     }
                 }
             }, { passive: true });
+
             settingsPanel.addEventListener('mouseenter', () => { clearTimeout(hidePanelTimeout); mouseNearIcon = true; });
             settingsPanel.addEventListener('mouseleave', () => {
                 mouseNearIcon = false;
@@ -330,10 +802,12 @@
             });
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape' && isPanelOpen) { closePanel(); hideIcon(); }
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') {
-                    e.preventDefault(); togglePanel();
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); togglePanel(); }
+                if (e.key === 'Enter' && document.activeElement === searchInput) {
+                    performSearch(searchInput.value);
                 }
             });
+
             uploadBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
             fileInput.addEventListener('change', event => {
                 const file = event.target.files[0];
@@ -347,6 +821,27 @@
                 fileInput.value = '';
             });
             resetBtn.addEventListener('click', e => { e.stopPropagation(); resetToBingWallpaper(); });
+            advancedToggle.addEventListener('click', e => { e.stopPropagation(); advancedSection.classList.toggle('show'); });
+
+            searchModeSelect.addEventListener('change', () => { applySearchMode(searchModeSelect.value); saveAdvancedSettings(); });
+            iconOpacityRange.addEventListener('input', () => { applyIconOpacity(iconOpacityRange.value); saveAdvancedSettings(); });
+            iconOpacityNumber.addEventListener('change', () => {
+                let val = parseFloat(iconOpacityNumber.value);
+                if (isNaN(val)) val = 0.28;
+                val = Math.min(1, Math.max(0, val));
+                applyIconOpacity(val);
+                saveAdvancedSettings();
+            });
+            searchEngineSelect.addEventListener('change', () => {
+                applySearchEngine(searchEngineSelect.value);
+                saveAdvancedSettings();
+            });
+
+            // 点击图标切换搜索引擎
+            searchEngineIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                switchToNextEngine();
+            });
 
             // 启动
             function init() {
@@ -354,12 +849,13 @@
                 currentSource = (savedSource === 'local' && localStorage.getItem(CUSTOM_KEY)) ? 'local' : 'bing';
                 updateInfoText();
                 loadWallpaper();
-                console.log('✅ 起始页已就绪（热恢复版）');
+                loadAdvancedSettings();
+                console.log('✅ 起始页已优化（切换引擎 / 输入框稳定）');
             }
-
             if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
             else init();
         })();
     </script>
 </body>
+
 </html>
