@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>起始页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease;
+            cursor: default;
+            background-color: #1a1a2e;
+        }
+
+        /* 默认壁纸先显示缓存或纯色背景 */
+        body {
+            background-image: none;
+        }
+
+        /* 触发区域 */
+        .settings-trigger {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 99;
+        }
+
+        /* 设置图标 - 默认完全不可见 */
+        .settings-icon {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, background 0.3s ease, transform 0.3s ease;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(12px);
+        }
+
+        .settings-trigger:hover + .settings-icon,
+        .settings-icon:hover {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-icon:hover {
+            background: rgba(0, 0, 0, 0.45);
+            transform: rotate(60deg);
+        }
+
+        .settings-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+        }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 16px;
+            padding: 24px;
+            min-width: 240px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.96);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 99;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .settings-panel.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .settings-panel h3 {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: center;
+            transition: background 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .reset-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 触发区域 -->
+    <div class="settings-trigger"></div>
+
+    <!-- 设置图标 -->
+    <div class="settings-icon" id="settingsIcon" title="设置壁纸">
+        <svg viewBox="0 0 24 24">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+        </svg>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <h3>壁纸设置</h3>
+        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+            选择本地壁纸
+        </button>
+        <input type="file" id="fileInput" accept="image/*" onchange="setWallpaper(event)">
+        <button class="reset-btn" onclick="resetWallpaper()">
+            恢复Bing每日壁纸
+        </button>
+    </div>
+
+    <script>
+        const BING_API = 'https://bing.img.run/1920x1080.php';
+        const CACHE_KEY = 'wallpaper_cache';
+        const CACHE_DATE_KEY = 'wallpaper_cache_date';
+
+        // 启动时加载壁纸
+        async function loadWallpaper() {
+            const savedWallpaper = localStorage.getItem('wallpaper');
+            
+            // 如果有用户手动设置的壁纸，优先使用
+            if (savedWallpaper && savedWallpaper.startsWith('data:')) {
+                document.body.style.backgroundImage = `url(${savedWallpaper})`;
+                // 后台更新Bing缓存
+                updateBingCache();
+                return;
+            }
+
+            // 检查今日缓存
+            const cachedImage = localStorage.getItem(CACHE_KEY);
+            const cacheDate = localStorage.getItem(CACHE_DATE_KEY);
+            const today = new Date().toDateString();
+
+            if (cachedImage && cacheDate === today) {
+                // 今天已经缓存，直接使用
+                document.body.style.backgroundImage = `url(${cachedImage})`;
+            } else if (cachedImage) {
+                // 有旧缓存，先用着，后台更新
+                document.body.style.backgroundImage = `url(${cachedImage})`;
+                updateBingCache();
+            } else {
+                // 首次使用，直接加载Bing
+                document.body.style.backgroundImage = `url(${BING_API})`;
+                updateBingCache();
+            }
+        }
+
+        // 后台缓存Bing图片（转成base64存localStorage）
+        function updateBingCache() {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                try {
+                    const base64 = canvas.toDataURL('image/jpeg', 0.9);
+                    localStorage.setItem(CACHE_KEY, base64);
+                    localStorage.setItem(CACHE_DATE_KEY, new Date().toDateString());
+                } catch(e) {
+                    // localStorage满了就跳过缓存
+                    console.log('缓存失败，空间不足');
+                }
+            };
+            img.src = BING_API + '&t=' + Date.now();
+        }
+
+        function init() {
+            loadWallpaper();
+
+            const settingsIcon = document.getElementById('settingsIcon');
+            const settingsPanel = document.getElementById('settingsPanel');
+            let hideTimeout;
+
+            settingsIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsPanel.classList.toggle('active');
+            });
+
+            settingsPanel.addEventListener('mouseenter', () => {
+                clearTimeout(hideTimeout);
+            });
+
+            settingsPanel.addEventListener('mouseleave', () => {
+                hideTimeout = setTimeout(() => {
+                    settingsPanel.classList.remove('active');
+                }, 400);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!settingsPanel.contains(e.target) && e.target !== settingsIcon) {
+                    settingsPanel.classList.remove('active');
+                }
+            });
+
+            settingsPanel.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        function setWallpaper(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    document.body.style.backgroundImage = `url(${imageData})`;
+                    localStorage.setItem('wallpaper', imageData);
+                    document.getElementById('settingsPanel').classList.remove('active');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetWallpaper() {
+            localStorage.removeItem('wallpaper');
+            document.getElementById('settingsPanel').classList.remove('active');
+            loadWallpaper();
+        }
+
+        init();
+    </script>
+</body>
+</html>
