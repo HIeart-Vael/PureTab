@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "PureTab · 极简标签页",
+    "version": "1.2.0",
+    "description": "极简风格的新标签页，支持 Bing 每日壁纸与本地壁纸。",
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; img-src * data: blob:; style-src 'self' 'unsafe-inline'"
+    }
+}
