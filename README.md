@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon/icon128.png" alt="PlainTab Logo" width="80">
+  <img src="icon/icon2048.png" alt="PlainTab Logo" width="80">
 </p>
 
 <h1 align="center">PlainTab · 极简起始页</h1>
