@@ -1,14 +1,17 @@
 <p align="center">
-  <img src="icon128.png" alt="PlainTab Logo" width="80">
+  <img src="icon/icon128.png" alt="PlainTab Logo" width="80">
 </p>
 
-<h1 align="center">PlainTab · 极简标签页</h1>
+<h1 align="center">PlainTab · 极简起始页</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.2.0-blue?style=flat-square" alt="版本">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
-  <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="许可证">
+  <a href = "LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square"
+    alt="许可证">
+  </a>
   <a href="https://plaintab.netlify.app">
     <img src="https://img.shields.io/badge/在线体验-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
