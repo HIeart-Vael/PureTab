@@ -63,7 +63,7 @@
 
 ### 浏览器扩展 · 手动安装（开发者模式）
 1. 克隆仓库  
-   `git clone https://github.com/HIeart-Vael/PureTab.git`
+   `git clone https://github.com/kaininx/PlainTab.git`
 2. 打开 Chrome 或 Edge，进入 `chrome://extensions`
 3. 开启右上角的**开发者模式**
 4. 点击**加载已解压的扩展程序**，选择本项目的文件夹
