@@ -1,0 +1,6 @@
+# 强制所有文本文件检出、提交时都使用 LF
+* text=auto eol=lf
+
+# 对于 Windows 必须 CRLF 的文件才保留
+*.bat text eol=crlf
+*.cmd text eol=crlf
