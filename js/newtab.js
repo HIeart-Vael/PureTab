@@ -5,9 +5,16 @@
     const I18N = window.I18N || {};
     const LanguageList = window.LanguageList || [];
 
+    function getChromeLang() {
+        if (typeof chrome !== 'undefined' && chrome.i18n) {
+            return chrome.i18n.getUILanguage();
+        }
+        return navigator.language || 'en';
+    }
     // 检测浏览器语言，优先匹配支持的语言
     function detectLanguage() {
-        const browserLang = navigator.language || 'en';
+        const browserLang = getChromeLang();
+
         // 精确匹配
         if (I18N[browserLang]) return browserLang;
         // 主语言匹配
@@ -19,13 +26,19 @@
     let currentLang = localStorage.getItem(LANG_KEY) || detectLanguage();
     if (!I18N[currentLang]) currentLang = 'en'; // fallback
 
+    // 替换原有 t 函数
     function t(key) {
+        // 1. 优先使用 Chrome 扩展 i18n（如果可用）
+        if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage) {
+            const msg = chrome.i18n.getMessage(key);
+            if (msg) return msg;   // 找到了就直接返回
+        }
+        // 2. 回退到 languages.js 中的翻译
         return I18N[currentLang]?.[key] || I18N['en']?.[key] || key;
     }
 
     // ========== 配置常量 ==========
-    const BING_SERVICE_PRIMARY = 'https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=zh-CN';
-    const BING_SERVICE_FALLBACK = 'https://bing.img.run/1920x1080.php';
+    const BING_SERVICE_PRIMARY = (mkt) => `https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=${mkt}`; const BING_SERVICE_FALLBACK = 'https://bing.img.run/1920x1080.php';
     const CACHE_KEY_URL = 'wallpaper_bing_url';
     const CACHE_KEY_DATE = 'wallpaper_bing_date';
     const SEARCH_MODE_KEY = 'search_mode';
@@ -181,11 +194,37 @@
         });
     }
 
+    function getBingMktFromLang(lang) {
+        // 映射表：语言代码 -> Bing 市场代码
+        const map = {
+            'zh-CN': 'zh-CN',   // 简体中文 → 中国
+            'zh-TW': 'zh-TW',   // 繁体中文 → 台湾地区
+            'en': 'en-US',      // 英语 → 美国
+            'ja': 'ja-JP',      // 日语 → 日本
+            'ko': 'ko-KR',      // 韩语 → 韩国
+            'fr': 'fr-FR',      // 法语 → 法国
+            'de': 'de-DE',      // 德语 → 德国
+            'es': 'es-ES',      // 西班牙语 → 西班牙
+            'it': 'it-IT',      // 意大利语 → 意大利
+            'pt': 'pt-BR',      // 葡萄牙语 → 巴西（Bing 支持巴西葡萄牙语）
+            'ru': 'ru-RU',      // 俄语 → 俄罗斯
+            'ar': 'ar-SA',      // 阿拉伯语 → 沙特阿拉伯
+            'hi': 'hi-IN',      // 印地语 → 印度
+            'tr': 'tr-TR',      // 土耳其语 → 土耳其
+            'pl': 'pl-PL',      // 波兰语 → 波兰
+            'vi': 'vi-VN'       // 越南语 → 越南
+        };
+        // 如果找不到映射，默认使用美国英语市场
+        return map[lang] || 'en-US';
+    }
+
     async function fetchAvailableBingUrl() {
-        for (const baseUrl of [BING_SERVICE_PRIMARY, BING_SERVICE_FALLBACK]) {
-            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-            if (await testImageUrl(url)) return url;
-        }
+        const mkt = getBingMktFromLang(currentLang);
+        const primaryUrl = BING_SERVICE_PRIMARY(mkt) + '&t=' + Date.now();
+        if (await testImageUrl(primaryUrl)) return primaryUrl;
+        // fallback 保持不变（它没有 mkt 参数，适合任何语言）
+        const fallbackUrl = BING_SERVICE_FALLBACK + '?t=' + Date.now();
+        if (await testImageUrl(fallbackUrl)) return fallbackUrl;
         throw new Error(t('bing_source_error'));
     }
 
@@ -355,6 +394,7 @@
 
     // ---------- 多语言 UI 更新 ----------
     function updateLanguageUI() {
+        document.title = t('extName');
         searchInput.placeholder = t('search_placeholder');
         searchEngineIcon.setAttribute('title', t('search_engine_title'));
         langIcon.setAttribute('title', t('lang_button_title'));
