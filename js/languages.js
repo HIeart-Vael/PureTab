@@ -1,6 +1,7 @@
 // ===================== 多语言包 (16种语言) =====================
 window.I18N = {
     'zh-CN': {
+        extName: 'PlainTab · 极简起始页',
         search_placeholder: '在 Web 中搜索…',
         search_engine_title: '点击切换搜索引擎 | 回车搜索',
         lang_button_title: '切换语言',
@@ -24,6 +25,7 @@ window.I18N = {
         language_panel_title: '🌐 语言'
     },
     'zh-TW': {
+        extName: 'PlainTab · 極簡起始頁',
         search_placeholder: '在 Web 中搜尋…',
         search_engine_title: '點擊切換搜尋引擎 | 按 Enter 搜尋',
         lang_button_title: '切換語言',
@@ -47,6 +49,7 @@ window.I18N = {
         language_panel_title: '🌐 語言'
     },
     'en': {
+        extName: 'PlainTab · Minimal Start Page',
         search_placeholder: 'Search the Web…',
         search_engine_title: 'Click to switch engine | Enter to search',
         lang_button_title: 'Switch Language',
@@ -70,6 +73,7 @@ window.I18N = {
         language_panel_title: '🌐 Language'
     },
     'es': {
+        extName: 'PlainTab · Página de Inicio Minimalista',
         search_placeholder: 'Buscar en la Web…',
         search_engine_title: 'Clic para cambiar motor | Enter para buscar',
         lang_button_title: 'Cambiar idioma',
@@ -93,6 +97,7 @@ window.I18N = {
         language_panel_title: '🌐 Idioma'
     },
     'hi': {
+        extName: 'PlainTab · न्यूनतम प्रारंभ पृष्ठ',
         search_placeholder: 'वेब पर खोजें…',
         search_engine_title: 'इंजन बदलने के लिए क्लिक करें | खोजने के लिए Enter दबाएं',
         lang_button_title: 'भाषा बदलें',
@@ -116,6 +121,7 @@ window.I18N = {
         language_panel_title: '🌐 भाषा'
     },
     'ar': {
+        extName: 'PlainTab · صفحة بداية بسيطة',
         search_placeholder: 'ابحث في الويب…',
         search_engine_title: 'انقر لتبديل المحرك | Enter للبحث',
         lang_button_title: 'تغيير اللغة',
@@ -139,6 +145,7 @@ window.I18N = {
         language_panel_title: '🌐 اللغة'
     },
     'pt': {
+        extName: 'PlainTab · Página Inicial Minimalista',
         search_placeholder: 'Pesquisar na Web…',
         search_engine_title: 'Clique para trocar mecanismo | Enter para buscar',
         lang_button_title: 'Alterar idioma',
@@ -162,6 +169,7 @@ window.I18N = {
         language_panel_title: '🌐 Idioma'
     },
     'ru': {
+        extName: 'PlainTab · Минималистичная стартовая страница',
         search_placeholder: 'Поиск в Интернете…',
         search_engine_title: 'Нажмите для смены поисковика | Enter для поиска',
         lang_button_title: 'Сменить язык',
@@ -185,6 +193,7 @@ window.I18N = {
         language_panel_title: '🌐 Язык'
     },
     'ja': {
+        extName: 'PlainTab · ミニマルなスタートページ',
         search_placeholder: 'Web を検索…',
         search_engine_title: '検索エンジン切替 | Enter で検索',
         lang_button_title: '言語切替',
@@ -208,6 +217,7 @@ window.I18N = {
         language_panel_title: '🌐 言語'
     },
     'de': {
+        extName: 'PlainTab · Minimalistische Startseite',
         search_placeholder: 'Im Web suchen…',
         search_engine_title: 'Klick zum Wechseln der Suchmaschine | Enter zum Suchen',
         lang_button_title: 'Sprache wechseln',
@@ -231,6 +241,7 @@ window.I18N = {
         language_panel_title: '🌐 Sprache'
     },
     'ko': {
+        extName: 'PlainTab · 미니멀 스타트 페이지',
         search_placeholder: '웹 검색…',
         search_engine_title: '검색 엔진 전환 | Enter로 검색',
         lang_button_title: '언어 전환',
@@ -254,6 +265,7 @@ window.I18N = {
         language_panel_title: '🌐 언어'
     },
     'fr': {
+        extName: 'PlainTab · Page de démarrage minimaliste',
         search_placeholder: 'Rechercher sur le Web…',
         search_engine_title: 'Cliquez pour changer de moteur | Entrée pour rechercher',
         lang_button_title: 'Changer de langue',
@@ -277,6 +289,7 @@ window.I18N = {
         language_panel_title: '🌐 Langue'
     },
     'it': {
+        extName: 'PlainTab · Pagina iniziale minimalista',
         search_placeholder: 'Cerca nel Web…',
         search_engine_title: 'Clicca per cambiare motore | Invio per cercare',
         lang_button_title: 'Cambia lingua',
@@ -300,6 +313,7 @@ window.I18N = {
         language_panel_title: '🌐 Lingua'
     },
     'tr': {
+        extName: 'PlainTab · Minimal Başlangıç Sayfası',
         search_placeholder: 'Web’de ara…',
         search_engine_title: 'Motoru değiştirmek için tıkla | Aramak için Enter',
         lang_button_title: 'Dil değiştir',
@@ -323,6 +337,7 @@ window.I18N = {
         language_panel_title: '🌐 Dil'
     },
     'pl': {
+        extName: 'PlainTab · Minimalistyczna strona startowa',
         search_placeholder: 'Szukaj w internecie…',
         search_engine_title: 'Kliknij, aby zmienić silnik | Enter, aby szukać',
         lang_button_title: 'Zmień język',
@@ -346,6 +361,7 @@ window.I18N = {
         language_panel_title: '🌐 Język'
     },
     'vi': {
+        extName: 'PlainTab · Trang bắt đầu tối giản',
         search_placeholder: 'Tìm kiếm trên Web…',
         search_engine_title: 'Nhấp để đổi công cụ | Enter để tìm',
         lang_button_title: 'Đổi ngôn ngữ',
