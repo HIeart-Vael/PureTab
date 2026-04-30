@@ -545,7 +545,7 @@
     function applySearchEngine(engine) { currentEngine = engine; currentEngineIndex = ENGINE_LIST.indexOf(engine); searchEngineIcon.innerHTML = ENGINE_ICONS[engine] || ENGINE_ICONS.google; searchEngineSelect.value = engine; }
     function performSearch(query) { if (!query.trim()) return; const engines = { google: 'https://www.google.com/search?q=', bing: 'https://www.bing.com/search?q=', baidu: 'https://www.baidu.com/s?wd=', duckduckgo: 'https://duckduckgo.com/?q=' }; window.open(engines[currentEngine] + encodeURIComponent(query), '_self'); }
     function applyIconOpacity(opacity) { currentIconOpacity = parseFloat(opacity); document.documentElement.style.setProperty('--icon-opacity-rest', currentIconOpacity); iconOpacityRange.value = currentIconOpacity; iconOpacityNumber.value = currentIconOpacity; }
-    function loadAdvancedSettings() { const savedMode = localStorage.getItem(SEARCH_MODE_KEY) || 'hover'; const savedOpacity = localStorage.getItem(ICON_OPACITY_KEY) || '0.45'; const savedEngine = localStorage.getItem(SEARCH_ENGINE_KEY) || 'google'; searchModeSelect.value = savedMode; applySearchMode(savedMode); applyIconOpacity(savedOpacity); applySearchEngine(savedEngine); }
+    function loadAdvancedSettings() { const savedMode = localStorage.getItem(SEARCH_MODE_KEY) || 'always'; const savedOpacity = localStorage.getItem(ICON_OPACITY_KEY) || '0.45'; const savedEngine = localStorage.getItem(SEARCH_ENGINE_KEY) || 'google'; searchModeSelect.value = savedMode; applySearchMode(savedMode); applyIconOpacity(savedOpacity); applySearchEngine(savedEngine); }
     function saveAdvancedSettings() { localStorage.setItem(SEARCH_MODE_KEY, searchModeSelect.value); localStorage.setItem(ICON_OPACITY_KEY, currentIconOpacity); localStorage.setItem(SEARCH_ENGINE_KEY, currentEngine); }
 
     // ---------- 多语言 UI 更新 ----------
@@ -672,7 +672,7 @@
     searchModeSelect.addEventListener('change', () => { applySearchMode(searchModeSelect.value); saveAdvancedSettings(); });
     iconOpacityRange.addEventListener('input', () => { applyIconOpacity(iconOpacityRange.value); saveAdvancedSettings(); });
     iconOpacityNumber.addEventListener('change', () => { let val = parseFloat(iconOpacityNumber.value); if (isNaN(val)) val = 0.45; val = Math.min(1, Math.max(0, val)); applyIconOpacity(val); saveAdvancedSettings(); });
-    document.getElementById('resetAdvancedBtn').addEventListener('click', () => { applySearchMode('hover'); searchModeSelect.value = 'hover'; applySearchEngine('google'); applyIconOpacity(0.4); saveAdvancedSettings(); });
+    document.getElementById('resetAdvancedBtn').addEventListener('click', () => { applySearchMode('always'); searchModeSelect.value = 'always'; applySearchEngine('google'); applyIconOpacity(0.4); saveAdvancedSettings(); });
     searchEngineSelect.addEventListener('change', () => { applySearchEngine(searchEngineSelect.value); saveAdvancedSettings(); });
     searchEngineIcon.addEventListener('click', (e) => { e.stopPropagation(); switchToNextEngine(); });
 
