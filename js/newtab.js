@@ -38,7 +38,8 @@
     }
 
     // ========== 配置常量 ==========
-    const BING_SERVICE_PRIMARY = (mkt) => `https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=${mkt}`; const BING_SERVICE_FALLBACK = 'https://bing.img.run/1920x1080.php';
+    const BING_SERVICE_PRIMARY = (mkt) => `https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=${mkt}`;
+    const BING_SERVICE_FALLBACK = 'https://bing.img.run/1920x1080.php';
     const CACHE_KEY_URL = 'wallpaper_bing_url';
     const CACHE_KEY_DATE = 'wallpaper_bing_date';
     const SEARCH_MODE_KEY = 'search_mode';
