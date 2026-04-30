@@ -270,22 +270,46 @@
     }
 
     async function setCustomWallpaper(file) {
+        // 1. 先在前端立即显示（临时 blob URL）
         const blobUrl = URL.createObjectURL(file);
         setBackground(blobUrl);
-        try {
-            await saveLocalWallpaper(file);
-            currentSource = 'local';
-            updateInfoText();
-            closeSettingsPanel();
-        } catch (e) {
-            alert(t('local_upload_error') + (e.message || '存储错误'));
-            loadWallpaper();
-        }
-    }
 
+        // 2. 存入 IndexedDB（异步，但不必等它完成才显示）
+        saveLocalWallpaper(file).catch(e => console.error(e));
+
+        // 3. 生成缩略图并存入 localStorage（关键步骤）
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_W = 320;          // 缩略图宽最多 320px，体积可控
+                const scale = MAX_W / img.width;
+                canvas.width = MAX_W;
+                canvas.height = Math.floor(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                try {
+                    const base64 = canvas.toDataURL('image/jpeg', 0.5);
+                    localStorage.setItem('__puretab_local_thumb', base64);
+                } catch (err) {
+                    // 图片太大放入 localStorage 失败（通常 >5MB），此时降级为无缓存
+                    console.warn('缩略图存入 localStorage 失败', err);
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // 更新状态
+        currentSource = 'local';
+        updateInfoText();
+        closeSettingsPanel();
+    }
     async function resetToBingWallpaper() {
         await removeLocalWallpaper();
         if (currentLocalBlobUrl) { URL.revokeObjectURL(currentLocalBlobUrl); currentLocalBlobUrl = null; }
+        localStorage.removeItem('__puretab_local_thumb');
         localStorage.removeItem(CACHE_KEY_DATE);
         localStorage.removeItem(CACHE_KEY_URL);
         currentSource = 'bing';
