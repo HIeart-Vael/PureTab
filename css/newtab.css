@@ -1,5 +1,5 @@
 :root {
-    --bg-fallback: #1a1a2e;
+    --bg-fallback: #0d0d0d;
     --icon-opacity-rest: 0.45;
     --icon-opacity-hover: 1;
     --transition-speed: 0.35s;
@@ -31,6 +31,7 @@ body {
     transition: background-image 0.6s ease;
     z-index: -1;
     background-color: var(--bg-fallback);
+    background-image: linear-gradient(160deg, #0d0d0d 0%, #1a1a1a 100%);
 }
 
 .search-bar {

@@ -554,4 +554,15 @@
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
+
+    window.addEventListener('beforeunload', function () {
+        const bg = wallpaperLayer.style.backgroundImage;
+        // 只保存有效的 url(...) 且不是临时 blob: 地址
+        if (bg && bg.startsWith('url(') && !bg.includes('blob:')) {
+            sessionStorage.setItem('__puretab_wallpaper_preload', bg);
+        } else {
+            sessionStorage.removeItem('__puretab_wallpaper_preload');
+        }
+    });
+
 })();
