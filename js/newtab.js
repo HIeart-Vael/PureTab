@@ -51,6 +51,8 @@
     const CUSTOM_BLOB_KEY = 'local_blob';
     const CUSTOM_SOURCE_KEY = 'local_source';
     const CUSTOM_MIME_KEY = 'local_mime';
+    const BING_BLOB_KEY = 'bing_blob';
+    const BING_DATE_KEY = 'bing_date';
 
     // DOM 元素
     const wallpaperLayer = document.getElementById('wallpaperLayer');
@@ -73,8 +75,10 @@
     const iconOpacityRange = document.getElementById('iconOpacityRange');
     const iconOpacityNumber = document.getElementById('iconOpacityNumber');
     const searchEngineSelect = document.getElementById('searchEngineSelect');
+    const LAST_SOURCE_KEY = 'last_source';
 
     let currentSource = 'bing';
+    let lastSource = localStorage.getItem(LAST_SOURCE_KEY) || 'bing';
     let isPanelOpen = false;
     let isLangPanelOpen = false;
     let hidePanelTimeout, iconVisibleTimeout;
@@ -157,6 +161,42 @@
         });
     }
 
+    async function saveBingWallpaper(blob) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.put(blob, BING_BLOB_KEY);
+            store.put(new Date().toDateString(), BING_DATE_KEY);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function loadBingWallpaper() {
+        const db = await openDB();
+        return new Promise((resolve) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const blobReq = store.get(BING_BLOB_KEY);
+            const dateReq = store.get(BING_DATE_KEY);
+            let blob = null, date = null;
+            blobReq.onsuccess = () => { blob = blobReq.result; check(); };
+            dateReq.onsuccess = () => { date = dateReq.result; check(); };
+            blobReq.onerror = dateReq.onerror = () => resolve(null);
+            function check() {
+                if (blobReq.readyState === 'done' && dateReq.readyState === 'done') {
+                    const today = new Date().toDateString();
+                    if (date === today && blob) {
+                        resolve(blob);
+                    } else {
+                        resolve(null);
+                    }
+                }
+            }
+        });
+    }
+
     async function removeLocalWallpaper() {
         const db = await openDB();
         return new Promise((resolve, reject) => {
@@ -178,6 +218,40 @@
         }
         if (url && url.startsWith('blob:')) currentLocalBlobUrl = url;
         wallpaperLayer.style.backgroundImage = url ? `url(${url})` : 'none';
+    }
+
+    function setCurrentWallpaper(url, source) {
+        setBackground(url);
+        currentSource = source;
+        updateInfoText();
+        // 生成缩略图（异步，不影响主流程）
+        generateThumbnail(url).catch(() => { });
+    }
+
+    function generateThumbnail(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous'; // 避免跨域污染，如果你使用第三方图片
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_W = 320;
+                const scale = MAX_W / img.width;
+                canvas.width = MAX_W;
+                canvas.height = Math.floor(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                try {
+                    const base64 = canvas.toDataURL('image/jpeg', 0.5);
+                    localStorage.setItem('__puretab_local_thumb', base64);
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            };
+            img.onerror = reject;
+            // 如果是 blob URL，不存在跨域问题；如果是 http URL，需要服务端允许 CORS
+            img.src = url;
+        });
     }
 
     function updateInfoText() {
@@ -230,91 +304,148 @@
 
     async function updateBingUrlCacheInBackground() {
         const today = new Date().toDateString();
+        // 如果今天已有缓存 URL 且 IDB 中已有图片，则跳过更新（但不妨碍刷新时使用）
         if (localStorage.getItem(CACHE_KEY_DATE) === today && localStorage.getItem(CACHE_KEY_URL)) return;
+
         try {
             const newUrl = await fetchAvailableBingUrl();
             localStorage.setItem(CACHE_KEY_URL, newUrl);
             localStorage.setItem(CACHE_KEY_DATE, today);
-            if (currentSource === 'bing' && !wallpaperLayer.style.backgroundImage) setBackground(newUrl);
-        } catch (e) { }
+
+            // 尝试下载并存入 IDB
+            const blob = await downloadAndCacheBingImage(newUrl);
+            if (blob) {
+                await saveBingWallpaper(blob);
+                // 如果当前正使用 Bing，则更新显示为最新图片（并生成缩略图）
+                if (currentSource === 'bing') {
+                    const url = URL.createObjectURL(blob);
+                    setCurrentWallpaper(url, 'bing');
+                }
+            }
+        } catch (e) {
+            // 什么都不做
+        }
     }
 
     async function loadWallpaper() {
+        // 首先尝试加载用户上次使用的壁纸源
+        if (lastSource === 'local') {
+            try {
+                const { blob, source } = await loadLocalWallpaper();
+                if (source === 'local' && blob) {
+                    const url = URL.createObjectURL(blob);
+                    setCurrentWallpaper(url, 'local');
+                    // 补丁：缩略图缺失时补生成
+                    if (!localStorage.getItem('__puretab_local_thumb')) {
+                        generateThumbnail(url).catch(() => { });
+                    }
+                    updateBingUrlCacheInBackground().catch(() => { });
+                    return;
+                }
+            } catch (e) { console.warn('读取本地壁纸失败', e); }
+            // 本地壁纸加载失败，降级到 Bing
+        }
+
+        // 尝试加载 Bing 壁纸（无论 lastSource 是 'bing' 还是本地降级）
+        // 1) 优先从 IDB 读取今天的 Bing 壁纸 Blob
         try {
-            const { blob, source } = await loadLocalWallpaper();
-            if (source === 'local' && blob) {
-                currentSource = 'local';
-                const url = URL.createObjectURL(blob);
-                setBackground(url);
-                updateInfoText();
+            const bingBlob = await loadBingWallpaper();
+            if (bingBlob) {
+                const url = URL.createObjectURL(bingBlob);
+                setCurrentWallpaper(url, 'bing');
+                if (!localStorage.getItem('__puretab_local_thumb')) {
+                    generateThumbnail(url).catch(() => { });
+                }
+                // 异步更新是否已有新 Bing 图片（静默缓存）
                 updateBingUrlCacheInBackground().catch(() => { });
                 return;
             }
-        } catch (e) { console.warn('读取本地壁纸失败', e); }
+        } catch (e) { console.warn('加载 IDB Bing 壁纸失败', e); }
 
+        // 2) IDB 无缓存，用原有网络逻辑获取 Bing 图片并存入 IDB
         currentSource = 'bing';
         updateInfoText();
+
         const cachedUrl = localStorage.getItem(CACHE_KEY_URL);
         const cachedDate = localStorage.getItem(CACHE_KEY_DATE);
         const today = new Date().toDateString();
-        if (cachedUrl && cachedDate === today) { setBackground(cachedUrl); return; }
+
+        // 如果缓存 URL 是今天的，直接尝试显示（可能仍是网络图片，但会尽快换取 blob）
+        if (cachedUrl && cachedDate === today) {
+            setBackground(cachedUrl);
+            // 下载该图片为 blob 并缓存
+            downloadAndCacheBingImage(cachedUrl).then(blob => {
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    setCurrentWallpaper(url, 'bing');
+                    saveBingWallpaper(blob).catch(() => { });
+                }
+            }).catch(() => { });
+            return;
+        }
+        // 如果旧缓存但已过期，先用旧缓存占位
         if (cachedUrl) setBackground(cachedUrl);
+
+        // 获取今天的新 Bing 图片 URL
         try {
             const newUrl = await fetchAvailableBingUrl();
             localStorage.setItem(CACHE_KEY_URL, newUrl);
             localStorage.setItem(CACHE_KEY_DATE, today);
+            // 先临时用新 URL 显示
             if (currentSource === 'bing') setBackground(newUrl);
+            // 下载新图片为 blob 并存入 IDB
+            downloadAndCacheBingImage(newUrl).then(blob => {
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    setCurrentWallpaper(url, 'bing');
+                    saveBingWallpaper(blob).catch(() => { });
+                }
+            }).catch(() => { });
         } catch (err) {
-            if (!wallpaperLayer.style.backgroundImage) setBackground(BING_SERVICE_PRIMARY);
+            if (!wallpaperLayer.style.backgroundImage) {
+                setBackground(BING_SERVICE_PRIMARY);
+            }
+        }
+    }
+
+    // 辅助函数：下载网络图片为 Blob
+    async function downloadAndCacheBingImage(url) {
+        try {
+            const response = await fetch(url, { mode: 'cors' });
+            if (!response.ok) return null;
+            const blob = await response.blob();
+            return blob;
+        } catch (e) {
+            // 跨域或网络错误，返回 null
+            return null;
         }
     }
 
     async function setCustomWallpaper(file) {
-        // 1. 先在前端立即显示（临时 blob URL）
+        // 先立即显示
         const blobUrl = URL.createObjectURL(file);
-        setBackground(blobUrl);
+        setCurrentWallpaper(blobUrl, 'local');
 
-        // 2. 存入 IndexedDB（异步，但不必等它完成才显示）
+        // 保存到 IDB
         saveLocalWallpaper(file).catch(e => console.error(e));
 
-        // 3. 生成缩略图并存入 localStorage（关键步骤）
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_W = 320;          // 缩略图宽最多 320px，体积可控
-                const scale = MAX_W / img.width;
-                canvas.width = MAX_W;
-                canvas.height = Math.floor(img.height * scale);
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                try {
-                    const base64 = canvas.toDataURL('image/jpeg', 0.5);
-                    localStorage.setItem('__puretab_local_thumb', base64);
-                } catch (err) {
-                    // 图片太大放入 localStorage 失败（通常 >5MB），此时降级为无缓存
-                    console.warn('缩略图存入 localStorage 失败', err);
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        // 更新 last source
+        localStorage.setItem(LAST_SOURCE_KEY, 'local');
+        lastSource = 'local';
 
-        // 更新状态
-        currentSource = 'local';
-        updateInfoText();
         closeSettingsPanel();
     }
+
     async function resetToBingWallpaper() {
         await removeLocalWallpaper();
         if (currentLocalBlobUrl) { URL.revokeObjectURL(currentLocalBlobUrl); currentLocalBlobUrl = null; }
         localStorage.removeItem('__puretab_local_thumb');
-        localStorage.removeItem(CACHE_KEY_DATE);
-        localStorage.removeItem(CACHE_KEY_URL);
+        // 注意：这里不清除 Bing 缓存 URL，因为可以用来下载
+        localStorage.setItem(LAST_SOURCE_KEY, 'bing');
+        lastSource = 'bing';
         currentSource = 'bing';
-        updateInfoText();
         closeSettingsPanel();
+        // 重新加载壁纸（将触发 Bing 流程）
         loadWallpaper();
     }
 
