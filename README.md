@@ -3,6 +3,9 @@
 </p>
 
 <h1 align="center">PlainTab · 极简起始页</h1>
+<p align="center">
+  <a href="README_en.md">English</a> · <a href="README_ja.md">日本語</a> · <a href="README_ru.md">Русский</a> · <a href="README_ko.md">한국어</a>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.2.0-blue?style=flat-square" alt="版本">
