@@ -3,6 +3,12 @@
 </p>
 
 <h1 align="center">PlainTab · 极简起始页</h1>
+
+> **新标签页只该做好一件事：**  
+> 被打开 → 展示一张令你赏心悦目的壁纸 → 送你前往它该去的网页。  
+> 你真的需要看时间、问候语，或是满屏的快捷链接吗？  
+> **PlainTab 的答案：不是加法，而是减法，让你的新标签页回归「PLAIN」。**
+
 <p align="center">
   <a href="README_en.md">English</a> · <a href="README_ja.md">日本語</a> · <a href="README_ru.md">Русский</a> · <a href="README_ko.md">한국어</a>
 </p>

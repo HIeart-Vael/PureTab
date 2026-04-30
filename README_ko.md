@@ -3,6 +3,13 @@
 </p>
 
 <h1 align="center">PlainTab · 미니멀 스타트 페이지</h1>
+
+> **새 탭이 해야 할 일은 딱 하나:**  
+> 열린다 → 마음에 드는 배경화면을 보여준다 → 원하는 페이지로 보내준다.  
+> 정말로 시간, 인사말, 아니면 아이콘 가득한 바로가기들이 필요해?  
+> **PlainTab의 대답: 더하는 게 아니라 덜어내는 거야. 새 탭을 순수한 「PLAIN」으로 되돌리자.**
+
+
 <p align="center">
   <a href="README.md">简体中文</a> · <a href="README_en.md">English</a> · <a href="README_ja.md">日本語</a> · <a href="README_ru.md">Русский</a>
 </p>

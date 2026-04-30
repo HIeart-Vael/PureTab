@@ -3,6 +3,13 @@
 </p>
 
 <h1 align="center">PlainTab · ミニマルスタートページ</h1>
+
+> **新しいタブがやるべきことはただ一つ：**  
+> 開く → 気に入った壁紙を表示する → 必要なページへ送り出す。  
+> 本当に時間や挨拶、アイコンだらけのショートカットが必要か？  
+> **PlainTab の答え：足すではなく、引く。新しいタブを純粋な「PLAIN」に戻そう。**
+
+
 <p align="center">
   <a href="README.md">简体中文</a> · <a href="README_en.md">English</a> · <a href="README_ru.md">Русский</a> · <a href="README_ko.md">한국어</a>
 </p>
