@@ -3,6 +3,12 @@
 </p>
 
 <h1 align="center">PlainTab · Minimal Start Page</h1>
+
+> **A new tab should do only one thing:**  
+> Open → show you a wallpaper you enjoy → send you to the page you need.  
+> Do you really need the time, a greeting, or a screen full of shortcuts?  
+> **PlainTab’s answer: no additions, only subtractions. Let your new tab return to pure 「PLAIN」.**
+
 <p align="center">
   <a href="README.md">简体中文</a> · <a href="README_ja.md">日本語</a> · <a href="README_ru.md">Русский</a> · <a href="README_ko.md">한국어</a>
 </p>
