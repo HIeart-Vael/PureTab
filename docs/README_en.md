@@ -140,6 +140,16 @@ The three entrances are completely isolated. Give each one a different local wal
 
 ---
 
+## 🔧 New Tab Footer Bar
+
+After installing the extension, Chrome / Edge shows a footer at the bottom-right of the new tab page (displaying the extension name). This is browser behavior, not something PlainTab adds.
+
+**How to hide it (from [Chrome Help](https://support.google.com/chrome/answer/11032183?hl=en)):**
+
+Open a new tab → click the "Customize Chrome" ✏️ icon in the bottom-right corner → Footer → turn off "Show footer on New Tab page".
+
+---
+
 ## 🌐 Multilingual Support
 
 16 built-in languages, auto-detected from browser, manually selectable at any time:

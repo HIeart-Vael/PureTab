@@ -140,6 +140,16 @@ Trzy wejścia są całkowicie odizolowane. Daj każdej inną lokalną tapetę lu
 
 ---
 
+## 🔧 Pasek stopki nowej karty
+
+Po zainstalowaniu rozszerzenia Chrome / Edge wyświetla stopkę w prawym dolnym rogu strony nowej karty (pokazującą nazwę rozszerzenia). Jest to zachowanie przeglądarki, a nie coś, co dodaje PlainTab.
+
+**Jak go ukryć (z [Pomocy Chrome](https://support.google.com/chrome/answer/11032183?hl=pl)):**
+
+Otwórz nową kartę → kliknij ikonę "Dostosuj Chrome" ✏️ w prawym dolnym rogu → Stopka → wyłącz "Pokaż stopkę na stronie nowej karty".
+
+---
+
 ## 🌐 Wsparcie wielojęzyczne
 
 16 wbudowanych języków, automatycznie wykrywanych z przeglądarki, ręcznie wybieralnych w dowolnym momencie:

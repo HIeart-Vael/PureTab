@@ -140,6 +140,16 @@ Les trois entrées sont complètement isolées. Donnez à chacune un fond d'écr
 
 ---
 
+## 🔧 Barre de pied de page du nouvel onglet
+
+Après avoir installé l'extension, Chrome / Edge affiche un pied de page en bas à droite de la page du nouvel onglet (affichant le nom de l'extension). Il s'agit d'un comportement du navigateur, pas de quelque chose que PlainTab ajoute.
+
+**Comment le masquer (d'après l'[Aide Chrome](https://support.google.com/chrome/answer/11032183?hl=fr)):**
+
+Ouvrez un nouvel onglet → cliquez sur l'icône "Personnaliser Chrome" ✏️ en bas à droite → Pied de page → désactivez "Afficher le pied de page sur la page Nouvel onglet".
+
+---
+
 ## 🌐 Support multilingue
 
 16 langues intégrées, détectées automatiquement depuis le navigateur, sélectionnables manuellement à tout moment :

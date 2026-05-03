@@ -140,6 +140,16 @@ I tre ingressi sono completamente isolati. Dai a ciascuno uno sfondo locale dive
 
 ---
 
+## 🔧 Barra del piè di pagina del nuovo tab
+
+Dopo aver installato l'estensione, Chrome / Edge mostra un piè di pagina nell'angolo inferiore destro della pagina del nuovo tab (con il nome dell'estensione). Questo è un comportamento del browser, non qualcosa aggiunto da PlainTab.
+
+**Come nasconderlo (dalla [Guida di Chrome](https://support.google.com/chrome/answer/11032183?hl=it)):**
+
+Apri un nuovo tab → clicca sull'icona "Personalizza Chrome" ✏️ nell'angolo inferiore destro → Piè di pagina → disattiva "Mostra piè di pagina nella pagina Nuovo tab".
+
+---
+
 ## 🌐 Supporto multilingua
 
 16 lingue integrate, rilevate automaticamente dal browser, selezionabili manualmente in qualsiasi momento:

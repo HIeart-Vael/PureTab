@@ -140,6 +140,16 @@ Evet, dahası var. Tarayıcınızın görünüm ayarlarında "Ana sayfa düğmes
 
 ---
 
+## 🔧 Yeni Sekme Alt Bilgi Çubuğu
+
+Eklentiyi yükledikten sonra, Chrome / Edge yeni sekme sayfasının sağ alt köşesinde bir alt bilgi (eklenti adını gösteren) gösterir. Bu, tarayıcı davranışıdır, PlainTab'ın eklediği bir şey değildir.
+
+**Nasıl gizlenir ([Chrome Yardım](https://support.google.com/chrome/answer/11032183?hl=tr)'dan):**
+
+Yeni bir sekme açın → sağ alt köşedeki "Chrome'u Özelleştir" ✏️ simgesine tıklayın → Alt bilgi → "Yeni Sekme sayfasında alt bilgiyi göster" seçeneğini kapatın.
+
+---
+
 ## 🌐 Cok Dilli Destek
 
 16 yerleşik dil, tarayıcıdan otomatik olarak algılanır, istediğiniz zaman manuel olarak secilebilir:

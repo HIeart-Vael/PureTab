@@ -140,6 +140,16 @@ Die drei Zugänge sind vollständig isoliert. Gib jedem ein lokales Hintergrundb
 
 ---
 
+## 🔧 Fußzeile im neuen Tab
+
+Nach der Installation der Erweiterung zeigt Chrome / Edge eine Fußzeile in der unteren rechten Ecke der neuen Tab-Seite an (mit dem Namen der Erweiterung). Dies ist ein Browserverhalten und wird nicht von PlainTab hinzugefügt.
+
+**So wird sie ausgeblendet (laut [Chrome-Hilfe](https://support.google.com/chrome/answer/11032183?hl=de)):**
+
+Öffnen Sie einen neuen Tab → klicken Sie auf das Symbol "Chrome anpassen" ✏️ in der unteren rechten Ecke → Fußzeile → deaktivieren Sie "Fußzeile auf der Seite 'Neuer Tab' anzeigen".
+
+---
+
 ## 🌐 Mehrsprachige Unterstutzung
 
 16 integrierte Sprachen, automatisch vom Browser erkannt, jederzeit manuell auswahlbar:
