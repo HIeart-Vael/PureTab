@@ -1,8 +1,4 @@
 {
-    "extName": {
-        "message": "PlainTab · Nova aba minimalista"
-    },
-    "extDesc": {
-        "message": "Uma nova aba limpa, rápida e sem rastreamento."
-    }
+    "extName": { "message": "PlainTab · Nova aba minimalista" },
+    "extDesc": { "message": "Uma nova aba limpa, rápida e sem rastreamento." }
 }

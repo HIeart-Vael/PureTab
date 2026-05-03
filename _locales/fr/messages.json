@@ -1,8 +1,4 @@
 {
-    "extName": {
-        "message": "PlainTab · Nouvel onglet minimaliste"
-    },
-    "extDesc": {
-        "message": "Une page de nouvel onglet propre, rapide et respectueuse de la vie privée."
-    }
+    "extName": { "message": "PlainTab · Nouvel onglet minimaliste" },
+    "extDesc": { "message": "Une page de nouvel onglet propre, rapide et respectueuse de la vie privée." }
 }

@@ -1,8 +1,4 @@
 {
-    "extName": {
-        "message": "PlainTab · Nueva pestaña minimalista"
-    },
-    "extDesc": {
-        "message": "Una página de nueva pestaña limpia, rápida y sin seguimiento."
-    }
+    "extName": { "message": "PlainTab · Nueva pestaña minimalista" },
+    "extDesc": { "message": "Una página de nueva pestaña limpia, rápida y sin seguimiento." }
 }

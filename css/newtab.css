@@ -1,8 +1,14 @@
 :root {
-    --bg-fallback: #808080;
-    --icon-opacity-rest: 0.45;
-    --icon-opacity-hover: 1;
-    --transition-speed: 0.35s;
+    --fallback-start: #1a1a2e;
+    --fallback-mid: #16213e;
+    --fallback-end: #0f3460;
+    --icon-opacity: 0.45;
+    --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-bg: rgba(18, 18, 22, 0.82);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: rgba(255, 255, 255, 0.5);
 }
 
 * {
@@ -14,11 +20,12 @@
 body {
     width: 100vw;
     height: 100vh;
-    background-color: var(--bg-fallback);
-    cursor: default;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(180deg, var(--fallback-start) 0%, var(--fallback-mid) 50%, var(--fallback-end) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overflow: hidden;
 }
 
+/* ========== 双层壁纸系统 ========== */
 .wallpaper-layer {
     position: fixed;
     top: 0;
@@ -28,26 +35,37 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    transition: background-image 0.6s ease;
-    z-index: -1;
+    z-index: 0;
 }
 
+.wallpaper-layer-front {
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.wallpaper-layer-front.active {
+    opacity: 1;
+}
+
+/* ========== 搜索栏 ========== */
 .search-bar {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 560px;
-    max-width: 90vw;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: 28px;
-    padding: 8px 20px;
+    max-width: 88vw;
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 22px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     z-index: 50;
     opacity: 0;
@@ -67,19 +85,19 @@ body {
     outline: none;
     color: #fff;
     font-size: 18px;
-    padding: 14px 0;
+    padding: 12px 0;
     caret-color: rgba(255, 255, 255, 0.8);
 }
 
 .search-bar input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.45);
 }
 
 .search-engine-icon {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
-    opacity: 0.9;
+    opacity: 0.8;
     transition: opacity 0.2s, transform 0.2s;
     flex-shrink: 0;
     display: flex;
@@ -95,14 +113,12 @@ body {
 .search-engine-icon svg {
     width: 100%;
     height: 100%;
-    fill: white;
+    fill: #fff;
 }
 
-/* 右上角图标通用样式 */
-.lang-icon,
-.settings-icon {
+/* ========== 右上角按钮 ========== */
+.corner-btn {
     position: fixed;
-    top: 22px;
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -113,159 +129,95 @@ body {
     z-index: 100;
     background: rgba(28, 28, 30, 0.35);
     backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: opacity var(--transition-speed) ease, background var(--transition-speed) ease, transform var(--transition-speed) ease, border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, visibility 0s linear;
+    transition: opacity var(--transition), background var(--transition), transform var(--transition);
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     outline: none;
+    color: inherit;
 }
 
-/* 语言图标默认完全隐藏 */
-.lang-icon {
+.corner-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: rgba(255, 255, 255, 0.85);
+    pointer-events: none;
+}
+
+.lang-btn {
+    top: 22px;
     right: 76px;
     opacity: 0;
     visibility: hidden;
-    transition: opacity var(--transition-speed) ease, visibility 0s linear var(--transition-speed);
-    /* 延迟隐藏保持过渡 */
+    transition: opacity var(--transition), visibility 0s linear var(--transition), background var(--transition), transform var(--transition);
 }
 
-/* 语言图标在可见/悬停时显示 */
-.lang-icon.is-visible,
-.lang-icon:hover {
-    opacity: var(--icon-opacity-hover);
+.lang-btn.visible,
+.lang-btn:hover {
+    opacity: 1;
     visibility: visible;
-    transition: opacity var(--transition-speed) ease, visibility 0s linear 0s;
+    transition: opacity var(--transition), visibility 0s linear 0s, background var(--transition), transform var(--transition);
 }
 
-.settings-icon {
+.settings-btn {
+    top: 22px;
     right: 22px;
-    opacity: var(--icon-opacity-rest);
-    /* 齿轮始终保持基础透明度 */
+    opacity: var(--icon-opacity);
 }
 
-.settings-icon.is-visible,
-.settings-icon:hover {
-    opacity: var(--icon-opacity-hover);
+.settings-btn.visible,
+.settings-btn:hover {
+    opacity: 1;
     background: rgba(28, 28, 30, 0.6);
     border-color: rgba(255, 255, 255, 0.22);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
-.settings-icon:hover {
+.settings-btn:hover {
     transform: rotate(30deg);
 }
 
-.lang-icon:hover {
-    transform: scale(1.05);
-}
-
-.lang-icon:active {
-    transform: scale(0.92);
-    transition: transform 0.12s ease;
-}
-
-.settings-icon:active {
-    transform: rotate(30deg) scale(0.92);
-    transition: transform 0.12s ease;
-}
-
-.settings-icon.is-panel-open {
-    opacity: var(--icon-opacity-hover);
+.settings-btn.panel-open {
+    opacity: 1;
     background: rgba(28, 28, 30, 0.65);
     border-color: rgba(255, 255, 255, 0.28);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     transform: rotate(60deg);
 }
 
-.lang-icon svg,
-.settings-icon svg {
-    width: 18px;
-    height: 18px;
-    fill: rgba(255, 255, 255, 0.88);
-    pointer-events: none;
-    transition: fill var(--transition-speed) ease;
+.lang-btn:hover {
+    transform: scale(1.05);
 }
 
-/* 语言选择面板 */
-.language-panel {
-    position: fixed;
-    top: 78px;
-    right: 76px;
-    /* 对齐语言图标 */
-    background: rgba(18, 18, 20, 0.85);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border-radius: 16px;
-    padding: 14px 0;
-    min-width: 160px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px) scale(0.94);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 99;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    user-select: none;
+.lang-btn:active {
+    transform: scale(0.92);
+    transition: transform 0.12s ease;
 }
 
-.language-panel.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
+.settings-btn:active {
+    transform: rotate(30deg) scale(0.92);
+    transition: transform 0.12s ease;
 }
 
-.language-panel .lang-title {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 11px;
-    text-align: center;
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-    padding: 0 16px;
-}
-
-.language-panel .lang-option {
-    display: block;
-    width: 100%;
-    padding: 10px 20px;
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 13px;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: inherit;
-    outline: none;
-}
-
-.language-panel .lang-option:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.language-panel .lang-option.current {
-    color: #fff;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-/* 设置面板样式（保持不变） */
+/* ========== 设置面板 ========== */
 .settings-panel {
     position: fixed;
     top: 78px;
     right: 22px;
-    background: rgba(18, 18, 20, 0.85);
+    background: var(--glass-bg);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border-radius: 16px;
     padding: 22px 20px 18px;
     min-width: 270px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--glass-shadow);
+    border: var(--glass-border);
+    z-index: 99;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px) scale(0.94);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 99;
-    border: 1px solid rgba(255, 255, 255, 0.12);
     user-select: none;
 }
 
@@ -276,127 +228,122 @@ body {
 }
 
 .settings-panel h3 {
-    color: rgba(255, 255, 255, 0.92);
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 600;
-    margin-bottom: 18px;
-    letter-spacing: 0.5px;
-    text-align: center;
-}
-
-.settings-panel .wallpaper-info {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 11px;
     text-align: center;
     margin-bottom: 16px;
-    letter-spacing: 0.3px;
-    min-height: 18px;
+    letter-spacing: 0.5px;
 }
 
-.upload-btn,
-.reset-btn {
+.wp-info {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-align: center;
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+}
+
+.panel-btn {
     display: block;
     width: 100%;
-    padding: 12px 16px;
+    padding: 11px 16px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 13px;
     text-align: center;
-    transition: all 0.2s ease;
     font-family: inherit;
     letter-spacing: 0.3px;
-    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
     outline: none;
-    border-radius: 10px;
-}
-
-.upload-btn {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.9);
+    -webkit-tap-highlight-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.upload-btn:hover {
+.panel-btn.primary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.panel-btn.primary:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.18);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
-.reset-btn {
+.panel-btn:not(.primary):not(.adv-toggle) {
     background: transparent;
-    color: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    margin-top: 8px;
+    color: var(--text-secondary);
     font-size: 11px;
+    margin-top: 8px;
 }
 
-.reset-btn:hover {
+.panel-btn:not(.primary):not(.adv-toggle):hover {
     background: rgba(255, 255, 255, 0.05);
     color: rgba(255, 255, 255, 0.75);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-.advanced-toggle-row {
+.adv-row {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-top: 10px;
 }
 
-.advanced-toggle {
+.adv-toggle {
     flex: 1;
-    display: block;
-    padding: 12px 16px;
-    cursor: pointer;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.4);
     font-size: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    cursor: pointer;
     text-align: center;
-    transition: all 0.2s ease;
     font-family: inherit;
     letter-spacing: 0.3px;
-    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
     outline: none;
-    border-radius: 10px;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.45);
+    -webkit-tap-highlight-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.advanced-toggle:hover {
+.adv-toggle:hover {
     background: rgba(255, 255, 255, 0.05);
     color: rgba(255, 255, 255, 0.8);
 }
 
-.github-icon-link {
+.gh-link {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 42px;
     height: 42px;
     border-radius: 10px;
-    background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    color: inherit;
     text-decoration: none;
 }
 
-.github-icon-link:hover {
+.gh-link:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-.github-icon-link svg {
+.gh-link svg {
     width: 20px;
     height: 20px;
     fill: rgba(255, 255, 255, 0.5);
     transition: fill 0.2s ease;
 }
 
-.github-icon-link:hover svg {
+.gh-link:hover svg {
     fill: rgba(255, 255, 255, 0.9);
 }
 
-.advanced-section {
+.adv-section {
     margin-top: 14px;
     display: none;
     flex-direction: column;
@@ -405,11 +352,9 @@ body {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
 }
 
-.advanced-section.show {
+.adv-section.show {
     display: flex;
 }
 
@@ -419,7 +364,6 @@ body {
     justify-content: space-between;
     color: rgba(255, 255, 255, 0.8);
     font-size: 12px;
-    padding: 4px 0;
 }
 
 .setting-row label {
@@ -433,7 +377,7 @@ body {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
-    color: white;
+    color: #fff;
     padding: 6px 10px;
     font-size: 12px;
     outline: none;
@@ -448,7 +392,13 @@ body {
 
 .setting-row select option {
     background: #222;
-    color: white;
+    color: #fff;
+}
+
+.opacity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .setting-row input[type="range"] {
@@ -465,7 +415,7 @@ body {
     -webkit-appearance: none;
     width: 16px;
     height: 16px;
-    background: white;
+    background: #fff;
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
@@ -490,15 +440,77 @@ input[type="file"] {
     display: none;
 }
 
+/* ========== 语言面板 ========== */
+.language-panel {
+    position: fixed;
+    top: 78px;
+    right: 76px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: 16px;
+    padding: 14px 0;
+    min-width: 160px;
+    box-shadow: var(--glass-shadow);
+    border: var(--glass-border);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.94);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.language-panel.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.lang-title {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+    padding: 0 16px;
+}
+
+.lang-option {
+    display: block;
+    width: 100%;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+    outline: none;
+}
+
+.lang-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.lang-option.current {
+    color: #fff;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ========== 响应式 ========== */
 @media (max-width: 480px) {
-    .lang-icon {
-        right: 64px;
+    .lang-btn {
         top: 16px;
+        right: 64px;
         width: 40px;
         height: 40px;
     }
 
-    .settings-icon {
+    .settings-btn {
         top: 16px;
         right: 16px;
         width: 40px;

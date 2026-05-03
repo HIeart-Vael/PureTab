@@ -1,317 +1,209 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>404 · 页面走失 | PlainTab</title>
+    <title>404 · Page not found | PlainTab</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg1: #1a1a2e;
+            --bg2: #16213e;
+            --bg3: #0f3460;
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #1e1e2f 0%, #0f0f1a 100%);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            position: relative;
-            cursor: default;
+            user-select: none;
         }
 
-        /* 动态漂浮的几何装饰 */
-        .floating-shape {
+        .bg-orb {
             position: absolute;
-            background: rgba(255, 255, 255, 0.03);
             border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
             pointer-events: none;
-            animation: float 20s infinite ease-in-out;
-            z-index: 0;
         }
 
-        @keyframes float {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-30px) rotate(10deg);
-            }
-
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-        }
-
-        /* 主卡片 */
-        .glass-card {
+        .card {
             position: relative;
             z-index: 10;
-            max-width: 520px;
-            width: 85vw;
-            background: rgba(22, 22, 28, 0.65);
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
-            border-radius: 48px;
-            padding: 2rem 2rem 2.5rem;
+            max-width: 480px;
+            width: 88vw;
+            background: rgba(22, 22, 30, 0.7);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 32px;
+            padding: 2.5rem 2rem 2.2rem;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
         }
 
-        .glass-card:hover {
-            transform: scale(1.01);
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* 插画区域 */
-        .illustration {
-            margin-bottom: 1.5rem;
-            position: relative;
-            display: flex;
-            justify-content: center;
-        }
-
-        .lost-doodle {
-            width: 140px;
-            height: 140px;
-            animation: wobble 2s infinite ease-in-out;
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
-        }
-
-        @keyframes wobble {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-8px);
-            }
-        }
-
-        /* 数字 404 艺术字 */
-        .error-code {
-            font-size: 5rem;
+        .code {
+            font-size: 5.5rem;
             font-weight: 800;
-            background: linear-gradient(125deg, #FFFFFF 20%, #A0A0C0 80%);
-            background-clip: text;
+            background: linear-gradient(135deg, #fff 20%, rgba(255,255,255,0.55) 80%);
             -webkit-background-clip: text;
+            background-clip: text;
             color: transparent;
-            letter-spacing: 0.08em;
-            margin-bottom: 0.25rem;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.06em;
+            line-height: 1;
+            margin-bottom: 0.4rem;
         }
 
-        .message {
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 1.2rem;
-            font-weight: 500;
+        .title {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 1.15rem;
+            font-weight: 600;
             margin-bottom: 0.5rem;
         }
 
-        .submessage {
-            color: rgba(255, 255, 255, 0.55);
-            font-size: 0.9rem;
-            margin-bottom: 1.8rem;
-            line-height: 1.4;
+        .desc {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.88rem;
+            margin-bottom: 2rem;
+            line-height: 1.55;
         }
 
-        /* 按钮 */
-        .home-btn {
+        .btn {
             display: inline-flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             background: rgba(255, 255, 255, 0.08);
             padding: 12px 28px;
             border-radius: 60px;
             border: 1px solid rgba(255, 255, 255, 0.15);
-            color: white;
-            font-size: 1rem;
+            color: #fff;
+            font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
             text-decoration: none;
-            backdrop-filter: blur(4px);
-            margin-top: 0.5rem;
+            transition: all 0.22s ease;
+            font-family: inherit;
         }
-
-        .home-btn:hover {
-            background: rgba(255, 255, 255, 0.18);
-            border-color: rgba(255, 255, 255, 0.35);
-            transform: scale(0.98);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.32);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
         }
+        .btn svg { width: 18px; height: 18px; fill: #fff; }
 
-        .home-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: white;
+        .timer {
+            margin-top: 1.4rem;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.32);
         }
+        .timer span { color: rgba(255, 255, 255, 0.6); font-weight: 600; }
 
-        /* 趣味小彩蛋：可点击的提示 */
-        .easter-egg {
-            margin-top: 2rem;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.28);
-            cursor: pointer;
-            transition: color 0.2s;
-            user-select: none;
-        }
-
-        .easter-egg:hover {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        /* 移动端适配 */
-        @media (max-width: 550px) {
-            .glass-card {
-                padding: 1.5rem 1.2rem 1.8rem;
-            }
-
-            .error-code {
-                font-size: 3.8rem;
-            }
-
-            .lost-doodle {
-                width: 100px;
-                height: 100px;
-            }
-
-            .message {
-                font-size: 1rem;
-            }
+        @media (max-width: 480px) {
+            .card { padding: 1.8rem 1.2rem 1.6rem; }
+            .code { font-size: 4rem; }
         }
     </style>
 </head>
-
 <body>
 
-    <!-- 装饰漂浮物 -->
-    <div class="floating-shape" style="width: 180px; height: 180px; top: -50px; left: -60px; animation-duration: 25s;">
-    </div>
-    <div class="floating-shape"
-        style="width: 250px; height: 250px; bottom: -80px; right: -70px; animation-duration: 28s; animation-delay: 2s;">
-    </div>
-    <div class="floating-shape" style="width: 90px; height: 90px; top: 30%; right: 5%; animation-duration: 18s;"></div>
-    <div class="floating-shape"
-        style="width: 120px; height: 120px; bottom: 15%; left: 5%; animation-duration: 22s; animation-delay: 1s;"></div>
+    <!-- 背景光晕 -->
+    <div class="bg-orb" style="width:260px;height:260px;top:-80px;left:-80px;"></div>
+    <div class="bg-orb" style="width:320px;height:320px;bottom:-100px;right:-100px;"></div>
+    <div class="bg-orb" style="width:140px;height:140px;top:30%;right:8%;"></div>
 
-    <main class="glass-card">
-        <div class="illustration">
-            <!-- 自制有趣 SVG：一只举着地图但迷路的小幽灵 / 简单线条风格 -->
-            <svg class="lost-doodle" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="60" cy="55" r="38" fill="rgba(255,255,240,0.12)" stroke="rgba(255,255,255,0.5)"
-                    stroke-width="1.5" />
-                <!-- 两只大眼睛 -->
-                <circle cx="46" cy="50" r="5" fill="white" stroke="none" />
-                <circle cx="74" cy="50" r="5" fill="white" stroke="none" />
-                <circle cx="47" cy="51" r="2.2" fill="#1e1e2f" />
-                <circle cx="75" cy="51" r="2.2" fill="#1e1e2f" />
-                <!-- 惊讶眉毛 -->
-                <path d="M41 44 Q46 40 52 44" stroke="rgba(255,255,255,0.7)" stroke-width="1.8" fill="none"
-                    stroke-linecap="round" />
-                <path d="M68 44 Q74 40 79 44" stroke="rgba(255,255,255,0.7)" stroke-width="1.8" fill="none"
-                    stroke-linecap="round" />
-                <!-- 疑惑的嘴巴 -->
-                <path d="M53 66 Q60 72 67 66" stroke="rgba(255,255,255,0.6)" stroke-width="2" fill="none"
-                    stroke-linecap="round" />
-                <!-- 手里的地图卷轴 -->
-                <rect x="85" y="60" width="20" height="26" rx="3" fill="rgba(210,180,140,0.5)" stroke="#D2B48C"
-                    stroke-width="1.2" />
-                <line x1="88" y1="70" x2="102" y2="70" stroke="#D2B48C" stroke-width="1" opacity="0.7" />
-                <line x1="88" y1="76" x2="100" y2="76" stroke="#D2B48C" stroke-width="1" opacity="0.7" />
-                <!-- 问号漂浮 -->
-                <text x="22" y="38" font-size="18" fill="rgba(255,255,255,0.5)" font-weight="bold">?</text>
-                <text x="92" y="42" font-size="16" fill="rgba(255,255,255,0.5)" font-weight="bold">?</text>
-            </svg>
+    <main class="card">
+        <div class="code">404</div>
+        <div class="title">This page has drifted away</div>
+        <div class="desc">
+            It may have gone to a simpler world…<br>
+            Or maybe the address was mistyped?
         </div>
 
-        <div class="error-code">404</div>
-        <div class="message">噢，页面偷偷溜走了</div>
-        <div class="submessage">
-            它可能去了一个更简洁的世界… <br>
-            或者你打错了地址？
-        </div>
-
-        <a href="/" class="home-btn" id="homeLink">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-                <path d="M12 3L3 9L5 10.6667L5 19H9V13H15V19H19V10.6667L21 9L12 3Z" fill="currentColor" />
-            </svg>
-            回到 PlainTab 首页
+        <a href="/" class="btn" id="homeBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 3L3 9l2 1.67V19h6v-6h2v6h6v-8.33L21 9l-9-6z"/></svg>
+            Back to PlainTab
         </a>
 
-        <div class="easter-egg" id="easterEgg">
-            🔍 点击这里，试试魔法 ✨
-        </div>
+        <div class="timer">Auto-redirect in <span id="countdown">5</span>s</div>
     </main>
 
     <script>
-        // 简单趣味彩蛋：改变卡片颜色 / 显示提示
-        const eggBtn = document.getElementById('easterEgg');
-        let clickCount = 0;
+    (function () {
+        // --- 稳健的基础路径检测 ---
+        // 优先级：1) <base> 标签  2) 脚本路径推断  3) '/'
+        var basePath = '/';
 
-        eggBtn.addEventListener('click', (e) => {
-            clickCount++;
-            const glass = document.querySelector('.glass-card');
-            if (clickCount === 1) {
-                const msg = document.querySelector('.submessage');
-                msg.innerHTML = '✨ 咻～ 其实页面没丢，它在跟你捉迷藏 ✨<br>试试点击 Logo 或者刷新？';
-                eggBtn.textContent = '🎉 再点一下，召唤壁纸彩蛋 🎉';
-                glass.style.transition = 'all 0.3s';
-                glass.style.borderColor = 'rgba(255,215,0,0.5)';
-            } else if (clickCount === 2) {
-                // 动态添加一个临时壁纸效果 (模仿 PureTab 壁纸)
-                const bodyBg = document.body;
-                bodyBg.style.background = 'radial-gradient(circle at 30% 20%, #2a2a3a, #0a0a12)';
-                const sub = document.querySelector('.submessage');
-                sub.innerHTML = '🌄 Bing 今日壁纸被召唤！但 404 页面依然倔强～ 🌄<br>要不你<strong>点一下上方按钮</strong>回家？';
-                eggBtn.textContent = '🪄 好啦好啦，不玩了，回归极简 🪄';
-            } else if (clickCount >= 3) {
-                // 复位
-                document.body.style.background = '';
-                glass.style.borderColor = '';
-                eggBtn.textContent = '🔍 点击这里，试试魔法 ✨';
-                const submsg = document.querySelector('.submessage');
-                submsg.innerHTML = '它可能去了一个更简洁的世界… <br>或者你打错了地址？';
-                clickCount = 0;
-            }
-        });
-
-        // 修正相对路径：如果是 GitHub Pages 子路径下，确保首页链接有效
-        // 由于 404 页面可能在任何路径被访问，我们动态识别根目录
-        const homeLink = document.getElementById('homeLink');
-        // 获取当前 origin + 可能的 base path (如果部署在子目录如 /PlainTab/)
-        // 简单稳健做法：尝试推断项目根路径（如果当前URL包含 '/PlainTab/' 则保留）
-        let basePath = '/';
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('/PlainTab/')) {
-            basePath = '/PlainTab/';
-        } else if (currentPath.includes('/plaintab/')) {
-            basePath = '/plaintab/';
+        // 方法 1：检查页面中是否有 <base> 标签
+        var baseEl = document.querySelector('base');
+        if (baseEl && baseEl.href) {
+            try { basePath = new URL(baseEl.href).pathname; } catch (e) {}
         }
-        // 也可以从 <base> 或环境变量来，但为了通用，检查是否在子目录
-        // 确保链接指向正确的 index.html
-        homeLink.href = basePath;
 
-        // 额外：如果用户需要，支持键盘 esc 娱乐
-        document.addEventListener('keydown', (e) => {
+        // 方法 2：从当前脚本的 src 或 404.html 的位置推断
+        // 404.html 被访问时的 URL 就是实际路径：如 /PlainTab/404.html 或 /something/nonexistent
+        // 我们取当前路径，去掉最后一段不存在的部分
+        if (basePath === '/') {
+            var scripts = document.getElementsByTagName('script');
+            var selfScript = scripts[scripts.length - 1];
+            // 无法通过脚本路径推断（inline script），回退到 URL 分析
+            var path = window.location.pathname;
+            // 如果路径中包含 404.html，取其所在目录
+            if (path.indexOf('404.html') !== -1) {
+                basePath = path.substring(0, path.lastIndexOf('/') + 1);
+            } else {
+                // 对于 Netlify：404.html 被 serve 在原始请求的路径上
+                // 例如访问 /foo/bar 返回的是 404.html，但 pathname 仍是 /foo/bar
+                // 这种情况下，真正的首页在根 '/'
+                // 我们保持 basePath = '/' 即可
+            }
+        }
+
+        // 确保以 / 结尾
+        if (basePath.charAt(basePath.length - 1) !== '/') basePath += '/';
+
+        var homeUrl = basePath;
+        var homeBtn = document.getElementById('homeBtn');
+        var countdownEl = document.getElementById('countdown');
+        homeBtn.href = homeUrl;
+
+        // --- 自动倒计时跳转 ---
+        var seconds = 5;
+        var timer = setInterval(function () {
+            seconds--;
+            countdownEl.textContent = seconds + 's';
+            if (seconds <= 0) {
+                clearInterval(timer);
+                window.location.href = homeUrl;
+            }
+        }, 1000);
+
+        // --- 点击按钮立即跳转（不等待倒计时） ---
+        homeBtn.addEventListener('click', function (e) {
+            clearInterval(timer);
+            // 允许默认行为（a 标签跳转）
+        });
+
+        // --- Esc 重置倒计时 ---
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
-                const glass = document.querySelector('.glass-card');
-                glass.style.transform = 'scale(0.99)';
-                setTimeout(() => { glass.style.transform = ''; }, 200);
+                clearInterval(timer);
+                seconds = 6; // 重置为 6（下一个 tick 变成 5）
+                countdownEl.textContent = '5s';
+                timer = setInterval(function () {
+                    seconds--;
+                    countdownEl.textContent = seconds + 's';
+                    if (seconds <= 0) {
+                        clearInterval(timer);
+                        window.location.href = homeUrl;
+                    }
+                }, 1000);
             }
         });
+    })();
     </script>
 </body>
-
 </html>
