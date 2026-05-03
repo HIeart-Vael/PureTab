@@ -2,6 +2,7 @@
     --fallback-start: #1a1a2e;
     --fallback-mid: #16213e;
     --fallback-end: #0f3460;
+    color-scheme: dark light;
     --icon-opacity: 0.45;
     --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     --glass-bg: rgba(18, 18, 22, 0.82);
@@ -18,7 +19,13 @@
 }
 
 html {
-    background-color: #808080;
+    background-color: #2a2a2e;
+}
+
+@media (prefers-color-scheme: light) {
+    html {
+        background-color: #d4d3d8;
+    }
 }
 
 body {
