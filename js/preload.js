@@ -1,11 +1,20 @@
+// preload.js — 在浏览器首帧绘制前，将缩略图写入 back 层
 (function () {
-    const layer = document.getElementById('wallpaperLayer');
-    if (!layer) return;
+    var back = document.getElementById('wallpaperBack');
+    if (!back) return;
 
-    // 仅使用 localStorage 中的统一缩略图（base64）
-    const thumb = localStorage.getItem('__puretab_local_thumb');
-    if (thumb) {
-        layer.style.backgroundImage = `url(${thumb})`;
+    var thumb = localStorage.getItem('__pt3_thumb');
+
+    if (thumb && typeof thumb === 'string' && thumb.indexOf('data:image') === 0) {
+        var style = document.createElement('style');
+        style.id = '__pt3_wp';
+        var escaped = thumb.replace(/['"\\]/g, function (c) {
+            if (c === "'") return "\\'";
+            if (c === '"') return '\\"';
+            if (c === '\\') return '\\\\';
+            return c;
+        });
+        style.textContent = '#wallpaperBack{background-image:url(\'' + escaped + '\')}';
+        document.head.appendChild(style);
     }
-    // 如果没有缩略图，什么都不设置，保留 body 的灰色背景
 })();

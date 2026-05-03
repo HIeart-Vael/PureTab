@@ -1,8 +1,4 @@
 {
-    "extName": {
-        "message": "PlainTab · ミニマル新しいタブ"
-    },
-    "extDesc": {
-        "message": "シンプルで高速、プライバシー重視の新しいタブページ。"
-    }
+    "extName": { "message": "PlainTab · ミニマル新しいタブ" },
+    "extDesc": { "message": "シンプルで高速、プライバシー重視の新しいタブページ。" }
 }
