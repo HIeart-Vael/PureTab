@@ -17,6 +17,10 @@
     box-sizing: border-box;
 }
 
+html {
+    background-color: #808080;
+}
+
 body {
     width: 100vw;
     height: 100vh;
