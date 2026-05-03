@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="Logotipo PlainTab" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Página Inicial Minimalista</h1>
+<h1 align="center">PlainTab V3 · Página Inicial Minimalista</h1>
 
 > **Uma nova aba deve fazer apenas uma coisa:**
 > Abrir → mostrar um papel de parede que você aprecia → enviá-lo para a página que precisa.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>Uma página inicial limpa, rápida e não intrusiva para novas abas.</strong><br>
-  Disponível em <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · papel de parede de camada dupla · zero cintilação · sem limite de tamanho de arquivo<br>
+  Disponível em <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zero cintilação · sem limite de tamanho de arquivo<br>
   Papel de parede diário do Bing · Imagens locais · 16 idiomas · Barra de pesquisa flexível · <strong>Privacidade em primeiro lugar</strong>
 </p>
 
@@ -88,6 +88,29 @@ Consulte [CHANGELOG.md](./CHANGELOG.md) para detalhes técnicos completos.
 
 ---
 
+## 💡 Escolha do desenvolvedor: três papéis de parede, três entradas
+
+Você instalou a extensão — sua nova aba já está ótima. Mas aqui está algo que você talvez não saiba: o PlainTab também está implantado em mais dois lugares:
+
+| Entrada | Configuração | URL |
+|---------|-------------|------|
+| 🧩 **Nova aba** | Extensão do navegador | Carregar esta extensão |
+| 🌐 **Página inicial** | Inicialização do navegador | `plaintab.netlify.app` |
+| 🏠 **Homepage** | Botão inicial | `kaininx.github.io/PlainTab` |
+
+Defina `plaintab.netlify.app` como a página inicial do seu navegador, deixe-a seguir a atualização diária do Bing. Cada vez que você iniciar o navegador, esse será seu **segundo papel de parede**.
+
+Sim, tem mais. Encontre o "Botão inicial" nas configurações de aparência do seu navegador, coloque `kaininx.github.io/PlainTab`, escolha outro papel de parede que você goste. Agora você tem um **terceiro papel de parede**.
+
+As três entradas são completamente isoladas. Dê a cada uma um papel de parede local diferente, ou deixe cada uma seguir a atualização diária do Bing. Abra o navegador: um papel de parede. Clique no botão inicial: outro. Abra uma nova aba: um terceiro. Rotação garantida.
+
+**Configuração:**
+1. Instale a extensão → Nova aba ✓
+2. Configurações do navegador → Ao iniciar → Abrir uma página específica → `https://plaintab.netlify.app`
+3. Configurações do navegador → Aparência → Mostrar botão inicial → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Uso
 
 | Ação | Efeito |
@@ -110,6 +133,8 @@ Consulte [CHANGELOG.md](./CHANGELOG.md) para detalhes técnicos completos.
 | Modo da barra de pesquisa | Flutuante / Sempre / Oculta |
 | Opacidade do ícone | 0 – 1 (padrão 0.45) |
 | Mecanismo de pesquisa | Google / Bing / Baidu / DuckDuckGo |
+
+> **Extensão Chrome vs. Versão Web — Diferença de pesquisa:** Para cumprir a política de "Propósito Único" da Chrome Web Store, a extensão usa a Chrome Search API, que respeita o mecanismo de pesquisa padrão definido nas configurações do navegador do usuário. O recurso de alternância de mecanismo não está disponível no modo de extensão. A versão web (Netlify / GitHub Pages) não está sujeita a esta restrição e mantém o seletor completo de mecanismo de pesquisa. Além da implementação de pesquisa, ambas as versões são funcionalmente idênticas.
 
 > Todas as configurações salvas no `localStorage`. Sem conta, sem sincronização na nuvem.
 

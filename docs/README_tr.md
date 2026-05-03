@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="PlainTab Logosu" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Minimal Baslangıc Sayfası</h1>
+<h1 align="center">PlainTab V3 · Minimal Baslangıc Sayfası</h1>
 
 > **Yeni bir sekme sadece tek bir şey yapmalı:**
 > Açılmalı → hosunuza giden bir duvar kagıdı gostermeli → ihtiyacınız olan sayfaya gondermeli.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>Temiz, hızlı ve mudehil olmayan bir baslangıc sayfası ve yeni sekme cozumu.</strong><br>
-  Şu adreste canlı: <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · cift katmanlı duvar kagıdı · sıfır titreme · dosya boyutu sınırı yok<br>
+  Şu adreste canlı: <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · sıfır titreme · dosya boyutu sınırı yok<br>
   Bing Gunluk Duvar Kagıdı · Yerel Gorseller · 16 Dil · Esnek Arama Cubugu · <strong>Gizlilik Once</strong>
 </p>
 
@@ -88,6 +88,29 @@ Tam teknik detaylar icin [CHANGELOG.md](./CHANGELOG.md) dosyasına bakın.
 
 ---
 
+## 💡 Geliştirici Tavsiyesi: Üç Duvar Kağıdı, Üç Giriş
+
+Eklentiyi kurdunuz — yeni sekmeniz zaten harika görünüyor. Ama işte bilmeyebileceğiniz bir şey: PlainTab iki yerde daha yayında:
+
+| Giriş | Ayar | URL |
+|------|--------|----------|
+| 🧩 **Yeni Sekme** | Tarayıcı eklentisi | Bu eklentiyi yükle |
+| 🌐 **Başlangıç Sayfası** | Tarayıcı başlatma | `plaintab.netlify.app` |
+| 🏠 **Ana Sayfa** | Ana sayfa düğmesi | `kaininx.github.io/PlainTab` |
+
+`plaintab.netlify.app` adresini tarayıcınızın başlangıç sayfası olarak ayarlayın, Bing'in günlük güncellemesini takip etmesine izin verin. Tarayıcıyı her başlattığınızda, bu sizin **ikinci duvar kağıdınızdır**.
+
+Evet, dahası var. Tarayıcınızın görünüm ayarlarında "Ana sayfa düğmesi"ni bulun, `kaininx.github.io/PlainTab` yazın, beğendiğiniz başka bir duvar kağıdı seçin. Artık **üçüncü bir duvar kağıdınız** var.
+
+Üç giriş tamamen birbirinden izoledir. Her birine farklı bir yerel duvar kağıdı verin veya her birinin Bing'in günlük yenilemesini takip etmesine izin verin. Tarayıcıyı başlatın: bir duvar kağıdı. Ana sayfa düğmesine tıklayın: başka bir. Yeni sekme açın: üçüncü bir. Dönüşüm garantili.
+
+**Kurulum:**
+1. Eklentiyi kurun → Yeni Sekme ✓
+2. Tarayıcı ayarları → Başlangıçta → Belirli bir sayfayı aç → `https://plaintab.netlify.app`
+3. Tarayıcı ayarları → Görünüm → Ana sayfa düğmesini göster → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Kullanım
 
 | Eylem | Etki |
@@ -111,7 +134,9 @@ Tam teknik detaylar icin [CHANGELOG.md](./CHANGELOG.md) dosyasına bakın.
 | Simge opaklığı | 0 – 1 (varsayılan 0.45) |
 | Arama motoru | Google / Bing / Baidu / DuckDuckGo |
 
-> Tüm ayarlar `localStorage`'da kaydedilir. Hesap yok, bulut senkronizasyonu yok.
+> **Chrome Eklentisi vs. Web Sürümü — Arama Farkı:** Chrome Web Store'un "Tek Amaç" politikasına uymak için, eklenti, kullanıcının tarayıcı ayarlarında belirlediği varsayılan arama motoruna saygı duyan Chrome Search API'sini kullanır. Eklenti modunda motor değiştirme özelliği mevcut değildir. Web sürümü (Netlify / GitHub Pages) bu kısıtlamaya tabi değildir ve tam arama motoru seçicisini korur. Arama uygulaması dışında, her iki sürüm de işlevsel olarak aynıdır.
+
+> Tüm ayarlar `localStorage`'da kaydedilir. Hesap yok, bulut senkronizasyonu yok.
 
 ---
 

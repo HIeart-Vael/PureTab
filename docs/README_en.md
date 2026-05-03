@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="PlainTab Logo" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Minimal Start Page</h1>
+<h1 align="center">PlainTab V3 · Minimal Start Page</h1>
 
 > **A new tab should do only one thing:**
 > Open → show you a wallpaper you enjoy → send you to the page you need.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>A clean, fast, and non-intrusive start page and new tab solution.</strong><br>
-  Live at <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · dual-layer wallpaper · zero flicker · no file size limit<br>
+  Live at <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zero flicker · no file size limit<br>
   Bing Daily Wallpaper · Local Images · 16 Languages · Flexible Search Bar · <strong>Privacy-First</strong>
 </p>
 
@@ -88,6 +88,29 @@ See [CHANGELOG.md](./CHANGELOG.md) for full technical details.
 
 ---
 
+## 💡 Developer's Pick: Three Wallpapers, Three Entrances
+
+You've installed the extension — your new tab already looks great. But here's something you might not know: PlainTab is also deployed in two more places:
+
+| Entrance | Setting | URL |
+|------|--------|----------|
+| 🧩 **New Tab** | Browser extension | Load this extension |
+| 🌐 **Start Page** | Browser launch | `plaintab.netlify.app` |
+| 🏠 **Homepage** | Home button | `kaininx.github.io/PlainTab` |
+
+Set `plaintab.netlify.app` as your browser's start page, let it follow Bing's daily update — every time you launch the browser, that's your **second wallpaper**.
+
+Yes, there's more. Find the "Home button" in your browser's appearance settings, put in `kaininx.github.io/PlainTab`, pick another wallpaper you like — now you've got a **third wallpaper**.
+
+The three entrances are completely isolated. Give each one a different local wallpaper, or let them each follow Bing's daily refresh. Launch the browser: one wallpaper. Click the home button: another. Open a new tab: a third one — rotation guaranteed.
+
+**Setup:**
+1. Install the extension → New Tab ✓
+2. Browser settings → On startup → Open a specific page → `https://plaintab.netlify.app`
+3. Browser settings → Appearance → Show home button → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Usage
 
 | Action | Effect |
@@ -110,6 +133,8 @@ See [CHANGELOG.md](./CHANGELOG.md) for full technical details.
 | Search bar mode | Hover / Always / Hidden |
 | Icon opacity | 0 – 1 (default 0.45) |
 | Search engine | Google / Bing / Baidu / DuckDuckGo |
+
+> **Chrome Extension vs. Web Version — Search Difference:** To comply with the Chrome Web Store's "Single Purpose" policy, the extension uses the Chrome Search API, which respects the default search engine set in the user's browser settings. The engine switching feature is not available in extension mode. The web version (Netlify / GitHub Pages) is not subject to this restriction and retains the full search engine selector. Other than the search implementation, both versions are functionally identical.
 
 > All settings saved in `localStorage`. No account, no cloud sync.
 
