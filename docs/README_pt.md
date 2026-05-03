@@ -140,6 +140,16 @@ As três entradas são completamente isoladas. Dê a cada uma um papel de parede
 
 ---
 
+## 🔧 Barra de rodapé da nova guia
+
+Após instalar a extensão, o Chrome / Edge mostra um rodapé no canto inferior direito da página de nova guia (exibindo o nome da extensão). Isso é um comportamento do navegador, não algo que o PlainTab adiciona.
+
+**Como ocultar (de acordo com a [Ajuda do Chrome](https://support.google.com/chrome/answer/11032183?hl=pt)):**
+
+Abra uma nova guia → clique no ícone "Personalizar o Chrome" ✏️ no canto inferior direito → Rodapé → desative "Mostrar rodapé na página Nova guia".
+
+---
+
 ## 🌐 Suporte multilíngue
 
 16 idiomas integrados, detectados automaticamente pelo navegador, selecionáveis manualmente a qualquer momento:

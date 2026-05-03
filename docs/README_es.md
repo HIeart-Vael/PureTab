@@ -140,6 +140,16 @@ Las tres entradas están completamente aisladas. Pon un fondo local diferente en
 
 ---
 
+## 🔧 Barra de pie de página en nueva pestaña
+
+Después de instalar la extensión, Chrome / Edge muestra un pie de página en la esquina inferior derecha de la nueva pestaña (mostrando el nombre de la extensión). Esto es un comportamiento del navegador, no algo que PlainTab agregue.
+
+**Cómo ocultarlo (según la [Ayuda de Chrome](https://support.google.com/chrome/answer/11032183?hl=es)):**
+
+Abre una nueva pestaña → haz clic en el icono "Personalizar Chrome" ✏️ de la esquina inferior derecha → Pie de página → desactiva "Mostrar pie de página en la página de nueva pestaña".
+
+---
+
 ## 🌐 Soporte multilingüe
 
 16 idiomas integrados, detectados automáticamente desde el navegador, seleccionables manualmente en cualquier momento:
