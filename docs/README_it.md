@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="Logo PlainTab" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Pagina iniziale minimalista</h1>
+<h1 align="center">PlainTab V3 · Pagina iniziale minimalista</h1>
 
 > **Una nuova scheda dovrebbe fare solo una cosa:**
 > Aprirsi → mostrarti uno sfondo che ti piace → portarti alla pagina che ti serve.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>Una pagina iniziale pulita, veloce e non invadente per le nuove schede.</strong><br>
-  Disponibile su <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · sfondo a doppio strato · zero sfarfallio · nessun limite di dimensione file<br>
+  Disponibile su <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zero sfarfallio · nessun limite di dimensione file<br>
   Sfondo giornaliero Bing · Immagini locali · 16 lingue · Barra di ricerca flessibile · <strong>Privacy al primo posto</strong>
 </p>
 
@@ -88,6 +88,29 @@ Consulta [CHANGELOG.md](./CHANGELOG.md) per i dettagli tecnici completi.
 
 ---
 
+## 💡 Scelta dello sviluppatore: tre sfondi, tre ingressi
+
+Hai installato l'estensione: la tua nuova scheda è già bellissima. Ma ecco qualcosa che forse non sai: PlainTab è anche distribuito in altri due posti:
+
+| Ingresso | Impostazione | URL |
+|----------|-------------|-----|
+| 🧩 **Nuova scheda** | Estensione del browser | Carica questa estensione |
+| 🌐 **Pagina iniziale** | Avvio del browser | `plaintab.netlify.app` |
+| 🏠 **Homepage** | Pulsante Home | `kaininx.github.io/PlainTab` |
+
+Imposta `plaintab.netlify.app` come pagina iniziale del tuo browser, lasciala seguire l'aggiornamento quotidiano di Bing. Ogni volta che avvii il browser, questo è il tuo **secondo sfondo**.
+
+Sì, c'è di più. Trova il "Pulsante Home" nelle impostazioni di aspetto del tuo browser, inserisci `kaininx.github.io/PlainTab`, scegli un altro sfondo che ti piace. Ora hai un **terzo sfondo**.
+
+I tre ingressi sono completamente isolati. Dai a ciascuno uno sfondo locale diverso, o lasciali seguire l'aggiornamento quotidiano di Bing. Avvia il browser: uno sfondo. Clicca il pulsante Home: un altro. Apri una nuova scheda: un terzo. Rotazione garantita.
+
+**Configurazione:**
+1. Installa l'estensione → Nuova scheda ✓
+2. Impostazioni browser → All'avvio → Apri una pagina specifica → `https://plaintab.netlify.app`
+3. Impostazioni browser → Aspetto → Mostra pulsante Home → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Utilizzo
 
 | Azione | Effetto |
@@ -110,6 +133,8 @@ Consulta [CHANGELOG.md](./CHANGELOG.md) per i dettagli tecnici completi.
 | Modalità barra di ricerca | Hover / Sempre / Nascosta |
 | Opacità icone | 0 – 1 (predefinito 0.45) |
 | Motore di ricerca | Google / Bing / Baidu / DuckDuckGo |
+
+> **Estensione Chrome vs. Versione Web — Differenza di ricerca:** Per conformarsi alla politica "Single Purpose" del Chrome Web Store, l'estensione utilizza l'API Chrome Search, che rispetta il motore di ricerca predefinito impostato nelle impostazioni del browser dell'utente. La funzionalità di cambio motore non è disponibile in modalità estensione. La versione web (Netlify / GitHub Pages) non è soggetta a questa restrizione e mantiene il selettore completo del motore di ricerca. A parte l'implementazione della ricerca, entrambe le versioni sono funzionalmente identiche.
 
 > Tutte le impostazioni sono salvate in `localStorage`. Nessun account, nessuna sincronizzazione cloud.
 

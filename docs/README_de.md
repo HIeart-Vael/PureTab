@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="PlainTab Logo" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Minimale Startseite</h1>
+<h1 align="center">PlainTab V3 · Minimale Startseite</h1>
 
 > **Ein neuer Tab sollte nur eines tun:**
 > Offnen → dir ein Hintergrundbild zeigen, das dir gefallt → dich zu der Seite bringen, die du brauchst.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>Eine saubere, schnelle und nicht aufdringliche Startseite und Neuer-Tab-Losung.</strong><br>
-  Live auf <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · Zweischicht-Hintergrundbild · null Flackern · keine Dateigroßenbeschrankung<br>
+  Live auf <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · null Flackern · keine Dateigroßenbeschrankung<br>
   Bing-Tageshintergrund · Lokale Bilder · 16 Sprachen · Flexible Suchleiste · <strong>Datenschutz an erster Stelle</strong>
 </p>
 
@@ -88,6 +88,29 @@ Vollstandige technische Details in [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
+## 💡 Entwickler-Tipp: Drei Hintergrundbilder, drei Zugänge
+
+Du hast die Erweiterung installiert — dein neuer Tab sieht schon toll aus. Aber hier ist etwas, das du vielleicht nicht weißt: PlainTab ist auch an zwei weiteren Orten bereitgestellt:
+
+| Zugang | Einstellung | URL |
+|--------|-------------|-----|
+| 🧩 **Neuer Tab** | Browser-Erweiterung | Diese Erweiterung laden |
+| 🌐 **Startseite** | Browser-Start | `plaintab.netlify.app` |
+| 🏠 **Homepage** | Home-Button | `kaininx.github.io/PlainTab` |
+
+Setze `plaintab.netlify.app` als Startseite deines Browsers, lass es dem täglichen Bing-Update folgen. Jedes Mal, wenn du den Browser startest, ist das dein **zweites Hintergrundbild**.
+
+Ja, es gibt noch mehr. Finde den "Home-Button" in den Darstellungseinstellungen deines Browsers, trage `kaininx.github.io/PlainTab` ein, wähle ein weiteres Hintergrundbild aus, das dir gefällt. Jetzt hast du ein **drittes Hintergrundbild**.
+
+Die drei Zugänge sind vollständig isoliert. Gib jedem ein lokales Hintergrundbild oder lass sie alle dem täglichen Bing-Update folgen. Browser starten: ein Hintergrundbild. Home-Button klicken: ein anderes. Neuen Tab öffnen: ein drittes. Abwechslung garantiert.
+
+**Einrichtung:**
+1. Erweiterung installieren → Neuer Tab ✓
+2. Browser-Einstellungen → Beim Start → Bestimmte Seite öffnen → `https://plaintab.netlify.app`
+3. Browser-Einstellungen → Darstellung → Home-Button anzeigen → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Verwendung
 
 | Aktion | Effekt |
@@ -110,6 +133,8 @@ Vollstandige technische Details in [CHANGELOG.md](./CHANGELOG.md).
 | Suchleistenmodus | Schweben / Immer / Ausgeblendet |
 | Symboltransparenz | 0 – 1 (Standard 0.45) |
 | Suchmaschine | Google / Bing / Baidu / DuckDuckGo |
+
+> **Chrome-Erweiterung vs. Web-Version — Suchunterschied:** Um die Richtlinie zur "Einzweckigkeit" des Chrome Web Stores einzuhalten, verwendet die Erweiterung die Chrome Search API, die die vom Benutzer in den Browsereinstellungen festgelegte Standardsuchmaschine respektiert. Die Suchmaschinenumschaltung ist im Erweiterungsmodus nicht verfügbar. Die Web-Version (Netlify / GitHub Pages) unterliegt dieser Einschränkung nicht und behält die vollständige Suchmaschinenauswahl. Abgesehen von der Suchimplementierung sind beide Versionen funktional identisch.
 
 > Alle Einstellungen werden in `localStorage` gespeichert. Kein Konto, keine Cloud-Synchronisation.
 

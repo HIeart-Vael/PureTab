@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="Logo PlainTab" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Minimalistyczna Strona Startowa</h1>
+<h1 align="center">PlainTab V3 · Minimalistyczna Strona Startowa</h1>
 
 > **Nowa karta powinna robić tylko jedną rzecz:**
 > Otwierać się → pokazywać tapetę, która ci się podoba → przenosić cię do strony, której potrzebujesz.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>Czysta, szybka i nienachalna strona startowa i rozwiazanie dla nowych kart.</strong><br>
-  Dostępne na <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · dwuwarstwowa tapeta · zero migotania · bez ograniczenia rozmiaru pliku<br>
+  Dostępne na <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zero migotania · bez ograniczenia rozmiaru pliku<br>
   Codzienna tapeta Bing · Obrazy lokalne · 16 języków · Elastyczny pasek wyszukiwania · <strong>Prywatność przede wszystkim</strong>
 </p>
 
@@ -88,6 +88,29 @@ Pełne szczegóły techniczne znajdziesz w [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
+## 💡 Wybór dewelopera: trzy tapety, trzy wejścia
+
+Zainstalowałeś rozszerzenie — twoja nowa karta już wygląda świetnie. Ale oto coś, czego możesz nie wiedzieć: PlainTab jest również wdrożony w dwóch innych miejscach:
+
+| Wejście | Ustawienie | URL |
+|---------|-----------|------|
+| 🧩 **Nowa karta** | Rozszerzenie przeglądarki | Załaduj to rozszerzenie |
+| 🌐 **Strona startowa** | Uruchamianie przeglądarki | `plaintab.netlify.app` |
+| 🏠 **Strona główna** | Przycisk strony głównej | `kaininx.github.io/PlainTab` |
+
+Ustaw `plaintab.netlify.app` jako stronę startową swojej przeglądarki, pozwól jej śledzić codzienną aktualizację Bing. Za każdym razem, gdy uruchomisz przeglądarkę, to twoja **druga tapeta**.
+
+Tak, to nie wszystko. Znajdź "Przycisk strony głównej" w ustawieniach wyglądu przeglądarki, wpisz `kaininx.github.io/PlainTab`, wybierz inną tapetę, która ci się podoba. Teraz masz **trzecią tapetę**.
+
+Trzy wejścia są całkowicie odizolowane. Daj każdej inną lokalną tapetę lub pozwól każdej śledzić codzienne odświeżanie Bing. Uruchom przeglądarkę: jedna tapeta. Kliknij przycisk strony głównej: druga. Otwórz nową kartę: trzecia. Rotacja gwarantowana.
+
+**Konfiguracja:**
+1. Zainstaluj rozszerzenie → Nowa karta ✓
+2. Ustawienia przeglądarki → Przy uruchamianiu → Otwórz konkretną stronę → `https://plaintab.netlify.app`
+3. Ustawienia przeglądarki → Wygląd → Pokaż przycisk strony głównej → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Użycie
 
 | Akcja | Efekt |
@@ -110,6 +133,8 @@ Pełne szczegóły techniczne znajdziesz w [CHANGELOG.md](./CHANGELOG.md).
 | Tryb paska wyszukiwania | Najechanie / Zawsze / Ukryty |
 | Nieprzezroczystość ikon | 0 – 1 (domyślnie 0.45) |
 | Wyszukiwarka | Google / Bing / Baidu / DuckDuckGo |
+
+> **Rozszerzenie Chrome vs. Wersja webowa — Różnica w wyszukiwaniu:** Aby zachować zgodność z polityką "Jednego celu" Chrome Web Store, rozszerzenie używa Chrome Search API, które szanuje domyślną wyszukiwarkę ustawioną w przeglądarce użytkownika. Funkcja zmiany wyszukiwarki nie jest dostępna w trybie rozszerzenia. Wersja webowa (Netlify / GitHub Pages) nie podlega temu ograniczeniu i zachowuje pełny selektor wyszukiwarki. Poza implementacją wyszukiwania, obie wersje są funkcjonalnie identyczne.
 
 > Wszystkie ustawienia zapisywane w `localStorage`. Bez konta, bez synchronizacji w chmurze.
 

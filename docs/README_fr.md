@@ -2,7 +2,7 @@
   <img src="../icon/icon2048.png" alt="Logo PlainTab" width="80">
 </p>
 
-<h1 align="center">PlainTab v3 · Page de démarrage minimaliste</h1>
+<h1 align="center">PlainTab V3 · Page de démarrage minimaliste</h1>
 
 > **Un nouvel onglet ne devrait faire qu'une seule chose :**
 > S'ouvrir → vous montrer un fond d'écran que vous aimez → vous envoyer vers la page dont vous avez besoin.
@@ -27,7 +27,7 @@
 
 <p align="center">
   <strong>Une page de démarrage propre, rapide et non intrusive pour votre nouvel onglet.</strong><br>
-  Disponible sur <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · fond d'écran double couche · zéro scintillement · aucune limite de taille de fichier<br>
+  Disponible sur <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zéro scintillement · aucune limite de taille de fichier<br>
   Fond d'écran Bing du jour · Images locales · 16 langues · Barre de recherche flexible · <strong>Confidentialité avant tout</strong>
 </p>
 
@@ -88,6 +88,29 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques.
 
 ---
 
+## 💡 Le choix du développeur : trois fonds d'écran, trois entrées
+
+Vous avez installé l'extension — votre nouvel onglet a déjà fière allure. Mais voici quelque chose que vous ne savez peut-être pas : PlainTab est aussi déployé à deux autres endroits :
+
+| Entrée | Paramètre | URL |
+|--------|-----------|-----|
+| 🧩 **Nouvel onglet** | Extension navigateur | Charger cette extension |
+| 🌐 **Page de démarrage** | Lancement du navigateur | `plaintab.netlify.app` |
+| 🏠 **Page d'accueil** | Bouton d'accueil | `kaininx.github.io/PlainTab` |
+
+Définissez `plaintab.netlify.app` comme page de démarrage de votre navigateur, laissez-la suivre la mise à jour quotidienne de Bing. Chaque fois que vous lancez le navigateur, c'est votre **deuxième fond d'écran**.
+
+Oui, il y a plus. Trouvez le "Bouton d'accueil" dans les paramètres d'apparence de votre navigateur, mettez `kaininx.github.io/PlainTab`, choisissez un autre fond d'écran que vous aimez. Voilà, vous avez un **troisième fond d'écran**.
+
+Les trois entrées sont complètement isolées. Donnez à chacune un fond d'écran local différent, ou laissez-les suivre la mise à jour quotidienne de Bing. Lancez le navigateur : un fond d'écran. Cliquez sur le bouton d'accueil : un autre. Ouvrez un nouvel onglet : un troisième. Rotation garantie.
+
+**Configuration :**
+1. Installez l'extension → Nouvel onglet ✓
+2. Paramètres du navigateur → Au démarrage → Ouvrir une page spécifique → `https://plaintab.netlify.app`
+3. Paramètres du navigateur → Apparence → Afficher le bouton d'accueil → `https://kaininx.github.io/PlainTab`
+
+---
+
 ## 🛠️ Utilisation
 
 | Action | Effet |
@@ -110,6 +133,8 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques.
 | Mode barre de recherche | Survol / Toujours / Masquée |
 | Opacité des icônes | 0 – 1 (par défaut 0.45) |
 | Moteur de recherche | Google / Bing / Baidu / DuckDuckGo |
+
+> **Extension Chrome vs. Version Web — Différence de recherche :** Pour se conformer à la politique d'« Usage unique » du Chrome Web Store, l'extension utilise l'API Chrome Search, qui respecte le moteur de recherche par défaut défini dans les paramètres du navigateur de l'utilisateur. La fonction de changement de moteur n'est pas disponible en mode extension. La version web (Netlify / GitHub Pages) n'est pas soumise à cette restriction et conserve le sélecteur de moteur de recherche complet. Hormis l'implémentation de la recherche, les deux versions sont fonctionnellement identiques.
 
 > Tous les paramètres sont sauvegardés dans `localStorage`. Pas de compte, pas de synchronisation cloud.
 
