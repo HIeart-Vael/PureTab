@@ -63,7 +63,6 @@
 
     // -- wallpaper
     var currentSource = 'bing';
-    var localBlobUrl = null;
 
     // -- language
     var currentLang = 'en';
@@ -177,11 +176,11 @@
 
     function idbGet(key) {
         return openDB().then(function (db) {
-            return new Promise(function (resolve) {
+            return new Promise(function (resolve, reject) {
                 var tx = db.transaction(STORE, 'readonly');
                 var req = tx.objectStore(STORE).get(key);
                 req.onsuccess = function () { resolve(req.result); };
-                req.onerror = function () { resolve(null); };
+                req.onerror = function (e) { reject(e.target.error); };
             });
         });
     }
@@ -200,14 +199,6 @@
     /* ================================================================
        WALLPAPER  —  dual-layer core
        ================================================================ */
-
-    // preload.js has already written a thumbnail into #wallpaperBack
-    // via back.style.backgroundImage.  This module fades full images in
-    // through #wallpaperFront, then stabilises them onto the back layer.
-
-    function setWallpaperStyle(url) {
-        back.style.backgroundImage = 'url(' + url + ')';
-    }
 
     function preloadImage(url) {
         return new Promise(function (resolve) {
@@ -228,7 +219,7 @@
                     requestAnimationFrame(function () {
                         front.classList.add('active');
                         setTimeout(function () {
-                            setWallpaperStyle(url);
+                            back.style.backgroundImage = 'url(' + url + ')';
                             front.classList.remove('active');
                             front.style.backgroundImage = '';
                             resolve();
@@ -428,7 +419,6 @@
 
     function resetToBing() {
         Promise.all([idbDelete(LOCAL_BLOB_KEY), idbDelete(LOCAL_MIME_KEY)]).then(function () {
-            if (localBlobUrl) { URL.revokeObjectURL(localBlobUrl); localBlobUrl = null; }
             localStorage.removeItem(THUMB_KEY);
             localStorage.setItem(SOURCE_KEY, 'bing');
             closeSettings();
