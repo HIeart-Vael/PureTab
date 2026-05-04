@@ -60,7 +60,7 @@ The old version used a single `<div>` with CSS `background-image` switching. Goi
 2. `#wallpaperFront` — starts transparent. After the full image is decoded, fades in on top
 3. At least one layer always has a visible image → **zero gray flash**
 
-See [CHANGELOG.md](./CHANGELOG.md) for full technical details.
+See [V3_NOTE.md](./V3_NOTE.md) for full technical details.
 
 ---
 

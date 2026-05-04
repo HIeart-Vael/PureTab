@@ -60,7 +60,7 @@ Stara wersja używała pojedynczego `<div>` z przełączaniem `background-image`
 2. `#wallpaperFront` — zaczyna przezroczysty. Po zdekodowaniu pełnego obrazu, pojawia się stopniowo na wierzchu
 3. Co najmniej jedna warstwa zawsze ma widoczny obraz → **brak szarego błysku**
 
-Pełne szczegóły techniczne znajdziesz w [CHANGELOG.md](./CHANGELOG.md).
+Pełne szczegóły techniczne znajdziesz w [V3_NOTE.md](./V3_NOTE.md).
 
 ---
 

@@ -60,7 +60,7 @@ Phien bản cũ sử dụng một `<div>` duy nhất với việc chuyển đổ
 2. `#wallpaperFront` — bắt đầu trong suốt. Sau khi hinh ảnh đầy đủ được giải ma, mờ dần len phia tren
 3. It nhất một lớp luon co hinh ảnh co thể nhin thấy → **khong co flash xam**
 
-Xem [CHANGELOG.md](./CHANGELOG.md) để biết chi tiết kỹ thuật đầy đủ.
+Xem [V3_NOTE.md](./V3_NOTE.md) để biết chi tiết kỹ thuật đầy đủ.
 
 ---
 

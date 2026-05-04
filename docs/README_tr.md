@@ -60,7 +60,7 @@ Eski surum, CSS `background-image` gecisiyle tek bir `<div>` kullanıyordu. Kucu
 2. `#wallpaperFront` — saydam başlar. Tam goruntu cozuldukten sonra, ustte yavaşca belirir
 3. En az bir katmanda her zaman gorunur bir goruntu bulunur → **gri flash yok**
 
-Tam teknik detaylar icin [CHANGELOG.md](./CHANGELOG.md) dosyasına bakın.
+Tam teknik detaylar icin [V3_NOTE.md](./V3_NOTE.md) dosyasına bakın.
 
 ---
 
