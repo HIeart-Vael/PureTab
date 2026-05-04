@@ -60,7 +60,7 @@ La versión anterior usaba un solo `<div>` con cambios de `background-image` en 
 2. `#wallpaperFront` — comienza transparente. Después de que la imagen completa se decodifica, aparece gradualmente encima
 3. Al menos una capa siempre tiene una imagen visible → **sin parpadeo gris**
 
-Consulta [CHANGELOG.md](./CHANGELOG.md) para obtener detalles técnicos completos.
+Consulta [V3_NOTE.md](./V3_NOTE.md) para obtener detalles técnicos completos.
 
 ---
 

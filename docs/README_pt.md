@@ -60,7 +60,7 @@ A versão antiga usava uma única `<div>` com alternância de `background-image`
 2. `#wallpaperFront` — começa transparente. Após a imagem completa ser decodificada, aparece gradualmente por cima
 3. Pelo menos uma camada sempre tem uma imagem visível → **sem flash cinza**
 
-Consulte [CHANGELOG.md](./CHANGELOG.md) para detalhes técnicos completos.
+Consulte [V3_NOTE.md](./V3_NOTE.md) para detalhes técnicos completos.
 
 ---
 

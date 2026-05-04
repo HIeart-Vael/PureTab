@@ -60,7 +60,7 @@ Die alte Version verwendete ein einzelnes `<div>` mit CSS `background-image`-Wec
 2. `#wallpaperFront` — startet transparent. Nachdem das vollstandige Bild dekodiert ist, blendet es daruber ein
 3. Mindestens eine Schicht hat immer ein sichtbares Bild → **kein grauer Blitz**
 
-Vollstandige technische Details in [CHANGELOG.md](./CHANGELOG.md).
+Vollstandige technische Details in [V3_NOTE.md](./V3_NOTE.md).
 
 ---
 

@@ -60,7 +60,7 @@ L'ancienne version utilisait un seul `<div>` avec un changement de `background-i
 2. `#wallpaperFront` — commence transparent. Après le décodage de l'image complète, elle apparaît progressivement par-dessus
 3. Au moins une couche a toujours une image visible → **aucun flash gris**
 
-Voir [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques.
+Voir [V3_NOTE.md](./V3_NOTE.md) pour tous les détails techniques.
 
 ---
 

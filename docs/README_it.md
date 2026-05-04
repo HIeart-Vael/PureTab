@@ -60,7 +60,7 @@ La vecchia versione usava un singolo `<div>` con commutazione di `background-ima
 2. `#wallpaperFront` — inizia trasparente. Dopo che l'immagine completa è stata decodificata, appare gradualmente sopra
 3. Almeno uno strato ha sempre un'immagine visibile → **nessun flash grigio**
 
-Consulta [CHANGELOG.md](./CHANGELOG.md) per i dettagli tecnici completi.
+Consulta [V3_NOTE.md](./V3_NOTE.md) per i dettagli tecnici completi.
 
 ---
 
