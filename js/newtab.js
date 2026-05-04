@@ -85,19 +85,6 @@
     var engineIndex = 0;
 
     /* ================================================================
-       UTILITY
-       ================================================================ */
-
-    function escapeCssUrl(url) {
-        return url.replace(/['"\\]/g, function (c) {
-            if (c === "'") return "\\'";
-            if (c === '"') return '\\"';
-            if (c === '\\') return '\\\\';
-            return c;
-        });
-    }
-
-    /* ================================================================
        i18n
        ================================================================ */
 
@@ -215,17 +202,11 @@
        ================================================================ */
 
     // preload.js has already written a thumbnail into #wallpaperBack
-    // via <style id="__pt3_wp">.  This module fades full images in
+    // via back.style.backgroundImage.  This module fades full images in
     // through #wallpaperFront, then stabilises them onto the back layer.
 
     function setWallpaperStyle(url) {
-        var style = document.getElementById('__pt3_wp');
-        if (!style) {
-            style = document.createElement('style');
-            style.id = '__pt3_wp';
-            document.head.appendChild(style);
-        }
-        style.textContent = '#wallpaperBack{background-image:url(\'' + escapeCssUrl(url) + '\')}';
+        back.style.backgroundImage = 'url(' + url + ')';
     }
 
     function preloadImage(url) {
@@ -241,7 +222,7 @@
 
     function applyWallpaper(url, source) {
         return preloadImage(url).then(function () {
-            front.style.backgroundImage = 'url(\'' + escapeCssUrl(url) + '\')';
+            front.style.backgroundImage = 'url(' + url + ')';
             return new Promise(function (resolve) {
                 requestAnimationFrame(function () {
                     requestAnimationFrame(function () {
@@ -273,8 +254,7 @@
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             try {
-                var base64 = canvas.toDataURL('image/jpeg', 0.55);
-                localStorage.setItem(THUMB_KEY, base64);
+                localStorage.setItem(THUMB_KEY, 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')');
             } catch (e) { /* canvas tainted or quota exceeded */ }
         };
         img.onerror = function () { /* ignore */ };
@@ -326,7 +306,7 @@
             return idbPut(BING_BLOB_KEY, blob).then(function () {
                 return idbPut(BING_DATE_KEY, today);
             }).then(function () {
-                setWallpaperStyle(URL.createObjectURL(blob));
+                back.style.backgroundImage = 'url(' + URL.createObjectURL(blob) + ')';
             });
         }).catch(function () { });
     }
@@ -398,8 +378,8 @@
             }
 
             // stale URL as temporary back-layer placeholder (only if no thumbnail exists)
-            if (cachedUrl && !document.getElementById('__pt3_wp')) {
-                setWallpaperStyle(cachedUrl);
+            if (cachedUrl && !back.style.backgroundImage) {
+                back.style.backgroundImage = 'url(' + cachedUrl + ')';
             }
 
             return fetchBingUrl().then(function (newUrl) {
@@ -409,8 +389,8 @@
                     cacheBingBlobAndRefresh(newUrl, today);
                 });
             }).catch(function () {
-                if (!document.getElementById('__pt3_wp')) {
-                    setWallpaperStyle(BING_PRIMARY(bingMkt(currentLang)));
+                if (!back.style.backgroundImage) {
+                    back.style.backgroundImage = 'url(' + BING_PRIMARY(bingMkt(currentLang)) + ')';
                 }
             });
         });
@@ -431,7 +411,7 @@
                 canvas.height = Math.floor(img.height * scale);
                 canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                 try {
-                    localStorage.setItem(THUMB_KEY, canvas.toDataURL('image/jpeg', 0.55));
+                    localStorage.setItem(THUMB_KEY, 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')');
                 } catch (e) { }
             };
             img.src = reader.result;
