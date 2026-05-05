@@ -4,6 +4,14 @@
 从单页 HTML 起步，演化为完整扩展：引入 newtab.js 壁纸系统、16 语言界面与 Chrome i18n 清单、MIT 许可证。
 Evolved from a single HTML page into a full extension with newtab.js wallpaper system, 16-language UI and Chrome i18n locales, MIT license.
 
+## v2.2.3
+新增本地壁纸上传功能，优化搜索引擎切换体验。
+Added local wallpaper upload and improved search engine switching UX.
+
+## v2.2.4
+迁移至 IndexedDB 存储壁纸，替换原有 localStorage 方案。
+Migrated wallpaper storage from localStorage to IndexedDB.
+
 ## v2.2.5
 引入壁纸预加载与首帧优化，消灭新标签页白屏闪烁。
 Wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
