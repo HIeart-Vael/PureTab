@@ -14,6 +14,6 @@
     },
     "permissions": ["search"],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' https://bing.biturl.top https://bing.img.run data: blob:; style-src 'self'"
+        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' https://bing.biturl.top https://bing.img.run https://www.bing.com https://cn.bing.com data: blob:; style-src 'self'"
     }
 }
