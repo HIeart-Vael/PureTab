@@ -1,34 +1,34 @@
-Changelog
+Journal des modifications
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • Correction du chargement du fond d'écran : la liste blanche CSP `img-src` ne contenait pas les origines du CDN Bing (`www.bing.com`, `cn.bing.com`), donc les images redirigées depuis les API proxy étaient bloquées par le navigateur.
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • Contournement de CSSOM sur le chemin critique de préchargement pour un premier affichage plus rapide ; CSP renforcée ; code mort supprimé ; icônes SVG et supports promotionnels ajoutés.
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • Fond adaptatif pour mode sombre, code restructuré, barre inférieure multilingue.
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • Passage à Chrome Search API pour la conformité à usage unique de CWS.
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • Réécriture complète : architecture double couche pour un rendu du fond d'écran sans scintillement avec fond de secours. (Voir V3_NOTE.md)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • Ajout de README en 5 langues, mode de recherche par défaut réglé sur « toujours visible ».
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • Optimisation du chargement du fond d'écran et du cache de miniatures ; nettoyage des constantes de l'API Bing.
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • Préchargement du fond d'écran et optimisation de la première image ajoutés pour éliminer le flash blanc à l'ouverture d'un nouvel onglet.
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • Migration du stockage du fond d'écran de localStorage vers IndexedDB.
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • Ajout du téléchargement de fond d'écran local et amélioration de l'expérience de changement de moteur de recherche.
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • Version initiale : évolution d'une simple page HTML vers une extension complète avec système de fond d'écran, interface en 16 langues, localisation Chrome i18n et licence MIT.

@@ -1,34 +1,34 @@
-Changelog
+Değişiklik günlüğü
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • Duvar kağıdı yükleme hatası düzeltildi: CSP `img-src` izin listesinde Bing CDN kaynakları (`www.bing.com`, `cn.bing.com`) eksikti, bu nedenle proxy API'lerinden yönlendirilen görüntüler tarayıcı tarafından engelleniyordu.
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • Daha hızlı ilk boyama için kritik ön yükleme yolunda CSSOM atlandı; CSP güçlendirildi; ölü kod kaldırıldı; SVG simgeleri ve tanıtım materyalleri eklendi.
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • Karanlık mod uyumlu arka plan, kod yapısı yeniden düzenlendi, çok dilli alt bilgi çubuğu.
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • CWS tek amaçlı uyumluluğu için Chrome Search API'ye geçildi.
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • Tamamen yeniden yazma: yedek arka plan ile titreşimsiz duvar kağıdı oluşturma için çift katmanlı mimari. (Bkz. V3_NOTE.md)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • 5 dilde README dosyaları eklendi, varsayılan arama modu "her zaman göster" olarak ayarlandı.
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • Duvar kağıdı yükleme ve küçük resim önbellekleme optimize edildi; Bing API sabitleri temizlendi.
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • Yeni sekme açıldığında beyaz flaşı ortadan kaldırmak için duvar kağıdı ön yükleme ve ilk kare optimizasyonu eklendi.
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • Duvar kağıdı depolaması localStorage'dan IndexedDB'ye taşındı.
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • Yerel duvar kağıdı yükleme eklendi ve arama motoru değiştirme deneyimi iyileştirildi.
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • İlk sürüm: tek bir HTML sayfasından duvar kağıdı sistemi, 16 dil arayüzü, Chrome i18n yerelleştirme ve MIT lisansı ile tam bir uzantıya dönüşüm.

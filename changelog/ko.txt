@@ -1,34 +1,34 @@
-Changelog
+변경 로그
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • 배경화면 로딩 수정: CSP `img-src` 허용 목록에 Bing CDN 원본(`www.bing.com`, `cn.bing.com`)이 누락되어 프록시 API에서 리디렉션된 이미지가 브라우저에서 차단되었습니다.
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • 더 빠른 첫 페인트를 위해 중요 프리로드 경로에서 CSSOM 우회, CSP 강화, 데드 코드 제거, SVG 아이콘 및 프로모션 자료 추가.
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • 다크 모드 적응형 배경, 코드 구조 재구성, 다국어 하단 바.
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • CWS 단일 목적 정책 준수를 위해 Chrome Search API로 전환.
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • 전체 재작성: 폴백 배경과 함께 깜박임 없는 배경화면 렌더링을 위한 이중 레이어 아키텍처. (V3_NOTE.md 참조)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • 5개 언어 README 추가, 기본 검색 모드를 "항상 표시"로 설정.
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • 배경화면 로딩 및 썸네일 캐싱 최적화, Bing API 상수 정리.
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • 새 탭을 열 때 빈 화면 깜박임을 없애기 위한 배경화면 프리로딩 및 첫 프레임 최적화 추가.
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • 배경화면 저장소를 localStorage에서 IndexedDB로 이전.
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • 로컬 배경화면 업로드 추가 및 검색 엔진 전환 UX 개선.
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • 최초 릴리스: 단일 HTML 페이지에서 배경화면 시스템, 16개 언어 UI, Chrome i18n 로케일 및 MIT 라이선스를 갖춘 완전한 확장 기능으로 발전.
