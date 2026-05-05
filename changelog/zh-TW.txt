@@ -1,4 +1,4 @@
-Changelog
+更新日誌
 
 • v3.0.4
   • 修復壁紙載入失敗：CSP `img-src` 白名單缺少 Bing CDN 域名（`www.bing.com` / `cn.bing.com`），代理 API 重新導向後的圖片被瀏覽器攔截。

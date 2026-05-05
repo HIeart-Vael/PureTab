@@ -1,34 +1,34 @@
-Changelog
+Nhật ký thay đổi
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • Đã sửa lỗi tải hình nền: danh sách cho phép CSP `img-src` thiếu nguồn Bing CDN (`www.bing.com`, `cn.bing.com`), do đó hình ảnh được chuyển hướng từ API proxy bị trình duyệt chặn.
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • Đã bỏ qua CSSOM trên đường dẫn tải trước quan trọng để hiển thị khung hình đầu tiên nhanh hơn; tăng cường CSP; xóa code thừa; thêm biểu tượng SVG và tài liệu quảng bá.
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • Hình nền thích ứng chế độ tối, tái cấu trúc code, thanh chân trang đa ngôn ngữ.
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • Đã chuyển sang Chrome Search API để tuân thủ chính sách mục đích duy nhất của CWS.
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • Viết lại toàn bộ: kiến trúc hai lớp để hiển thị hình nền không nhấp nháy với nền dự phòng. (Xem V3_NOTE.md)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • Đã thêm README 5 ngôn ngữ, đặt chế độ tìm kiếm mặc định thành "luôn hiển thị".
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • Đã tối ưu hóa tải hình nền và bộ nhớ đệm hình thu nhỏ; dọn dẹp hằng số Bing API.
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • Đã thêm tải trước hình nền và tối ưu hóa khung hình đầu tiên để loại bỏ hiện tượng nhấp nháy trắng khi mở tab mới.
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • Đã chuyển bộ nhớ hình nền từ localStorage sang IndexedDB.
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • Đã thêm tải lên hình nền cục bộ và cải thiện trải nghiệm chuyển đổi công cụ tìm kiếm.
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • Phát hành lần đầu: phát triển từ một trang HTML đơn lẻ thành một tiện ích đầy đủ với hệ thống hình nền, giao diện 16 ngôn ngữ, bản địa hóa Chrome i18n và giấy phép MIT.

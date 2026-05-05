@@ -1,34 +1,34 @@
-Changelog
+История изменений
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • Исправлена загрузка обоев: в белом списке CSP `img-src` отсутствовали источники CDN Bing (`www.bing.com`, `cn.bing.com`), поэтому изображения, перенаправленные через прокси-API, блокировались браузером.
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • Обход CSSOM на критическом пути предзагрузки для ускорения первой отрисовки; усилен CSP; удалён мёртвый код; добавлены SVG-иконки и промо-материалы.
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • Адаптивный фон для тёмной темы, реструктурированный код, многоязычная нижняя панель.
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • Переход на Chrome Search API для соответствия политике единого назначения CWS.
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • Полная переработка: двухслойная архитектура для отображения обоев без мерцания с резервным серым фоном. (См. V3_NOTE.md)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • Добавлены README на 5 языках, режим поиска по умолчанию изменён на «всегда отображать».
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • Оптимизирована загрузка обоев и кэширование миниатюр; очищены константы Bing API.
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • Добавлена предзагрузка обоев и оптимизация первого кадра для устранения белой вспышки при открытии новой вкладки.
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • Хранилище обоев перенесено из localStorage в IndexedDB.
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • Добавлена загрузка локальных обоев и улучшено переключение поисковых систем.
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • Первый релиз: эволюция от одной HTML-страницы до полноценного расширения с системой обоев, 16-язычным интерфейсом, локализацией Chrome i18n и лицензией MIT.

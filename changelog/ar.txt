@@ -1,34 +1,34 @@
-Changelog
+سجل التغييرات
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • تم إصلاح تحميل الخلفية: كانت قائمة السماح CSP `img-src` تفتقد إلى أصول Bing CDN (`www.bing.com`، `cn.bing.com`)، لذا تم حظر الصور المعاد توجيهها من واجهات API الوسيطة بواسطة المتصفح.
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • تم تجاوز CSSOM في مسار التحميل المسبق الحرج لتسريع العرض الأول؛ وتم تعزيز CSP؛ وإزالة التعليمات البرمجية الميتة؛ وإضافة أيقونات SVG ومواد ترويجية.
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • خلفية متكيفة مع الوضع الداكن، وإعادة هيكلة الكود، وشريط تذييل متعدد اللغات.
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • تم التبديل إلى Chrome Search API للامتثال لسياسة الغرض الواحد في CWS.
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • إعادة كتابة كاملة: بنية طبقتين لعرض الخلفية دون وميض مع خلفية احتياطية. (انظر V3_NOTE.md)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • تمت إضافة ملفات README بخمس لغات، وضبط وضع البحث الافتراضي على "دائم الظهور".
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • تم تحسين تحميل الخلفية والتخزين المؤقت للصور المصغرة؛ وتنظيف ثوابت Bing API.
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • تمت إضافة التحميل المسبق للخلفية وتحسين الإطار الأول للقضاء على الوميض الأبيض عند فتح علامة تبويب جديدة.
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • تم ترحيل تخزين الخلفية من localStorage إلى IndexedDB.
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • تمت إضافة رفع الخلفية المحلية وتحسين تجربة تبديل محرك البحث.
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • الإصدار الأولي: تطور من صفحة HTML واحدة إلى إضافة كاملة مع نظام الخلفيات، وواجهة بـ 16 لغة، ودعم Chrome i18n، وترخيص MIT.

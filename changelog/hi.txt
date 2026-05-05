@@ -1,34 +1,34 @@
-Changelog
+परिवर्तन लॉग
 
 • v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+  • वॉलपेपर लोडिंग ठीक की गई: CSP `img-src` अनुमति सूची में Bing CDN origins (`www.bing.com`, `cn.bing.com`) गायब थे, जिससे प्रॉक्सी API से रीडायरेक्ट की गई छवियां ब्राउज़र द्वारा ब्लॉक हो रही थीं।
 
 • v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+  • तेज़ पहले पेंट के लिए क्रिटिकल प्रीलोड पथ पर CSSOM को बायपास किया गया; CSP को मजबूत किया गया; डेड कोड हटाया गया; SVG आइकन और प्रमोशन सामग्री जोड़ी गई।
 
 • v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+  • डार्क मोड अनुकूली पृष्ठभूमि, कोड संरचना पुनर्गठित, बहुभाषी फ़ुटर बार।
 
 • v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+  • CWS एकल-उद्देश्य अनुपालन के लिए Chrome Search API पर स्विच किया गया।
 
 • v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+  • पूर्ण पुनर्लेखन: फ़ॉलबैक पृष्ठभूमि के साथ शून्य-फ़्लिकर वॉलपेपर रेंडरिंग के लिए डुअल-लेयर आर्किटेक्चर। (V3_NOTE.md देखें)
 
 • v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+  • 5 भाषाओं में README जोड़े गए, डिफ़ॉल्ट खोज मोड को "हमेशा दिखाएं" पर सेट किया गया।
 
 • v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+  • वॉलपेपर लोडिंग और थंबनेल कैशिंग को अनुकूलित किया गया; Bing API स्थिरांक साफ़ किए गए।
 
 • v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+  • नए टैब खोलने पर ब्लैंक फ़्लैश को समाप्त करने के लिए वॉलपेपर प्रीलोडिंग और फ़र्स्ट-फ़्रेम ऑप्टिमाइज़ेशन जोड़ा गया।
 
 • v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+  • वॉलपेपर स्टोरेज को localStorage से IndexedDB में माइग्रेट किया गया।
 
 • v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+  • स्थानीय वॉलपेपर अपलोड जोड़ा गया और खोज इंजन स्विचिंग UX में सुधार किया गया।
 
 • v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+  • प्रारंभिक रिलीज़: एकल HTML पेज से वॉलपेपर सिस्टम, 16-भाषा UI, Chrome i18n लोकेल और MIT लाइसेंस के साथ पूर्ण एक्सटेंशन में विकसित।
