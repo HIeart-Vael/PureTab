@@ -329,7 +329,7 @@
             meta.provider = provider;
             saveBingMeta(meta);
             var kb = (blob.size / 1024).toFixed(0);
-            log('Bing', (isNew ? 'new' : 'same') + ' image from ' + provider + '  ·  ' + kb + ' KB');
+            log('Bing', isNew ? 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB' : 'wallpaper unchanged, skipped  ·  ' + provider + '  ·  ' + kb + ' KB');
             return idbPut(BING_KEY, blob).then(function () { return blob; });
         }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
     }
