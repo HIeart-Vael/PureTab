@@ -2,11 +2,11 @@
     'use strict';
 
     /* ================================================================
-       CONSTANTS
+       常量
        ================================================================ */
 
     var BING_PRIMARY = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=' + mkt; };
-    var BING_FALLBACK = 'https://bing.img.run/1920x1080.php';
+    var BING_FALLBACK = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=image&index=0&mkt=' + mkt; };
     var DB_NAME = 'PlainTabV3';
     var DB_VERSION = 1;
     var STORE = 'wallpaper';
@@ -18,21 +18,27 @@
     var ENGINE_KEY = 'pt3_engine';
     var CACHE_URL_KEY = 'pt3_bing_url';
     var CACHE_DATE_KEY = 'pt3_bing_date';
+    var CACHE_API_KEY = 'pt3_bing_api';
     var BING_BLOB_KEY = 'bing_blob';
     var BING_DATE_KEY = 'bing_date';
+    var BING_IMAGE_KEY = 'pt3_bing_image';
     var LOCAL_BLOB_KEY = 'local_blob';
     var LOCAL_MIME_KEY = 'local_mime';
     var TRANSITION_MS = 500;
     var THUMB_MAX_W = 640;
 
+    // 日志工具：log 为普通信息，warn 为警告
+    var log = function (tag, msg) { console.log('[' + tag + '] ' + msg); };
+    var warn = function (tag, msg) { console.warn('[' + tag + '] ' + msg); };
+
     /* ================================================================
-       ENVIRONMENT
+       运行环境
        ================================================================ */
 
     var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id;
 
     /* ================================================================
-       DOM
+       DOM 元素
        ================================================================ */
 
     var back = document.getElementById('wallpaperBack');
@@ -58,18 +64,15 @@
     var resetAdvBtn = document.getElementById('resetAdvBtn');
 
     /* ================================================================
-       STATE
+       状态变量
        ================================================================ */
 
-    // -- wallpaper
     var currentMode = 'bing';
-
-    // -- language
     var currentLang = 'en';
     var I18N = window.I18N || {};
     var LanguageList = window.LanguageList || [];
 
-    // -- UI
+    // UI 交互状态
     var mouseNearCorner = false;
     var mouseOnSearch = false;
     var panelOpen = false;
@@ -77,16 +80,17 @@
     var hideTimeout = null;
     var searchTimeout = null;
 
-    // -- search settings (persisted)
+    // 搜索设置（持久化）
     var searchMode = 'always';
     var currentOpacity = 0.45;
     var currentEngine = 'google';
     var engineIndex = 0;
 
     /* ================================================================
-       i18n
+       国际化
        ================================================================ */
 
+    // 获取翻译文本，优先 chrome.i18n，其次内置 I18N 表，最后回退到 key 本身
     function t(key) {
         if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage) {
             var msg = chrome.i18n.getMessage(key);
@@ -95,6 +99,7 @@
         return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['en'] && I18N['en'][key]) || key;
     }
 
+    // 探测浏览器语言，在 I18N 表中找最佳匹配
     function detectLang() {
         var browserLang = 'en';
         if (typeof chrome !== 'undefined' && chrome.i18n) browserLang = chrome.i18n.getUILanguage();
@@ -106,6 +111,7 @@
         return found || 'en';
     }
 
+    // 刷新整个页面的 UI 文本
     function updateLangUI() {
         document.title = t('extName');
         searchInput.placeholder = t('searchPlaceholder');
@@ -129,6 +135,7 @@
         renderLangPanel();
     }
 
+    // 渲染语言选择面板的按钮列表
     function renderLangPanel() {
         document.querySelector('.lang-title').textContent = t('langPanelTitle');
         langOptions.innerHTML = '';
@@ -149,20 +156,28 @@
     }
 
     /* ================================================================
-       STORAGE  —  IndexedDB
+       IndexedDB 存储
        ================================================================ */
 
+    // 获取（或创建并缓存）数据库连接
+    var _db;
     function openDB() {
+        if (_db) return Promise.resolve(_db);
         return new Promise(function (resolve, reject) {
             var req = indexedDB.open(DB_NAME, DB_VERSION);
             req.onupgradeneeded = function (e) {
                 if (!e.target.result.objectStoreNames.contains(STORE)) e.target.result.createObjectStore(STORE);
             };
-            req.onsuccess = function (e) { resolve(e.target.result); };
+            req.onsuccess = function (e) {
+                _db = e.target.result;
+                _db.onclose = function () { _db = null; };
+                resolve(_db);
+            };
             req.onerror = function (e) { reject(e.target.error); };
         });
     }
 
+    // 写入键值对
     function idbPut(key, value) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -174,6 +189,7 @@
         });
     }
 
+    // 读取键值
     function idbGet(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -185,6 +201,7 @@
         });
     }
 
+    // 删除键值
     function idbDelete(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -197,9 +214,10 @@
     }
 
     /* ================================================================
-       WALLPAPER  —  dual-layer core
+       壁纸 — 双图层核心
        ================================================================ */
 
+    // 将图片预加载到浏览器缓存中
     function preloadImage(url) {
         return new Promise(function (resolve) {
             var img = new Image();
@@ -211,6 +229,7 @@
         });
     }
 
+    // 展示壁纸：预加载 → front 层淡入 → 稳定到 back 层，零白屏
     function applyWallpaper(url, mode) {
         return preloadImage(url).then(function () {
             front.style.backgroundImage = 'url(' + url + ')';
@@ -234,6 +253,7 @@
         });
     }
 
+    // 生成缩略图存入 localStorage，供 preload.js 同步绘制首帧
     function generateThumbnail(url) {
         var img = new Image();
         img.crossOrigin = 'anonymous';
@@ -246,21 +266,23 @@
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             try {
                 localStorage.setItem(THUMB_KEY, 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')');
-            } catch (e) { /* canvas tainted or quota exceeded */ }
+            } catch (e) { /* canvas 被跨域污染或 quota 满了 */ }
         };
-        img.onerror = function () { /* ignore */ };
+        img.onerror = function () { /* 忽略 */ };
         img.src = url;
     }
 
     /* ================================================================
-       WALLPAPER  —  Bing fetch & cache
+       壁纸 — Bing 获取与缓存
        ================================================================ */
 
+    // 语言代码 → Bing 市场代码
     function bingMkt(lang) {
         var map = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'en': 'en-US', 'ja': 'ja-JP', 'ko': 'ko-KR', 'fr': 'fr-FR', 'de': 'de-DE', 'es': 'es-ES', 'it': 'it-IT', 'pt': 'pt-BR', 'ru': 'ru-RU', 'ar': 'ar-SA', 'hi': 'hi-IN', 'tr': 'tr-TR', 'pl': 'pl-PL', 'vi': 'vi-VN' };
         return map[lang] || 'en-US';
     }
 
+    // 用 Image 加载测试 URL 是否可达，8 秒超时
     function testUrl(url) {
         return new Promise(function (resolve) {
             var img = new Image();
@@ -271,59 +293,106 @@
         });
     }
 
+    // 获取可用的 Bing 图片 URL，先试主 API，不行再试备用，返回 {url, api}
     function fetchBingUrl() {
         var mkt = bingMkt(currentLang);
         var primary = BING_PRIMARY(mkt) + '&t=' + Date.now();
         return testUrl(primary).then(function (ok) {
-            if (ok) return primary;
-            return testUrl(BING_FALLBACK + '?t=' + Date.now()).then(function (ok2) {
-                if (ok2) return BING_FALLBACK;
+            if (ok) return { url: primary, api: 'primary' };
+            var fallback = BING_FALLBACK(mkt) + '&t=' + Date.now();
+            return testUrl(fallback).then(function (ok2) {
+                if (ok2) return { url: fallback, api: 'fallback' };
                 throw new Error('Bing unavailable');
             });
+        }).catch(function () {
+            warn('Bing', 'both primary and fallback unreachable, kept last image');
+            throw new Error('Bing unavailable');
         });
     }
 
+    // 以 CORS 方式下载图片 Blob（用于存入 IDB）
     function downloadBingBlob(url) {
-        if (url.indexOf('bing.img.run') !== -1) return Promise.reject('no-cors');
         return fetch(url, { mode: 'cors' }).then(function (r) {
             if (!r.ok) throw new Error('fetch failed');
             return r.blob();
         });
     }
 
-    // download → store blob in IDB → refresh back layer with blob URL
-    function cacheBingBlobAndRefresh(url, today) {
-        return downloadBingBlob(url).then(function (blob) {
-            return idbPut(BING_BLOB_KEY, blob).then(function () {
-                return idbPut(BING_DATE_KEY, today);
-            }).then(function () {
-                back.style.backgroundImage = 'url(' + URL.createObjectURL(blob) + ')';
-            });
-        }).catch(function () { });
+    // 获取 Bing JSON 元数据（含唯一图片 URL），用于跨天去重判断
+    function fetchBingMeta() {
+        var mkt = bingMkt(currentLang);
+        var mkJson = function (fn) { return fn(mkt).replace('format=image', 'format=json') + '&t=' + Date.now(); };
+        return fetch(mkJson(BING_PRIMARY)).then(function (r) { return r.json(); }).then(function (data) {
+            if (data && data.url) return data;
+            throw new Error('no url');
+        }).catch(function () {
+            return fetch(mkJson(BING_FALLBACK)).then(function (r) { return r.json(); }).then(function (data) {
+                if (data && data.url) return data;
+                return null;
+            }).catch(function () { return null; });
+        });
     }
 
+    // 对比 JSON 元数据中的唯一图片 URL，判断是否真的换了新图
+    function isNewBingImage() {
+        return fetchBingMeta().then(function (meta) {
+            if (!meta) return true;
+            var old = localStorage.getItem(BING_IMAGE_KEY);
+            if (old !== meta.url) {
+                localStorage.setItem(BING_IMAGE_KEY, meta.url);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    // 下载 blob 并存入 IDB，返回 true（新图）/ false（同图）/ undefined（失败）
+    function cacheBingBlob(url, api, today) {
+        return downloadBingBlob(url).then(function (blob) {
+            var kb = (blob.size / 1024).toFixed(0);
+            return isNewBingImage().then(function (isNew) {
+                if (isNew) {
+                    log('Bing', "got today's image from " + api + '  ·  ' + kb + ' KB');
+                    return idbPut(BING_BLOB_KEY, blob).then(function () {
+                        return idbPut(BING_DATE_KEY, today);
+                    }).then(function () { return true; });
+                }
+                log('Bing', 'no new image yet (' + api + ' returned the same one), will retry later');
+                return false;
+            });
+        }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
+    }
+
+    // 后台静默获取最新 Bing 壁纸并缓存（本地壁纸模式下使用）
     function cacheBingInBackground() {
         var today = new Date().toDateString();
         if (localStorage.getItem(CACHE_DATE_KEY) === today && localStorage.getItem(CACHE_URL_KEY)) return;
-        fetchBingUrl().then(function (newUrl) {
-            localStorage.setItem(CACHE_URL_KEY, newUrl);
-            localStorage.setItem(CACHE_DATE_KEY, today);
-            return downloadBingBlob(newUrl).then(function (blob) {
-                return idbPut(BING_BLOB_KEY, blob).then(function () {
-                    return idbPut(BING_DATE_KEY, today);
-                }).then(function () {
-                    if (currentMode === 'bing') {
-                        applyWallpaper(URL.createObjectURL(blob), 'bing');
-                    }
+        fetchBingUrl().then(function (r) {
+            localStorage.setItem(CACHE_URL_KEY, r.url);
+            localStorage.setItem(CACHE_API_KEY, r.api);
+            return downloadBingBlob(r.url).then(function (blob) {
+                return isNewBingImage().then(function (isNew) {
+                    if (!isNew) { log('Bing', 'background: no new image yet, skipped'); return; }
+                    var kb = (blob.size / 1024).toFixed(0);
+                    return idbPut(BING_BLOB_KEY, blob).then(function () {
+                        return idbPut(BING_DATE_KEY, today);
+                    }).then(function () {
+                        localStorage.setItem(CACHE_DATE_KEY, today);
+                        log('Bing', "background: got today's image  ·  " + kb + ' KB');
+                        if (currentMode === 'bing') {
+                            applyWallpaper(URL.createObjectURL(blob), 'bing');
+                        }
+                    });
                 });
-            });
-        }).catch(function () { /* silent */ });
+            }).catch(function () { warn('Bing', 'background: failed, will retry later'); });
+        });
     }
 
     /* ================================================================
-       WALLPAPER  —  main load flow
+       壁纸 — 主加载流程
        ================================================================ */
 
+    // 主流程：并行读取本地和 Bing 缓存，按优先级决定用哪个源
     function loadWallpaper() {
         var lastMode = localStorage.getItem(MODE_KEY) || 'bing';
 
@@ -336,10 +405,14 @@
             var bingBlob = results[1][0];
             var bingDate = results[1][1];
             var today = new Date().toDateString();
+            var cachedDate = localStorage.getItem(CACHE_DATE_KEY);
+            var cachedUrl = localStorage.getItem(CACHE_URL_KEY);
 
-            // 1) local wallpaper takes priority
+            // 分支1：本地壁纸优先
             if (lastMode === 'local' && localBlob) {
+                log('Local', 'using your own wallpaper');
                 var blob = localBlob;
+                // IDB 取回的 blob 可能丢失 MIME，用存储时保存的 MIME 修复
                 if ((!blob.type || blob.type === '') && localMime) {
                     try { blob = new Blob([blob], { type: localMime }); } catch (e) { }
                 }
@@ -348,36 +421,41 @@
                 });
             }
 
-            // 2) today's Bing blob already cached
+            // 分支2：Bing blob 缓存是今天的，直接用
             if (bingBlob && bingDate === today) {
-                return applyWallpaper(URL.createObjectURL(bingBlob), 'bing').then(function () {
-                    cacheBingInBackground();
-                });
+                log('Bing', 'wallpaper is fresh  ·  date: ' + bingDate + ', nothing to do');
+                return applyWallpaper(URL.createObjectURL(bingBlob), 'bing');
             }
 
-            // 3) network path — no usable local cache
+            // 分支3：没有可用缓存，走网络获取
             currentMode = 'bing';
             wpInfo.textContent = t('wpBing');
+            var oldDate = bingDate || cachedDate;
+            log('Bing', oldDate ? 'wallpaper is old (cache: ' + oldDate + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
 
-            var cachedUrl = localStorage.getItem(CACHE_URL_KEY);
-            var cachedDate = localStorage.getItem(CACHE_DATE_KEY);
-
+            // 3a：localStorage 里有今天的 URL 但没 blob，先用 URL 展示再异步下载 blob
             if (cachedUrl && cachedDate === today) {
+                var cachedApi = localStorage.getItem(CACHE_API_KEY) || 'primary';
                 return applyWallpaper(cachedUrl, 'bing').then(function () {
-                    cacheBingBlobAndRefresh(cachedUrl, today);
+                    return cacheBingBlob(cachedUrl, cachedApi, today);
+                }).then(function (isNew) {
+                    if (isNew === false) localStorage.removeItem(CACHE_DATE_KEY);
                 });
             }
 
-            // stale URL as temporary back-layer placeholder (only if no thumbnail exists)
+            // 旧 URL 临时垫到 back 层，防止白屏（仅当缩略图也不可用时）
             if (cachedUrl && !back.style.backgroundImage) {
                 back.style.backgroundImage = 'url(' + cachedUrl + ')';
             }
 
-            return fetchBingUrl().then(function (newUrl) {
-                localStorage.setItem(CACHE_URL_KEY, newUrl);
-                localStorage.setItem(CACHE_DATE_KEY, today);
-                return applyWallpaper(newUrl, 'bing').then(function () {
-                    cacheBingBlobAndRefresh(newUrl, today);
+            // 3b：完全无缓存，从头获取 URL → 展示 → 下载 blob
+            return fetchBingUrl().then(function (r) {
+                localStorage.setItem(CACHE_URL_KEY, r.url);
+                localStorage.setItem(CACHE_API_KEY, r.api);
+                return applyWallpaper(r.url, 'bing').then(function () {
+                    return cacheBingBlob(r.url, r.api, today);
+                }).then(function (isNew) {
+                    if (isNew) localStorage.setItem(CACHE_DATE_KEY, today);
                 });
             }).catch(function () {
                 if (!back.style.backgroundImage) {
@@ -388,25 +466,13 @@
     }
 
     /* ================================================================
-       WALLPAPER  —  local upload
+       壁纸 — 本地上传
        ================================================================ */
 
+    // 用户上传自定义壁纸
     function setLocalWallpaper(file) {
         var reader = new FileReader();
-        reader.onload = function () {
-            var img = new Image();
-            img.onload = function () {
-                var canvas = document.createElement('canvas');
-                var scale = THUMB_MAX_W / img.width;
-                canvas.width = THUMB_MAX_W;
-                canvas.height = Math.floor(img.height * scale);
-                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                try {
-                    localStorage.setItem(THUMB_KEY, 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')');
-                } catch (e) { }
-            };
-            img.src = reader.result;
-        };
+        reader.onload = function () { generateThumbnail(reader.result); };
         reader.readAsDataURL(file);
 
         var blobUrl = URL.createObjectURL(file);
@@ -417,6 +483,7 @@
         closeSettings();
     }
 
+    // 重置为 Bing 每日壁纸
     function resetToBing() {
         Promise.all([idbDelete(LOCAL_BLOB_KEY), idbDelete(LOCAL_MIME_KEY)]).then(function () {
             localStorage.removeItem(THUMB_KEY);
@@ -427,9 +494,10 @@
     }
 
     /* ================================================================
-       UI  —  settings & language panels
+       UI — 设置面板与语言面板
        ================================================================ */
 
+    // 打开设置面板，互斥关闭语言面板
     function openSettings() {
         if (langOpen) closeLangPanel();
         if (panelOpen) return;
@@ -439,6 +507,7 @@
         clearTimeout(hideTimeout);
     }
 
+    // 关闭设置面板
     function closeSettings() {
         if (!panelOpen) return;
         panelOpen = false;
@@ -446,6 +515,7 @@
         settingsBtn.classList.remove('panel-open');
     }
 
+    // 打开语言面板，互斥关闭设置面板
     function openLangPanel() {
         if (panelOpen) closeSettings();
         if (langOpen) return;
@@ -454,23 +524,27 @@
         clearTimeout(hideTimeout);
     }
 
+    // 关闭语言面板
     function closeLangPanel() {
         if (!langOpen) return;
         langOpen = false;
         langPanel.classList.remove('active');
     }
 
+    // 关闭所有面板
     function closeAll() { closeSettings(); closeLangPanel(); }
 
     /* ================================================================
-       UI  —  corner buttons & search bar visibility
+       UI — 角落按钮与搜索栏显隐
        ================================================================ */
 
+    // 显示右上角设置和语言按钮
     function showCorners() {
         settingsBtn.classList.add('visible');
         langBtn.classList.add('visible');
     }
 
+    // 延迟隐藏角落按钮（面板打开时不隐藏）
     function hideCorners() {
         if (panelOpen || langOpen) return;
         clearTimeout(hideTimeout);
@@ -482,13 +556,16 @@
         }, 400);
     }
 
+    // 鼠标是否在右上角触发区域
     function isNearTopRight(x, y) { return x > window.innerWidth - 180 && y < 130; }
 
+    // 鼠标是否在屏幕中央区域（用于触发搜索栏）
     function isInCenter(x, y) {
         var w = window.innerWidth, h = window.innerHeight;
         return x > w * 0.3 && x < w * 0.7 && y > h * 0.42 && y < h * 0.58;
     }
 
+    // 显示搜索栏（受 searchMode 约束）
     function showSearch() {
         if (searchMode === 'never') return;
         if (searchMode === 'always') { searchBar.classList.add('visible'); return; }
@@ -496,6 +573,7 @@
         searchBar.classList.add('visible');
     }
 
+    // 延迟隐藏搜索栏（输入框聚焦时不隐藏）
     function hideSearch() {
         if (searchMode === 'always') return;
         if (document.activeElement === searchInput) return;
@@ -506,14 +584,16 @@
     }
 
     /* ================================================================
-       UI  —  settings: search mode, opacity, engine
+       UI — 搜索设置控件
        ================================================================ */
 
+    // 应用搜索栏显示模式：hover / always / never
     function applySearchMode(mode) {
         searchMode = mode;
         searchBar.classList.toggle('visible', mode === 'always');
     }
 
+    // 应用图标透明度
     function applyOpacity(val) {
         currentOpacity = parseFloat(val);
         document.documentElement.style.setProperty('--icon-opacity', currentOpacity);
@@ -521,6 +601,7 @@
         opacityNum.value = currentOpacity;
     }
 
+    // 切换搜索引擎
     function applyEngine(engine) {
         currentEngine = engine;
         engineIndex = ENGINES.indexOf(engine);
@@ -529,17 +610,20 @@
         saveSettings();
     }
 
+    // 轮换到下一个搜索引擎
     function nextEngine() {
         engineIndex = (engineIndex + 1) % ENGINES.length;
         applyEngine(ENGINES[engineIndex]);
     }
 
+    // 持久化搜索设置
     function saveSettings() {
         localStorage.setItem(SEARCH_MODE_KEY, searchMode);
         localStorage.setItem(OPACITY_KEY, currentOpacity);
         localStorage.setItem(ENGINE_KEY, currentEngine);
     }
 
+    // 从 localStorage 恢复搜索设置并应用
     function loadSettings() {
         var mode = localStorage.getItem(SEARCH_MODE_KEY) || 'always';
         var opacity = parseFloat(localStorage.getItem(OPACITY_KEY)) || 0.45;
@@ -551,7 +635,7 @@
     }
 
     /* ================================================================
-       SEARCH  —  web mode: engine selector + URL mapping
+       搜索引擎
        ================================================================ */
 
     var ENGINES = ['google', 'bing', 'baidu', 'duckduckgo'];
@@ -563,6 +647,7 @@
         baidu: '<svg height="1em" viewBox="0 0 24 24" width="1em"><path d="M8.859 11.735c1.017-1.71 4.059-3.083 6.202.286 1.579 2.284 4.284 4.397 4.284 4.397s2.027 1.601.73 4.684c-1.24 2.956-5.64 1.607-6.005 1.49l-.024-.009s-1.746-.568-3.776-.112c-2.026.458-3.773.286-3.773.286l-.045-.001c-.328-.01-2.38-.187-3.001-2.968-.675-3.028 2.365-4.687 2.592-4.968.226-.288 1.802-1.37 2.816-3.085zm.986 1.738v2.032h-1.64s-1.64.138-2.213 2.014c-.2 1.252.177 1.99.242 2.148.067.157.596 1.073 1.927 1.342h3.078v-7.514l-1.394-.022zm3.588 2.191l-1.44.024v3.956s.064.985 1.44 1.344h3.541v-5.3h-1.528v3.979h-1.46s-.466-.068-.553-.447v-3.556zM9.82 16.715v3.06H8.58s-.863-.045-1.126-1.049c-.136-.445.02-.959.088-1.16.063-.203.353-.671.951-.85H9.82zm9.525-9.036c2.086 0 2.646 2.06 2.646 2.742 0 .688.284 3.597-2.309 3.655-2.595.057-2.704-1.77-2.704-3.08 0-1.374.277-3.317 2.367-3.317zM4.24 6.08c1.523-.135 2.645 1.55 2.762 2.513.07.625.393 3.486-1.975 4-2.364.515-3.244-2.249-2.984-3.544 0 0 .28-2.797 2.197-2.969zm8.847-1.483c.14-1.31 1.69-3.316 2.931-3.028 1.236.285 2.367 1.944 2.137 3.37-.224 1.428-1.345 3.313-3.095 3.082-1.748-.226-2.143-1.823-1.973-3.424zM9.425 1c1.307 0 2.364 1.519 2.364 3.398 0 1.879-1.057 3.4-2.364 3.4s-2.367-1.521-2.367-3.4C7.058 2.518 8.118 1 9.425 1z" fill="#2932E1"/></svg>'
     };
 
+    // Web 模式搜索行为
     var doSearch = function (query) {
         if (!query.trim()) return;
         var urls = { google: 'https://www.google.com/search?q=', bing: 'https://www.bing.com/search?q=', baidu: 'https://www.baidu.com/s?wd=', duckduckgo: 'https://duckduckgo.com/?q=' };
@@ -570,10 +655,29 @@
     };
 
     /* ================================================================
-       EVENTS
+       扩展模式 — 覆盖搜索行为
        ================================================================ */
 
-    // -- corner buttons
+    // 扩展模式：用 chrome.search.query 替代多引擎选择，符合 CWS 单一用途政策
+    function setupExtensionMode() {
+        doSearch = function (query) {
+            if (!query.trim()) return;
+            try {
+                chrome.search.query({ text: query, disposition: 'CURRENT_TAB' });
+            } catch (e) {
+                window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_self');
+            }
+        };
+        engineIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><g clip-path="url(#a)"><path d="M14 12.94 10.16 9.1c1.25-1.76 1.1-4.2-.48-5.78a4.49 4.49 0 0 0-6.36 0 4.49 4.49 0 0 0 0 6.36 4.486 4.486 0 0 0 5.78.48L12.94 14 14 12.94ZM4.38 8.62a3 3 0 0 1 0-4.24 3 3 0 0 1 4.24 0 3 3 0 0 1 0 4.24 3 3 0 0 1-4.24 0Z"/></g><defs><clipPath id="a"><path d="M0 0h16v16H0z"/></clipPath></defs></svg>';
+        engineIcon.style.opacity = '0.45';
+        engineIcon.style.pointerEvents = 'none';
+        engineSel.closest('.setting-row').style.display = 'none';
+    }
+
+    /* ================================================================
+       事件绑定
+       ================================================================ */
+
     settingsBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         panelOpen ? closeSettings() : openSettings();
@@ -588,7 +692,6 @@
     langBtn.addEventListener('mouseenter', function () { mouseNearCorner = true; showCorners(); });
     langBtn.addEventListener('mouseleave', function () { mouseNearCorner = false; if (!panelOpen && !langOpen) hideCorners(); });
 
-    // -- mouse tracking
     document.addEventListener('mousemove', function (e) {
         if (isNearTopRight(e.clientX, e.clientY)) showCorners();
         else if (!mouseNearCorner && !panelOpen && !langOpen) hideCorners();
@@ -596,27 +699,23 @@
         else hideSearch();
     });
 
-    // -- search bar
     searchBar.addEventListener('mouseenter', function () { mouseOnSearch = true; clearTimeout(searchTimeout); });
     searchBar.addEventListener('mouseleave', function () { mouseOnSearch = false; hideSearch(); });
     searchInput.addEventListener('focus', function () { searchBar.classList.add('visible'); clearTimeout(searchTimeout); });
     searchInput.addEventListener('blur', function () { hideSearch(); });
 
-    // -- keyboard
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') { closeAll(); hideCorners(); }
         if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); panelOpen ? closeSettings() : openSettings(); }
         if (e.key === 'Enter' && document.activeElement === searchInput) doSearch(searchInput.value);
     });
 
-    // -- click-away
     document.addEventListener('click', function (e) {
         if (panelOpen && !settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettings();
         if (langOpen && !langPanel.contains(e.target) && e.target !== langBtn && !langBtn.contains(e.target)) closeLangPanel();
         hideCorners();
     });
 
-    // -- settings panel
     settingsPanel.addEventListener('mouseenter', function () { clearTimeout(hideTimeout); mouseNearCorner = true; });
     settingsPanel.addEventListener('mouseleave', function () { mouseNearCorner = false; hideTimeout = setTimeout(function () { closeSettings(); hideCorners(); }, 500); });
     settingsPanel.addEventListener('click', function (e) { e.stopPropagation(); });
@@ -625,7 +724,6 @@
     langPanel.addEventListener('mouseleave', function () { mouseNearCorner = false; hideTimeout = setTimeout(function () { closeLangPanel(); hideCorners(); }, 500); });
     langPanel.addEventListener('click', function (e) { e.stopPropagation(); });
 
-    // -- settings panel controls
     uploadBtn.addEventListener('click', function (e) { e.stopPropagation(); fileInput.click(); });
     fileInput.addEventListener('change', function () {
         var file = fileInput.files[0];
@@ -650,31 +748,14 @@
     engineIcon.addEventListener('click', function (e) { e.stopPropagation(); nextEngine(); });
 
     /* ================================================================
-       EXTENSION MODE  —  overrides web-mode search behaviour
+       启动
        ================================================================ */
 
-    function setupExtensionMode() {
-        doSearch = function (query) {
-            if (!query.trim()) return;
-            try {
-                chrome.search.query({ text: query, disposition: 'CURRENT_TAB' });
-            } catch (e) {
-                window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_self');
-            }
-        };
-        engineIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><g clip-path="url(#a)"><path d="M14 12.94 10.16 9.1c1.25-1.76 1.1-4.2-.48-5.78a4.49 4.49 0 0 0-6.36 0 4.49 4.49 0 0 0 0 6.36 4.486 4.486 0 0 0 5.78.48L12.94 14 14 12.94ZM4.38 8.62a3 3 0 0 1 0-4.24 3 3 0 0 1 4.24 0 3 3 0 0 1 0 4.24 3 3 0 0 1-4.24 0Z"/></g><defs><clipPath id="a"><path d="M0 0h16v16H0z"/></clipPath></defs></svg>';
-        engineIcon.style.opacity = '0.45';
-        engineIcon.style.pointerEvents = 'none';
-        engineSel.closest('.setting-row').style.display = 'none';
-    }
-
-    /* ================================================================
-       BOOTSTRAP
-       ================================================================ */
-
+    // 初始化：确定语言 → 恢复设置 → 刷新 UI → 加载壁纸 → 扩展模式覆盖
     function init() {
         currentLang = localStorage.getItem(LANG_KEY) || detectLang();
         if (!I18N[currentLang]) currentLang = 'en';
+        log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + currentLang);
         loadSettings();
         updateLangUI();
         loadWallpaper();
