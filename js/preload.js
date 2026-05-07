@@ -2,7 +2,7 @@
 (function () {
     var b = document.getElementById('wallpaperBack');
     if (b) {
-        var t = localStorage.getItem('__pt3_thumb');
+        var t = localStorage.getItem('ptab_thumb');
         if (t) b.style.backgroundImage = t;
     }
 })();

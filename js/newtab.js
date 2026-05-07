@@ -7,23 +7,18 @@
 
     var BING_PRIMARY = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=' + mkt; };
     var BING_FALLBACK = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=image&index=0&mkt=' + mkt; };
-    var DB_NAME = 'PlainTabV3';
+    var DB_NAME = 'PlainTab';
     var DB_VERSION = 1;
     var STORE = 'wallpaper';
-    var THUMB_KEY = '__pt3_thumb';
-    var LANG_KEY = 'pt3_lang';
-    var MODE_KEY = 'pt3_mode';
-    var SEARCH_MODE_KEY = 'pt3_search_mode';
-    var OPACITY_KEY = 'pt3_opacity';
-    var ENGINE_KEY = 'pt3_engine';
-    var CACHE_URL_KEY = 'pt3_bing_url';
-    var CACHE_DATE_KEY = 'pt3_bing_date';
-    var CACHE_API_KEY = 'pt3_bing_api';
-    var BING_BLOB_KEY = 'bing_blob';
-    var BING_DATE_KEY = 'bing_date';
-    var BING_IMAGE_KEY = 'pt3_bing_image';
-    var LOCAL_BLOB_KEY = 'local_blob';
-    var LOCAL_MIME_KEY = 'local_mime';
+    var THUMB_KEY = 'ptab_thumb';
+    var LANG_KEY = 'ptab_lang';
+    var MODE_KEY = 'ptab_wallpaper_source';
+    var SEARCH_MODE_KEY = 'ptab_search_visibility';
+    var OPACITY_KEY = 'ptab_icon_opacity';
+    var ENGINE_KEY = 'ptab_search_engine';
+    var META_KEY = 'ptab_bing_meta';
+    var BING_KEY = 'bing';
+    var LOCAL_KEY = 'local';
     var TRANSITION_MS = 500;
     var THUMB_MAX_W = 640;
 
@@ -333,13 +328,29 @@
         });
     }
 
+    // 读取已缓存的 Bing 元数据
+    function loadBingMeta() {
+        try {
+            var raw = localStorage.getItem(META_KEY);
+            return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+    }
+
+    // 写入 Bing 元数据
+    function saveBingMeta(meta) {
+        try {
+            localStorage.setItem(META_KEY, JSON.stringify(meta));
+        } catch (e) { /* quota 满了 */ }
+    }
+
     // 对比 JSON 元数据中的唯一图片 URL，判断是否真的换了新图
     function isNewBingImage() {
         return fetchBingMeta().then(function (meta) {
             if (!meta) return true;
-            var old = localStorage.getItem(BING_IMAGE_KEY);
-            if (old !== meta.url) {
-                localStorage.setItem(BING_IMAGE_KEY, meta.url);
+            var cached = loadBingMeta();
+            if (cached.contentId !== meta.url) {
+                cached.contentId = meta.url;
+                saveBingMeta(cached);
                 return true;
             }
             return false;
@@ -347,17 +358,20 @@
     }
 
     // 下载 blob 并存入 IDB，返回 true（新图）/ false（同图）/ undefined（失败）
-    function cacheBingBlob(url, api, today) {
+    function cacheBingBlob(url, provider, today) {
         return downloadBingBlob(url).then(function (blob) {
             var kb = (blob.size / 1024).toFixed(0);
             return isNewBingImage().then(function (isNew) {
                 if (isNew) {
-                    log('Bing', "got today's image from " + api + '  ·  ' + kb + ' KB');
-                    return idbPut(BING_BLOB_KEY, blob).then(function () {
-                        return idbPut(BING_DATE_KEY, today);
-                    }).then(function () { return true; });
+                    log('Bing', "got today's image from " + provider + '  ·  ' + kb + ' KB');
+                    var meta = loadBingMeta();
+                    meta.src = url;
+                    meta.date = today;
+                    meta.provider = provider;
+                    saveBingMeta(meta);
+                    return idbPut(BING_KEY, blob).then(function () { return true; });
                 }
-                log('Bing', 'no new image yet (' + api + ' returned the same one), will retry later');
+                log('Bing', 'no new image yet (' + provider + ' returned the same one), will retry later');
                 return false;
             });
         }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
@@ -366,18 +380,18 @@
     // 后台静默获取最新 Bing 壁纸并缓存（本地壁纸模式下使用）
     function cacheBingInBackground() {
         var today = new Date().toDateString();
-        if (localStorage.getItem(CACHE_DATE_KEY) === today && localStorage.getItem(CACHE_URL_KEY)) return;
+        var meta = loadBingMeta();
+        if (meta.date === today && meta.src) return;
         fetchBingUrl().then(function (r) {
-            localStorage.setItem(CACHE_URL_KEY, r.url);
-            localStorage.setItem(CACHE_API_KEY, r.api);
             return downloadBingBlob(r.url).then(function (blob) {
                 return isNewBingImage().then(function (isNew) {
                     if (!isNew) { log('Bing', 'background: no new image yet, skipped'); return; }
                     var kb = (blob.size / 1024).toFixed(0);
-                    return idbPut(BING_BLOB_KEY, blob).then(function () {
-                        return idbPut(BING_DATE_KEY, today);
-                    }).then(function () {
-                        localStorage.setItem(CACHE_DATE_KEY, today);
+                    meta.src = r.url;
+                    meta.date = today;
+                    meta.provider = r.api;
+                    saveBingMeta(meta);
+                    return idbPut(BING_KEY, blob).then(function () {
                         log('Bing', "background: got today's image  ·  " + kb + ' KB');
                         if (currentMode === 'bing') {
                             applyWallpaper(URL.createObjectURL(blob), 'bing');
@@ -395,26 +409,23 @@
     // 主流程：并行读取本地和 Bing 缓存，按优先级决定用哪个源
     function loadWallpaper() {
         var lastMode = localStorage.getItem(MODE_KEY) || 'bing';
+        var meta = loadBingMeta();
+        var today = new Date().toDateString();
 
         return Promise.all([
-            Promise.all([idbGet(LOCAL_BLOB_KEY), idbGet(LOCAL_MIME_KEY)]),
-            Promise.all([idbGet(BING_BLOB_KEY), idbGet(BING_DATE_KEY)])
+            idbGet(LOCAL_KEY),
+            idbGet(BING_KEY)
         ]).then(function (results) {
-            var localBlob = results[0][0];
-            var localMime = results[0][1];
-            var bingBlob = results[1][0];
-            var bingDate = results[1][1];
-            var today = new Date().toDateString();
-            var cachedDate = localStorage.getItem(CACHE_DATE_KEY);
-            var cachedUrl = localStorage.getItem(CACHE_URL_KEY);
+            var localData = results[0];
+            var bingBlob = results[1];
 
             // 分支1：本地壁纸优先
-            if (lastMode === 'local' && localBlob) {
+            if (lastMode === 'local' && localData) {
                 log('Local', 'using your own wallpaper');
-                var blob = localBlob;
+                var blob = localData.blob;
                 // IDB 取回的 blob 可能丢失 MIME，用存储时保存的 MIME 修复
-                if ((!blob.type || blob.type === '') && localMime) {
-                    try { blob = new Blob([blob], { type: localMime }); } catch (e) { }
+                if ((!blob.type || blob.type === '') && localData.mime) {
+                    try { blob = new Blob([blob], { type: localData.mime }); } catch (e) { }
                 }
                 return applyWallpaper(URL.createObjectURL(blob), 'local').then(function () {
                     cacheBingInBackground();
@@ -422,40 +433,41 @@
             }
 
             // 分支2：Bing blob 缓存是今天的，直接用
-            if (bingBlob && bingDate === today) {
-                log('Bing', 'wallpaper is fresh  ·  date: ' + bingDate + ', nothing to do');
+            if (bingBlob && meta.date === today) {
+                log('Bing', 'wallpaper is fresh  ·  date: ' + meta.date + ', nothing to do');
                 return applyWallpaper(URL.createObjectURL(bingBlob), 'bing');
             }
 
             // 分支3：没有可用缓存，走网络获取
             currentMode = 'bing';
             wpInfo.textContent = t('wpBing');
-            var oldDate = bingDate || cachedDate;
+            var oldDate = meta.date;
             log('Bing', oldDate ? 'wallpaper is old (cache: ' + oldDate + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
 
-            // 3a：localStorage 里有今天的 URL 但没 blob，先用 URL 展示再异步下载 blob
-            if (cachedUrl && cachedDate === today) {
-                var cachedApi = localStorage.getItem(CACHE_API_KEY) || 'primary';
-                return applyWallpaper(cachedUrl, 'bing').then(function () {
-                    return cacheBingBlob(cachedUrl, cachedApi, today);
+            // 3a：meta 里有今天的 src 但没 blob，先用 src 展示再异步下载 blob
+            if (meta.src && meta.date === today) {
+                var provider = meta.provider || 'primary';
+                return applyWallpaper(meta.src, 'bing').then(function () {
+                    return cacheBingBlob(meta.src, provider, today);
                 }).then(function (isNew) {
-                    if (isNew === false) localStorage.removeItem(CACHE_DATE_KEY);
+                    if (isNew === false) { meta.date = ''; saveBingMeta(meta); }
                 });
             }
 
             // 旧 URL 临时垫到 back 层，防止白屏（仅当缩略图也不可用时）
-            if (cachedUrl && !back.style.backgroundImage) {
-                back.style.backgroundImage = 'url(' + cachedUrl + ')';
+            if (meta.src && !back.style.backgroundImage) {
+                back.style.backgroundImage = 'url(' + meta.src + ')';
             }
 
             // 3b：完全无缓存，从头获取 URL → 展示 → 下载 blob
             return fetchBingUrl().then(function (r) {
-                localStorage.setItem(CACHE_URL_KEY, r.url);
-                localStorage.setItem(CACHE_API_KEY, r.api);
+                meta.src = r.url;
+                meta.provider = r.api;
+                saveBingMeta(meta);
                 return applyWallpaper(r.url, 'bing').then(function () {
                     return cacheBingBlob(r.url, r.api, today);
                 }).then(function (isNew) {
-                    if (isNew) localStorage.setItem(CACHE_DATE_KEY, today);
+                    if (isNew) { meta.date = today; saveBingMeta(meta); }
                 });
             }).catch(function () {
                 if (!back.style.backgroundImage) {
@@ -477,15 +489,14 @@
 
         var blobUrl = URL.createObjectURL(file);
         applyWallpaper(blobUrl, 'local');
-        idbPut(LOCAL_BLOB_KEY, file).catch(function () { });
-        if (file.type) idbPut(LOCAL_MIME_KEY, file.type).catch(function () { });
+        idbPut(LOCAL_KEY, { blob: file, mime: file.type || '' }).catch(function () { });
         localStorage.setItem(MODE_KEY, 'local');
         closeSettings();
     }
 
     // 重置为 Bing 每日壁纸
     function resetToBing() {
-        Promise.all([idbDelete(LOCAL_BLOB_KEY), idbDelete(LOCAL_MIME_KEY)]).then(function () {
+        idbDelete(LOCAL_KEY).then(function () {
             localStorage.removeItem(THUMB_KEY);
             localStorage.setItem(MODE_KEY, 'bing');
             closeSettings();
