@@ -12,7 +12,7 @@
     var STORE = 'wallpaper';
     var THUMB_KEY = '__pt3_thumb';
     var LANG_KEY = 'pt3_lang';
-    var SOURCE_KEY = 'pt3_source';
+    var MODE_KEY = 'pt3_mode';
     var SEARCH_MODE_KEY = 'pt3_search_mode';
     var OPACITY_KEY = 'pt3_opacity';
     var ENGINE_KEY = 'pt3_engine';
@@ -62,7 +62,7 @@
        ================================================================ */
 
     // -- wallpaper
-    var currentSource = 'bing';
+    var currentMode = 'bing';
 
     // -- language
     var currentLang = 'en';
@@ -113,7 +113,7 @@
         langBtn.setAttribute('title', t('langTitle'));
         settingsBtn.setAttribute('title', t('settingsTitle'));
         document.querySelector('.settings-panel h3').textContent = t('panelTitle');
-        wpInfo.textContent = currentSource === 'local' ? t('wpLocal') : t('wpBing');
+        wpInfo.textContent = currentMode === 'local' ? t('wpLocal') : t('wpBing');
         uploadBtn.textContent = t('uploadBtn');
         resetBtn.textContent = t('resetBtn');
         advToggle.textContent = t('advToggle');
@@ -211,7 +211,7 @@
         });
     }
 
-    function applyWallpaper(url, source) {
+    function applyWallpaper(url, mode) {
         return preloadImage(url).then(function () {
             front.style.backgroundImage = 'url(' + url + ')';
             return new Promise(function (resolve) {
@@ -228,8 +228,8 @@
                 });
             });
         }).then(function () {
-            currentSource = source;
-            wpInfo.textContent = source === 'local' ? t('wpLocal') : t('wpBing');
+            currentMode = mode;
+            wpInfo.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
             generateThumbnail(url);
         });
     }
@@ -312,7 +312,7 @@
                 return idbPut(BING_BLOB_KEY, blob).then(function () {
                     return idbPut(BING_DATE_KEY, today);
                 }).then(function () {
-                    if (currentSource === 'bing') {
+                    if (currentMode === 'bing') {
                         applyWallpaper(URL.createObjectURL(blob), 'bing');
                     }
                 });
@@ -325,7 +325,7 @@
        ================================================================ */
 
     function loadWallpaper() {
-        var lastSource = localStorage.getItem(SOURCE_KEY) || 'bing';
+        var lastMode = localStorage.getItem(MODE_KEY) || 'bing';
 
         return Promise.all([
             Promise.all([idbGet(LOCAL_BLOB_KEY), idbGet(LOCAL_MIME_KEY)]),
@@ -338,7 +338,7 @@
             var today = new Date().toDateString();
 
             // 1) local wallpaper takes priority
-            if (lastSource === 'local' && localBlob) {
+            if (lastMode === 'local' && localBlob) {
                 var blob = localBlob;
                 if ((!blob.type || blob.type === '') && localMime) {
                     try { blob = new Blob([blob], { type: localMime }); } catch (e) { }
@@ -356,7 +356,7 @@
             }
 
             // 3) network path — no usable local cache
-            currentSource = 'bing';
+            currentMode = 'bing';
             wpInfo.textContent = t('wpBing');
 
             var cachedUrl = localStorage.getItem(CACHE_URL_KEY);
@@ -413,14 +413,14 @@
         applyWallpaper(blobUrl, 'local');
         idbPut(LOCAL_BLOB_KEY, file).catch(function () { });
         if (file.type) idbPut(LOCAL_MIME_KEY, file.type).catch(function () { });
-        localStorage.setItem(SOURCE_KEY, 'local');
+        localStorage.setItem(MODE_KEY, 'local');
         closeSettings();
     }
 
     function resetToBing() {
         Promise.all([idbDelete(LOCAL_BLOB_KEY), idbDelete(LOCAL_MIME_KEY)]).then(function () {
             localStorage.removeItem(THUMB_KEY);
-            localStorage.setItem(SOURCE_KEY, 'bing');
+            localStorage.setItem(MODE_KEY, 'bing');
             closeSettings();
             loadWallpaper();
         });
