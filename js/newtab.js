@@ -5,8 +5,8 @@
        常量
        ================================================================ */
 
-    var BING_PRIMARY = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=image&index=0&mkt=' + mkt; };
-    var BING_FALLBACK = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=image&index=0&mkt=' + mkt; };
+    var BING_PRIMARY = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
+    var BING_FALLBACK = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
     var DB_NAME = 'PlainTab';
     var DB_VERSION = 1;
     var STORE = 'wallpaper';
@@ -277,31 +277,22 @@
         return map[lang] || 'en-US';
     }
 
-    // 用 Image 加载测试 URL 是否可达，8 秒超时
-    function testUrl(url) {
-        return new Promise(function (resolve) {
-            var img = new Image();
-            var timer = setTimeout(function () { img.src = ''; resolve(false); }, 8000);
-            img.onload = function () { clearTimeout(timer); resolve(true); };
-            img.onerror = function () { clearTimeout(timer); resolve(false); };
-            img.src = url;
-        });
-    }
-
-    // 获取可用的 Bing 图片 URL，先试主 API，不行再试备用，返回 {url, api}
+    // 获取 Bing JSON API → 返回图像直链，先试主 API，不行再试备用，返回 {url, api}
     function fetchBingUrl() {
         var mkt = bingMkt(currentLang);
-        var primary = BING_PRIMARY(mkt) + '&t=' + Date.now();
-        return testUrl(primary).then(function (ok) {
-            if (ok) return { url: primary, api: 'primary' };
-            var fallback = BING_FALLBACK(mkt) + '&t=' + Date.now();
-            return testUrl(fallback).then(function (ok2) {
-                if (ok2) return { url: fallback, api: 'fallback' };
-                throw new Error('Bing unavailable');
+        function tryFetch(url, api) {
+            return fetch(url).then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            }).then(function (data) {
+                if (data && data.url) return { url: data.url, api: api };
+                throw new Error('no url in response');
             });
-        }).catch(function () {
-            warn('Bing', 'both primary and fallback unreachable, kept last image');
-            throw new Error('Bing unavailable');
+        }
+        var primary = BING_PRIMARY(mkt) + '&t=' + Date.now();
+        return tryFetch(primary, 'primary').catch(function () {
+            var fallback = BING_FALLBACK(mkt) + '&t=' + Date.now();
+            return tryFetch(fallback, 'fallback');
         });
     }
 
@@ -310,21 +301,6 @@
         return fetch(url, { mode: 'cors' }).then(function (r) {
             if (!r.ok) throw new Error('fetch failed');
             return r.blob();
-        });
-    }
-
-    // 获取 Bing JSON 元数据（含唯一图片 URL），用于跨天去重判断
-    function fetchBingMeta() {
-        var mkt = bingMkt(currentLang);
-        var mkJson = function (fn) { return fn(mkt).replace('format=image', 'format=json') + '&t=' + Date.now(); };
-        return fetch(mkJson(BING_PRIMARY)).then(function (r) { return r.json(); }).then(function (data) {
-            if (data && data.url) return data;
-            throw new Error('no url');
-        }).catch(function () {
-            return fetch(mkJson(BING_FALLBACK)).then(function (r) { return r.json(); }).then(function (data) {
-                if (data && data.url) return data;
-                return null;
-            }).catch(function () { return null; });
         });
     }
 
@@ -343,37 +319,18 @@
         } catch (e) { /* quota 满了 */ }
     }
 
-    // 对比 JSON 元数据中的唯一图片 URL，判断是否真的换了新图
-    function isNewBingImage() {
-        return fetchBingMeta().then(function (meta) {
-            if (!meta) return true;
-            var cached = loadBingMeta();
-            if (cached.contentId !== meta.url) {
-                cached.contentId = meta.url;
-                saveBingMeta(cached);
-                return true;
-            }
-            return false;
-        });
-    }
-
-    // 下载 blob 并存入 IDB，返回 true（新图）/ false（同图）/ undefined（失败）
+    // 下载 Blob 并存入 IDB，同时更新 meta（src 即去重 key）
     function cacheBingBlob(url, provider, today) {
         return downloadBingBlob(url).then(function (blob) {
+            var meta = loadBingMeta();
+            var isNew = meta.src !== url;
+            meta.src = url;
+            meta.date = today;
+            meta.provider = provider;
+            saveBingMeta(meta);
             var kb = (blob.size / 1024).toFixed(0);
-            return isNewBingImage().then(function (isNew) {
-                if (isNew) {
-                    log('Bing', "got today's image from " + provider + '  ·  ' + kb + ' KB');
-                    var meta = loadBingMeta();
-                    meta.src = url;
-                    meta.date = today;
-                    meta.provider = provider;
-                    saveBingMeta(meta);
-                    return idbPut(BING_KEY, blob).then(function () { return true; });
-                }
-                log('Bing', 'no new image yet (' + provider + ' returned the same one), will retry later');
-                return false;
-            });
+            log('Bing', (isNew ? 'new' : 'same') + ' image from ' + provider + '  ·  ' + kb + ' KB');
+            return idbPut(BING_KEY, blob).then(function () { return blob; });
         }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
     }
 
@@ -383,23 +340,12 @@
         var meta = loadBingMeta();
         if (meta.date === today && meta.src) return;
         fetchBingUrl().then(function (r) {
-            return downloadBingBlob(r.url).then(function (blob) {
-                return isNewBingImage().then(function (isNew) {
-                    if (!isNew) { log('Bing', 'background: no new image yet, skipped'); return; }
-                    var kb = (blob.size / 1024).toFixed(0);
-                    meta.src = r.url;
-                    meta.date = today;
-                    meta.provider = r.api;
-                    saveBingMeta(meta);
-                    return idbPut(BING_KEY, blob).then(function () {
-                        log('Bing', "background: got today's image  ·  " + kb + ' KB');
-                        if (currentMode === 'bing') {
-                            applyWallpaper(URL.createObjectURL(blob), 'bing');
-                        }
-                    });
-                });
-            }).catch(function () { warn('Bing', 'background: failed, will retry later'); });
-        });
+            return cacheBingBlob(r.url, r.api, today).then(function (blob) {
+                if (blob && currentMode === 'bing') {
+                    applyWallpaper(URL.createObjectURL(blob), 'bing');
+                }
+            });
+        }).catch(function () { warn('Bing', 'background: failed, will retry later'); });
     }
 
     /* ================================================================
@@ -441,16 +387,12 @@
             // 分支3：没有可用缓存，走网络获取
             currentMode = 'bing';
             wpInfo.textContent = t('wpBing');
-            var oldDate = meta.date;
-            log('Bing', oldDate ? 'wallpaper is old (cache: ' + oldDate + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
+            log('Bing', meta.date ? 'wallpaper is old (cache: ' + meta.date + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
 
             // 3a：meta 里有今天的 src 但没 blob，先用 src 展示再异步下载 blob
             if (meta.src && meta.date === today) {
-                var provider = meta.provider || 'primary';
                 return applyWallpaper(meta.src, 'bing').then(function () {
-                    return cacheBingBlob(meta.src, provider, today);
-                }).then(function (isNew) {
-                    if (isNew === false) { meta.date = ''; saveBingMeta(meta); }
+                    return cacheBingBlob(meta.src, meta.provider || 'primary', today);
                 });
             }
 
@@ -461,17 +403,12 @@
 
             // 3b：完全无缓存，从头获取 URL → 展示 → 下载 blob
             return fetchBingUrl().then(function (r) {
-                meta.src = r.url;
-                meta.provider = r.api;
-                saveBingMeta(meta);
                 return applyWallpaper(r.url, 'bing').then(function () {
                     return cacheBingBlob(r.url, r.api, today);
-                }).then(function (isNew) {
-                    if (isNew) { meta.date = today; saveBingMeta(meta); }
                 });
             }).catch(function () {
-                if (!back.style.backgroundImage) {
-                    back.style.backgroundImage = 'url(' + BING_PRIMARY(bingMkt(currentLang)) + ')';
+                if (!back.style.backgroundImage && meta.src) {
+                    back.style.backgroundImage = 'url(' + meta.src + ')';
                 }
             });
         });
@@ -483,10 +420,6 @@
 
     // 用户上传自定义壁纸
     function setLocalWallpaper(file) {
-        var reader = new FileReader();
-        reader.onload = function () { generateThumbnail(reader.result); };
-        reader.readAsDataURL(file);
-
         var blobUrl = URL.createObjectURL(file);
         applyWallpaper(blobUrl, 'local');
         idbPut(LOCAL_KEY, { blob: file, mime: file.type || '' }).catch(function () { });
