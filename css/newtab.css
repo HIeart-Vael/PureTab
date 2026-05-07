@@ -512,6 +512,74 @@ input[type="file"] {
     background: rgba(255, 255, 255, 0.05);
 }
 
+/* ========== 本地壁纸画廊 ========== */
+.local-gallery {
+    margin-bottom: 14px;
+}
+
+.local-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.local-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+    cursor: default;
+    transition: border-color 0.2s;
+}
+
+.local-thumb:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.local-thumb-del {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+.local-thumb-del::before,
+.local-thumb-del::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 10px;
+    background: #fff;
+    border-radius: 1px;
+}
+
+.local-thumb-del::before { transform: rotate(45deg); }
+.local-thumb-del::after  { transform: rotate(-45deg); }
+
+.local-thumb:hover .local-thumb-del {
+    opacity: 1;
+}
+
+.local-thumb-del:hover {
+    background: rgba(220, 53, 69, 0.85);
+}
+
 /* ========== 响应式 ========== */
 @media (max-width: 480px) {
     .lang-btn {

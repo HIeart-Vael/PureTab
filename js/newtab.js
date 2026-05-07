@@ -10,7 +10,7 @@
     var DB_NAME = 'PlainTab';
     var DB_VERSION = 1;
     var STORE = 'wallpaper';
-    var THUMB_KEY = 'ptab_thumb';
+    var BING_THUMB_KEY = 'bing_thumb';
     var LANG_KEY = 'ptab_lang';
     var MODE_KEY = 'ptab_wallpaper_source';
     var SEARCH_MODE_KEY = 'ptab_search_visibility';
@@ -18,7 +18,9 @@
     var ENGINE_KEY = 'ptab_search_engine';
     var META_KEY = 'ptab_bing_meta';
     var BING_KEY = 'bing';
-    var LOCAL_KEY = 'local';
+    var LOCAL_IMAGES_KEY = 'local_images';
+    var LOCAL_INDEX_KEY = 'ptab_local_index';
+    var LOCAL_THUMBS_KEY = 'local_thumbs';
     var TRANSITION_MS = 500;
     var THUMB_MAX_W = 640;
 
@@ -114,7 +116,8 @@
         langBtn.setAttribute('title', t('langTitle'));
         settingsBtn.setAttribute('title', t('settingsTitle'));
         document.querySelector('.settings-panel h3').textContent = t('panelTitle');
-        wpInfo.textContent = currentMode === 'local' ? t('wpLocal') : t('wpBing');
+        if (currentMode === 'local') refreshLocalGallery();
+        else wpInfo.textContent = t('wpBing');
         uploadBtn.textContent = t('uploadBtn');
         resetBtn.textContent = t('resetBtn');
         advToggle.textContent = t('advToggle');
@@ -244,27 +247,39 @@
         }).then(function () {
             currentMode = mode;
             wpInfo.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
-            generateThumbnail(url);
+            return generateThumbnail(url);
         });
     }
 
     // 生成缩略图存入 localStorage，供 preload.js 同步绘制首帧
     function generateThumbnail(url) {
-        var img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = function () {
-            var canvas = document.createElement('canvas');
-            var scale = THUMB_MAX_W / img.width;
-            canvas.width = THUMB_MAX_W;
-            canvas.height = Math.floor(img.height * scale);
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            try {
-                localStorage.setItem(THUMB_KEY, 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')');
-            } catch (e) { /* canvas 被跨域污染或 quota 满了 */ }
-        };
-        img.onerror = function () { /* 忽略 */ };
-        img.src = url;
+        return new Promise(function (resolve) {
+            var img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function () {
+                var canvas = document.createElement('canvas');
+                var scale = THUMB_MAX_W / img.width;
+                canvas.width = THUMB_MAX_W;
+                canvas.height = Math.floor(img.height * scale);
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                var thumb = 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
+                try { localStorage.setItem(BING_THUMB_KEY, thumb); } catch (e) { /* quota 满了 */ }
+                resolve(thumb);
+            };
+            img.onerror = function () { resolve(null); };
+            img.src = url;
+        });
+    }
+
+    // 读取/写入缩略图数组（与 local_images 数组索引对齐）
+    function loadThumbs() {
+        try { return JSON.parse(localStorage.getItem(LOCAL_THUMBS_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+    function saveThumbs(thumbs) {
+        try { localStorage.setItem(LOCAL_THUMBS_KEY, JSON.stringify(thumbs)); }
+        catch (e) { /* quota 满了 */ }
     }
 
     /* ================================================================
@@ -377,21 +392,32 @@
         var today = new Date().toDateString();
 
         return Promise.all([
-            idbGet(LOCAL_KEY),
+            idbGet(LOCAL_IMAGES_KEY),
             idbGet(BING_KEY)
         ]).then(function (results) {
-            var localData = results[0];
+            var localImages = results[0];
             var bingBlob = results[1];
 
-            // 分支1：本地壁纸优先
-            if (lastMode === 'local' && localData) {
-                log('Local', 'using your own wallpaper');
-                var blob = localData.blob;
+            // 分支1：本地壁纸优先（支持轮播）
+            if (lastMode === 'local' && localImages && localImages.length) {
+                var idx = (parseInt(localStorage.getItem(LOCAL_INDEX_KEY)) || 0) % localImages.length;
+                var img = localImages[idx];
+                var blob = img.blob;
                 // IDB 取回的 blob 可能丢失 MIME，用存储时保存的 MIME 修复
-                if ((!blob.type || blob.type === '') && localData.mime) {
-                    try { blob = new Blob([blob], { type: localData.mime }); } catch (e) { }
+                if ((!blob.type || blob.type === '') && img.mime) {
+                    try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
                 }
-                return applyWallpaper(URL.createObjectURL(blob), 'local').then(function () {
+                localStorage.setItem(LOCAL_INDEX_KEY, (idx + 1) % localImages.length);
+                log('Local', 'image ' + (idx + 1) + '/' + localImages.length + (img.name ? '  ·  ' + img.name : ''));
+                return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
+                    // 自愈：长度匹配时补缺失的缩略图，防止稀疏数组覆盖正常数据
+                    if (thumb) {
+                        var thumbs = loadThumbs();
+                        if (thumbs.length === localImages.length && !thumbs[idx]) {
+                            thumbs[idx] = thumb;
+                            saveThumbs(thumbs);
+                        }
+                    }
                     cacheBingInBackground();
                 });
             }
@@ -436,22 +462,102 @@
        壁纸 — 本地上传
        ================================================================ */
 
-    // 用户上传自定义壁纸
-    function setLocalWallpaper(file) {
+    // 生成简易唯一 ID
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    // 保存单张本地壁纸（show 为 true 时展示并切到本地模式，false 则只存库）
+    function saveLocalImage(file, show) {
         var blobUrl = URL.createObjectURL(file);
-        applyWallpaper(blobUrl, 'local');
-        idbPut(LOCAL_KEY, { blob: file, mime: file.type || '' }).catch(function () { });
-        localStorage.setItem(MODE_KEY, 'local');
-        closeSettings();
+        var newImage = { id: generateId(), blob: file, mime: file.type || '', name: file.name || '' };
+
+        // 先查重，避免展示了重复图又跳过
+        return idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+            images = images || [];
+            if (images.some(function (img) { return img.name === file.name && img.blob.size === file.size; })) {
+                log('Local', 'duplicate skipped: ' + file.name);
+                return false;
+            }
+
+            var start = show
+                ? (localStorage.setItem(MODE_KEY, 'local'), applyWallpaper(blobUrl, 'local'))
+                : generateThumbnail(blobUrl);
+
+            return start.then(function (thumb) {
+                if (!thumb) { warn('Local', 'thumbnail failed for ' + file.name); return false; }
+                // 重新读取以获取最新状态（批量导入时前一张可能已写入）
+                return idbGet(LOCAL_IMAGES_KEY).then(function (imgs) {
+                    imgs = imgs || [];
+                    var thumbs = loadThumbs();
+                    imgs.push(newImage);
+                    thumbs.push(thumb);
+                    return idbPut(LOCAL_IMAGES_KEY, imgs).then(function () { saveThumbs(thumbs); return true; });
+                });
+            });
+        }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
+    }
+
+    // 画廊 "+" 按钮专用：展示并刷新 UI
+    function setLocalWallpaper(file, keepOpen) {
+        saveLocalImage(file, true).then(function () {
+            if (keepOpen) refreshLocalGallery(); else closeSettings();
+        }).catch(function () {
+            if (!keepOpen) closeSettings();
+        });
+    }
+
+    // 删除单张本地壁纸
+    function deleteLocalImage(id) {
+        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+            if (!images) return;
+            var delIdx = -1;
+            for (var i = 0; i < images.length; i++) {
+                if (images[i].id === id) { delIdx = i; break; }
+            }
+            images = images.filter(function (img) { return img.id !== id; });
+            var thumbs = loadThumbs();
+            if (delIdx >= 0 && delIdx < thumbs.length) thumbs.splice(delIdx, 1);
+
+            if (images.length === 0) {
+                return idbDelete(LOCAL_IMAGES_KEY).then(function () {
+                    saveThumbs([]);
+                    localStorage.removeItem(LOCAL_INDEX_KEY);
+                    localStorage.setItem(MODE_KEY, 'bing');
+                    currentMode = 'bing';
+                    wpInfo.textContent = t('wpBing');
+                    removeLocalGallery();
+                    loadWallpaper();
+                });
+            }
+            return idbPut(LOCAL_IMAGES_KEY, images).then(function () {
+                saveThumbs(thumbs);
+                refreshLocalGallery();
+            });
+        }).catch(function () { });
     }
 
     // 重置为 Bing 每日壁纸
     function resetToBing() {
-        idbDelete(LOCAL_KEY).then(function () {
-            localStorage.removeItem(THUMB_KEY);
+        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+            var count = (images && images.length) || 0;
+            if (count > 1 && !confirm(t('resetConfirm'))) return;
+
+            currentMode = 'bing';
+            removeLocalGallery();
+            localStorage.removeItem(BING_THUMB_KEY);
+            localStorage.removeItem(LOCAL_THUMBS_KEY);
+            localStorage.removeItem(LOCAL_INDEX_KEY);
             localStorage.setItem(MODE_KEY, 'bing');
+
+            return idbDelete(LOCAL_IMAGES_KEY).then(function () {
+                return loadWallpaper();
+            }).then(function () {
+                wpInfo.textContent = t('wpBing');
+                closeSettings();
+            });
+        }).catch(function () {
             closeSettings();
-            loadWallpaper();
         });
     }
 
@@ -467,6 +573,9 @@
         settingsPanel.classList.add('active');
         settingsBtn.classList.add('panel-open');
         clearTimeout(hideTimeout);
+        // 本地模式下展示画廊
+        if (currentMode === 'local') refreshLocalGallery();
+        else { uploadBtn.style.display = ''; resetBtn.style.display = ''; }
     }
 
     // 关闭设置面板
@@ -475,6 +584,7 @@
         panelOpen = false;
         settingsPanel.classList.remove('active');
         settingsBtn.classList.remove('panel-open');
+        revokeGalleryUrls();
     }
 
     // 打开语言面板，互斥关闭设置面板
@@ -495,6 +605,89 @@
 
     // 关闭所有面板
     function closeAll() { closeSettings(); closeLangPanel(); }
+
+    // --- 本地壁纸画廊 ---
+
+    var _galleryUrls = [];
+
+    function revokeGalleryUrls() {
+        _galleryUrls.forEach(function (url) { URL.revokeObjectURL(url); });
+        _galleryUrls = [];
+    }
+
+    function removeLocalGallery() {
+        revokeGalleryUrls();
+        var g = document.getElementById('localGallery');
+        if (g) g.style.display = 'none';
+        uploadBtn.style.display = '';
+        resetBtn.style.display = '';
+    }
+
+    function refreshLocalGallery() {
+        if (currentMode !== 'local') return;
+        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+            if (images && images.length) renderLocalGallery(images, loadThumbs());
+        }).catch(function () { });
+    }
+
+    function renderLocalGallery(images, thumbs) {
+        revokeGalleryUrls();
+        var gallery = document.getElementById('localGallery');
+        if (!gallery) {
+            gallery = document.createElement('div');
+            gallery.id = 'localGallery';
+            gallery.className = 'local-gallery';
+            wpInfo.parentNode.insertBefore(gallery, uploadBtn);
+        }
+
+        while (gallery.firstChild) gallery.removeChild(gallery.firstChild);
+        gallery.style.display = 'block';
+
+        wpInfo.textContent = t('wpLocal') + ' · ' + images.length + ' ' + t('imageCount');
+
+        var grid = document.createElement('div');
+        grid.className = 'local-gallery-grid';
+
+        images.forEach(function (img, i) {
+            var card = document.createElement('div');
+            card.className = 'local-thumb';
+            var bg = thumbs[i];
+            if (!bg && img.blob && img.blob.size > 0) {
+                var url = URL.createObjectURL(img.blob);
+                _galleryUrls.push(url);
+                bg = 'url(' + url + ')';
+            }
+            if (bg) card.style.backgroundImage = bg;
+
+            var del = document.createElement('button');
+            del.className = 'local-thumb-del';
+            del.title = t('deleteImage') + (img.name ? ': ' + img.name : '');
+            del.setAttribute('data-id', img.id);
+            del.addEventListener('click', function (e) {
+                e.stopPropagation();
+                deleteLocalImage(this.dataset.id);
+            });
+            card.appendChild(del);
+            grid.appendChild(card);
+        });
+
+        gallery.appendChild(grid);
+
+        if (images.length < 12) {
+            var addBtn = document.createElement('button');
+            addBtn.className = 'panel-btn primary';
+            addBtn.textContent = '+ ' + t('addImage');
+            addBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                _uploadKeepOpen = true;
+                fileInput.click();
+            });
+            gallery.appendChild(addBtn);
+        }
+
+        // 画廊显示时隐藏原有的上传按钮
+        uploadBtn.style.display = 'none';
+    }
 
     /* ================================================================
        UI — 角落按钮与搜索栏显隐
@@ -686,13 +879,37 @@
     langPanel.addEventListener('mouseleave', function () { mouseNearCorner = false; hideTimeout = setTimeout(function () { closeLangPanel(); hideCorners(); }, 500); });
     langPanel.addEventListener('click', function (e) { e.stopPropagation(); });
 
-    uploadBtn.addEventListener('click', function (e) { e.stopPropagation(); fileInput.click(); });
+    var _uploadKeepOpen = false;
+
+    uploadBtn.addEventListener('click', function (e) { e.stopPropagation(); _uploadKeepOpen = false; fileInput.click(); });
     fileInput.addEventListener('change', function () {
-        var file = fileInput.files[0];
-        if (!file) return;
-        if (!file.type.match(/^image\//)) { alert(t('fileError')); fileInput.value = ''; return; }
-        setLocalWallpaper(file);
+        var all = Array.from(fileInput.files || []);
+        var files = all.filter(function (f) { return f.type && f.type.match(/^image\//); });
         fileInput.value = '';
+        if (!files.length) return;
+
+        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+            images = images || [];
+            var slots = Math.max(0, 12 - images.length);
+            if (!slots) return;
+
+            var saved = 0;
+            var p = Promise.resolve();
+            files.forEach(function (file) {
+                p = p.then(function () {
+                    if (saved >= slots) return;
+                    var show = saved === 0;
+                    return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
+                });
+            });
+            return p.then(function () {
+                log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (slots: ' + slots + ')');
+                if (_uploadKeepOpen) refreshLocalGallery(); else closeSettings();
+            });
+        }).catch(function (e) {
+            warn('Local', 'batch save failed: ' + e.message);
+            if (!_uploadKeepOpen) closeSettings();
+        });
     });
     resetBtn.addEventListener('click', function (e) { e.stopPropagation(); resetToBing(); });
     advToggle.addEventListener('click', function (e) { e.stopPropagation(); advSection.classList.toggle('show'); });
