@@ -171,6 +171,8 @@ PlainTab은 어떤 프레임워크나 라이브러리도 사용하지 않았다.
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — 통일된 이징 곡선. 모든 페이드인과 팝업 애니메이션에서 공유된다. `ease`나 `ease-in-out`이 아니다——이 곡선은 시작 부분에서 더 빠르게 목표에 도달하고 끝부분에서는 더 부드럽게 감쇠한다. 밀리초 단위의 UI 응답 차이에서 체감상 차이는 명확하다
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — 확장 모드에서 브라우저 UI 언어를 가져온다. `navigator.language`보다 사용자의 실제 의도를 더 정확하게 반영한다
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — `setTimeout`으로 렌더링 타이밍을 추측하지 않고, 브라우저의 프레임 리듬에 정확히 동기화한다. 두 번 연속 사용하여 스타일 계산과 제출 사이에 명확한 프레임 경계를 확보한다
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — 두 Bing API 엔드포인트를 동시에 호출하여 먼저 응답하는 쪽을 사용함으로써 불필요한 대기를 제거
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — 각 Bing API 요청을 8초로 제한하고, 지는 쪽 연결을 OS 수준 TCP 타임아웃에 맡기는 대신 깔끔하게 중단
 
 **사용하지 않는 기술도 마찬가지로 중요하다**: 제로 외부 의존성. React도, Tailwind도, 빌드 도구도 없다. `manifest.json`의 CSP는 `script-src 'self'`로 제한된다——브라우저가 순수 vanilla JS를 강제한다. 도입하지 않은 모든 라이브러리는 더 적은 파싱 시간, 더 작은 네트워크 오버헤드, 더 빠른 첫 번째 프레임을 의미한다.
 
@@ -202,7 +204,7 @@ PlainTab은 어떤 프레임워크나 라이브러리도 사용하지 않았다.
 
 로컬 배경화면 모드에서도 Bing 배경화면은 백그라운드에서 조용히 업데이트된다——사용자가 언제든 Bing 모드로 돌아와도 네트워크를 기다릴 필요가 없다.
 
-Bing API에는 두 개의 엔드포인트가 주-백업 이중화로 준비되어 있으며, 언어 코드(예: `zh-CN`)는 Bing 마켓 코드로 매핑되고, 일부 언어는 `en-US`로 폴백된다.
+Bing API는 `Promise.any`를 통해 두 엔드포인트를 동시에 호출하며, 8초 `AbortController` 타임아웃으로 제어한다——가장 빠른 응답이 승리한다. JSON 페이로드는 매우 작아서 추가 요청 비용이 거의 없지만, 경쟁을 통해 전 세계 어디서나 최적의 지연 시간을 보장한다. 언어 코드(예: `zh-CN`)는 Bing 마켓 코드로 매핑되고, 일부 언어는 `en-US`로 폴백된다.
 
 ---
 

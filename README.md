@@ -172,6 +172,8 @@ PlainTab doesn't use any frameworks or libraries. Every API listed below was cho
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — A unified easing curve shared by all fade-in and pop animations. Not `ease` or `ease-in-out` — this curve reaches its target faster at the start and decelerates more gently at the end. For millisecond-level UI response differences, the felt difference is noticeable
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — Retrieves the browser UI language in extension mode, more accurately reflecting the user's true intent than `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — Instead of guessing render timing with `setTimeout`, it aligns precisely with the browser's frame cadence. Using it twice in succession ensures a clear frame boundary between style computation and commit
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Fires both Bing API endpoints simultaneously and uses whichever responds first, eliminating unnecessary wait
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Caps each Bing API request at 8 seconds, cleanly aborting the losing connection instead of letting it hang on OS-level TCP timeout
 
 **The technologies NOT used are equally important**: zero external dependencies. No React, no Tailwind, no build tools. The CSP in `manifest.json` restricts `script-src 'self'` — the browser enforces pure vanilla JS. Every library not included means less parse time, less network overhead, and an earlier first paint.
 
@@ -203,7 +205,7 @@ Each time a new tab opens, PlainTab searches for the fastest available wallpaper
 
 In local wallpaper mode, the Bing wallpaper is silently updated in the background — users can switch back to Bing mode at any time without waiting for the network.
 
-The Bing API has two endpoints for primary/backup disaster recovery. Language codes (e.g., `zh-CN`) are mapped to Bing market codes, with some languages falling back to `en-US`.
+The Bing API fires both endpoints simultaneously via `Promise.any` with an 8-second `AbortController` timeout — the fastest response wins. The JSON payloads are tiny, so the extra request costs virtually nothing, yet the race ensures optimal latency regardless of where you are. Language codes (e.g., `zh-CN`) are mapped to Bing market codes, with some languages falling back to `en-US`.
 
 ---
 

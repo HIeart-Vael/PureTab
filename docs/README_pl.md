@@ -168,6 +168,8 @@ PlainTab nie używa żadnych frameworków ani bibliotek. Każde z poniższych AP
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — ujednolicona krzywa easing dla wszystkich animacji pojawiania się i zanikania. To nie `ease` ani `ease-in-out` — ta krzywa szybciej osiąga cel na początku i ma łagodniejsze wygaszanie na końcu. Dla odpowiedzi UI rzędu milisekund różnica percepcyjna jest wyraźna
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — w trybie rozszerzenia pobiera język interfejsu przeglądarki, dokładniej odzwierciedlając rzeczywiste preferencje użytkownika niż `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — nie opiera się na `setTimeout` w odgadywaniu momentu renderowania, ale precyzyjnie dostosowuje się do rytmu klatek przeglądarki. Dwukrotne użycie zapewnia wyraźną granicę klatki między obliczaniem stylów a ich wysyłką
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Uruchamia oba punkty końcowe API Bing jednocześnie i używa tego, który odpowie pierwszy, eliminując niepotrzebne oczekiwanie
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Ogranicza każde żądanie API Bing do 8 sekund, czysto przerywając przegrywające połączenie zamiast pozostawiać je do czasu TCP na poziomie systemu operacyjnego
 
 **Równie ważne są technologie, których nie użyto**: zero zewnętrznych zależności. Żadnego Reacta, Tailwinda ani narzędzi do budowania. CSP w `manifest.json` ogranicza `script-src 'self'` — przeglądarka wymusza czysty vanilla JS. Każda niewprowadzona biblioteka oznacza mniej czasu na parsowanie, mniejszy narzut sieciowy i wcześniejszą pierwszą klatkę.
 
@@ -199,7 +201,7 @@ Przy każdym otwarciu nowej karty wyszukiwane jest najszybsze dostępne źródł
 
 W trybie lokalnych tapet tapeta Bing jest wciąż po cichu aktualizowana w tle — użytkownik może w każdej chwili przełączyć się na tryb Bing bez czekania na sieć.
 
-API Bing ma dwa punkty końcowe do przełączania awaryjnego. Kody językowe (np. `zh-CN`) są mapowane na kody rynkowe Bing, a niektóre języki wracają do `en-US`.
+API Bing uruchamia oba punkty końcowe jednocześnie przez `Promise.any` z 8-sekundowym limitem czasu przez `AbortController` — najszybsza odpowiedź wygrywa. Ładunki JSON są niewielkie, więc dodatkowe żądanie kosztuje praktycznie nic, a jednak wyścig zapewnia optymalne opóźnienie niezależnie od tego, gdzie jesteś. Kody językowe (np. `zh-CN`) są mapowane na kody rynkowe Bing, a niektóre języki wracają do `en-US`.
 
 ---
 

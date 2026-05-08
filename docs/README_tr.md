@@ -168,6 +168,8 @@ PlainTab herhangi bir framework veya kütüphane kullanmaz. Aşağıdaki her API
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — tüm solma ve açılma animasyonları için birleşik yumuşatma eğrisi. `ease` veya `ease-in-out` değildir — bu eğri başlangıçta hedefe daha hızlı ulaşır ve sonda daha yumuşak bir azalma gösterir. Milisaniye düzeyindeki UI yanıtları için algısal fark belirgindir
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — uzantı modunda tarayıcı UI dilini alır, `navigator.language`'den daha doğru bir şekilde kullanıcının gerçek niyetini yansıtır
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — render zamanlamasını tahmin etmek için `setTimeout`'a güvenmez, tarayıcının kare ritmine hassas bir şekilde hizalanır. Art arda iki kez kullanımı, stil hesaplaması ve gönderim arasında net bir kare sınırı sağlar
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Her iki Bing API uç noktasını aynı anda ateşler ve ilk yanıt vereni kullanır, gereksiz beklemeyi ortadan kaldırır
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Her Bing API isteğini 8 saniyede sınırlar, kaybeden bağlantıyı işletim sistemi seviyesinde TCP zaman aşımına bırakmak yerine temizce sonlandırır
 
 **Kullanılmayan teknolojiler de aynı derecede önemlidir**: sıfır harici bağımlılık. React, Tailwind veya derleme araçları yok. `manifest.json` içindeki CSP, `script-src 'self'` ile sınırlar — tarayıcı saf vanilla JS'yi zorunlu kılar. Eklenmeyen her kütüphane daha az ayrıştırma süresi, daha az ağ yükü ve daha erken bir ilk kare anlamına gelir.
 
@@ -199,7 +201,7 @@ Her yeni sekme açıldığında, mevcut en hızlı duvar kağıdı kaynağı aş
 
 Yerel duvar kağıdı modunda, Bing duvar kağıdı arka planda sessizce güncellenir — kullanıcı istediği zaman ağ beklemeye gerek kalmadan Bing moduna geçebilir.
 
-Bing API'nin ana/yedek iki uç noktası bulunur. Dil kodları (örn. `zh-CN`) Bing pazar kodlarına eşlenir, bazı diller `en-US`'e geri döner.
+Bing API, `Promise.any` ile her iki uç noktayı aynı anda ateşler, 8 saniyelik `AbortController` zaman aşımı ile — en hızlı yanıt kazanır. JSON yükleri çok küçüktür, bu nedenle ekstra isteğin maliyeti neredeyse sıfırdır, ancak yarış nerede olursanız olun en uygun gecikmeyi sağlar. Dil kodları (örn. `zh-CN`) Bing pazar kodlarına eşlenir, bazı diller `en-US`'e geri döner.
 
 ---
 
