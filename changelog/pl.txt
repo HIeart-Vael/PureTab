@@ -1,5 +1,8 @@
 Dziennik zmian
 
+• v3.1.1
+  • Przełączono Bing API na tryb wyścigu z Promise.any i 8-sekundowym limitem czasu AbortController; zaktualizowano wszystkie 16 README, aby odzwierciedlić nową strategię pobierania i dodać techniki opóźnienia Promise.any/AbortController.
+
 • v3.1.0
   • Galeria lokalnych tapet: przesyłanie, usuwanie, rotacja wielu tapet z wyborem wsadowym; refaktoryzacja kodu (nazewnictwo semantyczne, podział funkcji, komentarze projektowe); ulepszone style tytułów paneli; rozszerzona lokalizacja wielojęzyczna; poprawione CSP w celu usunięcia domen JSON API.
 

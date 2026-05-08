@@ -1,5 +1,8 @@
 Nhật ký thay đổi
 
+• v3.1.1
+  • Đã chuyển Bing API sang chế độ cạnh tranh với Promise.any và thời gian chờ 8 giây AbortController; đã cập nhật tất cả 16 README để phản ánh chiến lược tìm nạp mới và thêm kỹ thuật giảm độ trễ Promise.any/AbortController.
+
 • v3.1.0
   • Thư viện hình nền cục bộ: tải lên, xóa, xoay vòng nhiều hình nền với chọn hàng loạt; tái cấu trúc mã (đặt tên ngữ nghĩa, chia nhỏ hàm, chú thích thiết kế); cải thiện kiểu tiêu đề bảng; nâng cao bản địa hóa đa ngôn ngữ; sửa CSP để xóa miền JSON API.
 

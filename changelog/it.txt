@@ -1,5 +1,8 @@
 Registro delle modifiche
 
+• v3.1.1
+  • Passaggio dell'API Bing alla modalità competizione con Promise.any e timeout di 8s con AbortController; aggiornati tutti i 16 README per riflettere la nuova strategia di recupero e aggiungere le tecniche di latenza Promise.any/AbortController.
+
 • v3.1.0
   • Galleria sfondi locali: carica, elimina, ruota più sfondi con selezione multipla; refactoring del codice (nomi semantici, divisione funzioni, commenti di design); migliorati gli stili dei titoli dei pannelli; localizzazione multilingue potenziata; CSP corretto per rimuovere i domini API JSON.
 

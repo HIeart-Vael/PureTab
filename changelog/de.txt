@@ -1,5 +1,8 @@
 Änderungsprotokoll
 
+• v3.1.1
+  • Bing-API auf Promise.any-Race mit 8s-AbortController-Timeout umgestellt; alle 16 READMEs aktualisiert, um die neue Abrufstrategie sowie Promise.any/AbortController-Latenztechniken zu dokumentieren.
+
 • v3.1.0
   • Lokale Hintergrundbild-Galerie: Hochladen, Löschen, Rotieren mehrerer Hintergründe mit Stapelauswahl; Code-Refactoring (semantische Benennung, Aufteilung langer Funktionen, Designkommentare); verbesserte Panel-Titelstile; erweiterte mehrsprachige Lokalisierung; CSP korrigiert, um JSON-API-Domänen zu entfernen.
 

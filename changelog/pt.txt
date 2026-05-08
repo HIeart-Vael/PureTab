@@ -1,5 +1,8 @@
 Registro de alterações
 
+• v3.1.1
+  • Mudou a API do Bing para modo de competição com Promise.any e tempo limite de 8s com AbortController; atualizou todos os 16 READMEs para refletir a nova estratégia de busca e adicionou técnicas de latência com Promise.any/AbortController.
+
 • v3.1.0
   • Galeria de papéis de parede locais: enviar, excluir, rotacionar vários papéis de parede com seleção em lote; refatoração de código (nomes semânticos, divisão de funções, comentários de design); melhoria nos estilos de títulos dos painéis; localização multilíngue aprimorada; CSP corrigido para remover domínios de API JSON.
 

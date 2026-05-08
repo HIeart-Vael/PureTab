@@ -1,5 +1,8 @@
 Changelog
 
+• v3.1.1
+  • Switched Bing API to Promise.any race with 8s AbortController timeout; updated all 16 READMEs to reflect new fetch strategy and added Promise.any/AbortController to latency techniques.
+
 • v3.1.0
   • Local wallpaper gallery: upload, delete, rotate multiple wallpapers with batch file selection; code refactoring (semantic naming, split functions, design comments); improved panel title styling; enhanced multi-language localization; fixed CSP to remove JSON API domains.
 
