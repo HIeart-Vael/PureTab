@@ -1,5 +1,11 @@
 Changelog
 
+• v3.1.0
+  • Local wallpaper gallery: upload, delete, rotate multiple wallpapers with batch file selection; code refactoring (semantic naming, split functions, design comments); improved panel title styling; enhanced multi-language localization; fixed CSP to remove JSON API domains.
+
+• v3.0.5
+  • Upgraded Bing API proxy (region support + image dedup); optimized wallpaper caching (check IDB before download); unified localStorage keys; added 16-language changelog files; improved logging and code semantics.
+
 • v3.0.4
   • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
 

@@ -1,5 +1,11 @@
 Dziennik zmian
 
+• v3.1.0
+  • Galeria lokalnych tapet: przesyłanie, usuwanie, rotacja wielu tapet z wyborem wsadowym; refaktoryzacja kodu (nazewnictwo semantyczne, podział funkcji, komentarze projektowe); ulepszone style tytułów paneli; rozszerzona lokalizacja wielojęzyczna; poprawione CSP w celu usunięcia domen JSON API.
+
+• v3.0.5
+  • Zaktualizowano proxy Bing API (obsługa regionalna + deduplikacja obrazów); zoptymalizowano buforowanie tapet (sprawdzanie IDB przed pobraniem); ujednolicono klucze localStorage; dodano pliki changelog w 16 językach; ulepszono rejestrowanie i semantykę kodu.
+
 • v3.0.4
   • Naprawiono ładowanie tapety: na liście dozwolonych CSP `img-src` brakowało źródeł CDN Bing (`www.bing.com`, `cn.bing.com`), więc obrazy przekierowywane z proxy API były blokowane przez przeglądarkę.
 

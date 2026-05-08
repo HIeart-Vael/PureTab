@@ -1,5 +1,11 @@
 Değişiklik günlüğü
 
+• v3.1.0
+  • Yerel duvar kağıdı galerisi: birden fazla duvar kağıdını toplu seçimle yükleme/silme/döndürme; kod yeniden yapılandırma (anlamsal adlandırma, uzun fonksiyonları bölme, tasarım yorumları); panel başlık stilleri iyileştirildi; çok dilli yerelleştirme geliştirildi; JSON API alanlarını kaldırmak için CSP düzeltildi.
+
+• v3.0.5
+  • Bing API proxy yükseltildi (bölge desteği + görüntü tekilleştirme); duvar kağıdı önbellekleme optimize edildi (indirmeden önce IDB'yi kontrol et); localStorage anahtarları birleştirildi; 16 dilde changelog dosyaları eklendi; günlük kaydı ve kod anlam bilgisi iyileştirildi.
+
 • v3.0.4
   • Duvar kağıdı yükleme hatası düzeltildi: CSP `img-src` izin listesinde Bing CDN kaynakları (`www.bing.com`, `cn.bing.com`) eksikti, bu nedenle proxy API'lerinden yönlendirilen görüntüler tarayıcı tarafından engelleniyordu.
 
