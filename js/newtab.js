@@ -2,11 +2,13 @@
     'use strict';
 
     /* ================================================================
-       常量
+       1. 常量
        ================================================================ */
 
     var BING_PRIMARY = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
     var BING_FALLBACK = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
+
+    // *** localStorage / IndexedDB 的 key 名 —— 任何改动都会破坏已部署版本 ***
     var DB_NAME = 'PlainTab';
     var DB_VERSION = 1;
     var STORE = 'wallpaper';
@@ -21,25 +23,25 @@
     var LOCAL_IMAGES_KEY = 'local_images';
     var LOCAL_INDEX_KEY = 'ptab_local_index';
     var LOCAL_THUMBS_KEY = 'local_thumbs';
+
     var TRANSITION_MS = 500;
     var THUMB_MAX_W = 640;
 
-    // 日志工具：log 为普通信息，warn 为警告
     var log = function (tag, msg) { console.log('[' + tag + '] ' + msg); };
     var warn = function (tag, msg) { console.warn('[' + tag + '] ' + msg); };
 
     /* ================================================================
-       运行环境
+       2. 运行环境
        ================================================================ */
 
     var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id;
 
     /* ================================================================
-       DOM 元素
+       3. DOM 元素
        ================================================================ */
 
-    var back = document.getElementById('wallpaperBack');
-    var front = document.getElementById('wallpaperFront');
+    var wallpaperBackEl = document.getElementById('wallpaperBack');
+    var wallpaperFrontEl = document.getElementById('wallpaperFront');
     var searchBar = document.getElementById('searchBar');
     var searchInput = document.getElementById('searchInput');
     var engineIcon = document.getElementById('searchEngineIcon');
@@ -48,46 +50,49 @@
     var settingsPanel = document.getElementById('settingsPanel');
     var langPanel = document.getElementById('langPanel');
     var langOptions = document.getElementById('langOptions');
-    var wpInfo = document.getElementById('wpInfo');
+    var wallpaperInfoEl = document.getElementById('wpInfo');
     var uploadBtn = document.getElementById('uploadBtn');
     var fileInput = document.getElementById('fileInput');
     var resetBtn = document.getElementById('resetBtn');
-    var advToggle = document.getElementById('advToggle');
-    var advSection = document.getElementById('advSection');
-    var searchModeSel = document.getElementById('searchModeSel');
+    var advancedToggleEl = document.getElementById('advToggle');
+    var advancedSectionEl = document.getElementById('advSection');
+    var searchModeSelect = document.getElementById('searchModeSel');
     var opacityRange = document.getElementById('opacityRange');
-    var opacityNum = document.getElementById('opacityNum');
-    var engineSel = document.getElementById('engineSel');
-    var resetAdvBtn = document.getElementById('resetAdvBtn');
+    var opacityNumInput = document.getElementById('opacityNum');
+    var engineSelect = document.getElementById('engineSel');
+    var resetAdvancedBtn = document.getElementById('resetAdvBtn');
 
     /* ================================================================
-       状态变量
+       4. 状态变量
        ================================================================ */
 
-    var currentMode = 'bing';
+    var currentMode = 'bing';             // 'bing' | 'local'
     var currentLang = 'en';
     var I18N = window.I18N || {};
     var LanguageList = window.LanguageList || [];
 
-    // UI 交互状态
-    var mouseNearCorner = false;
-    var mouseOnSearch = false;
-    var panelOpen = false;
-    var langOpen = false;
-    var hideTimeout = null;
-    var searchTimeout = null;
+    // 鼠标/面板交互状态
+    var isMouseInCornerZone = false;
+    var isMouseInSearchZone = false;
+    var isSettingsPanelOpen = false;
+    var isLangPanelOpen = false;
+    var cornerHideTimer = null;
+    var searchHideTimer = null;
 
-    // 搜索设置（持久化）
-    var searchMode = 'always';
+    // 搜索设置（持久化到 localStorage）
+    var searchMode = 'always';            // 'hover' | 'always' | 'never'
     var currentOpacity = 0.45;
     var currentEngine = 'google';
     var engineIndex = 0;
 
     /* ================================================================
-       国际化
+       5. 国际化 (i18n)
        ================================================================ */
 
-    // 获取翻译文本，优先 chrome.i18n，其次内置 I18N 表，最后回退到 key 本身
+    /**
+     * 查找翻译文本的优先级链：
+     *   chrome.i18n（扩展模式）→ I18N 表当前语言 → I18N 表英语 → 原始 key
+     */
     function t(key) {
         if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage) {
             var msg = chrome.i18n.getMessage(key);
@@ -96,7 +101,7 @@
         return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['en'] && I18N['en'][key]) || key;
     }
 
-    // 探测浏览器语言，在 I18N 表中找最佳匹配
+    /** 探测浏览器语言，找 I18N 表中最佳匹配 */
     function detectLang() {
         var browserLang = 'en';
         if (typeof chrome !== 'undefined' && chrome.i18n) browserLang = chrome.i18n.getUILanguage();
@@ -108,7 +113,7 @@
         return found || 'en';
     }
 
-    // 刷新整个页面的 UI 文本
+    /** 用当前语言刷新页面上所有可见文本 */
     function updateLangUI() {
         document.title = t('extName');
         searchInput.placeholder = t('searchPlaceholder');
@@ -117,23 +122,23 @@
         settingsBtn.setAttribute('title', t('settingsTitle'));
         document.querySelector('.settings-panel h3').textContent = t('panelTitle');
         if (currentMode === 'local') refreshLocalGallery();
-        else wpInfo.textContent = t('wpBing');
+        else wallpaperInfoEl.textContent = t('wpBing');
         uploadBtn.textContent = t('uploadBtn');
         resetBtn.textContent = t('resetBtn');
-        advToggle.textContent = t('advToggle');
+        advancedToggleEl.textContent = t('advToggle');
         var labels = document.querySelectorAll('.setting-row label');
         if (labels.length >= 3) {
             labels[0].textContent = t('searchLabel');
             labels[1].textContent = t('opacityLabel');
             labels[2].textContent = t('engineLabel');
         }
-        var opts = searchModeSel.options;
+        var opts = searchModeSelect.options;
         if (opts.length >= 3) { opts[0].textContent = t('searchHover'); opts[1].textContent = t('searchAlways'); opts[2].textContent = t('searchNever'); }
-        resetAdvBtn.textContent = t('resetAdv');
+        resetAdvancedBtn.textContent = t('resetAdv');
         renderLangPanel();
     }
 
-    // 渲染语言选择面板的按钮列表
+    /** 渲染语言选择面板的按钮列表 */
     function renderLangPanel() {
         document.querySelector('.lang-title').textContent = t('langPanelTitle');
         langOptions.innerHTML = '';
@@ -154,28 +159,29 @@
     }
 
     /* ================================================================
-       IndexedDB 存储
+       6. IndexedDB 存储层
        ================================================================ */
 
-    // 获取（或创建并缓存）数据库连接
-    var _db;
+    var _dbConnection;
+
+    /** 获取（或创建并缓存）数据库连接 */
     function openDB() {
-        if (_db) return Promise.resolve(_db);
+        if (_dbConnection) return Promise.resolve(_dbConnection);
         return new Promise(function (resolve, reject) {
             var req = indexedDB.open(DB_NAME, DB_VERSION);
             req.onupgradeneeded = function (e) {
                 if (!e.target.result.objectStoreNames.contains(STORE)) e.target.result.createObjectStore(STORE);
             };
             req.onsuccess = function (e) {
-                _db = e.target.result;
-                _db.onclose = function () { _db = null; };
-                resolve(_db);
+                _dbConnection = e.target.result;
+                // WHY: 连接意外关闭时清除缓存，下次调用会重新建立连接
+                _dbConnection.onclose = function () { _dbConnection = null; };
+                resolve(_dbConnection);
             };
             req.onerror = function (e) { reject(e.target.error); };
         });
     }
 
-    // 写入键值对
     function idbPut(key, value) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -187,7 +193,6 @@
         });
     }
 
-    // 读取键值
     function idbGet(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -199,7 +204,6 @@
         });
     }
 
-    // 删除键值
     function idbDelete(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -212,14 +216,25 @@
     }
 
     /* ================================================================
-       壁纸 — 双图层核心
+       7. 壁纸核心 — 双图层零白屏系统
+
+       WHY 需要两个图层：
+         #wallpaperBack (z-index:0) — 始终持有可见图像。
+         preload.js 在浏览器首帧绘制前同步写入缩略图，
+         用户永远不会看到空白背景。
+         #wallpaperFront (z-index:1, opacity:0) — 用于淡入过渡。
+         新图在内存中预加载 → 设到 front 层 → CSS opacity
+         transition 淡入 → 过渡完成后 "稳定" 到 back 层
+         （直接 back.style.backgroundImage 赋值），front 复位透明。
+         这样每个时刻至少有一层持有已渲染图像 —— 零白屏。
        ================================================================ */
 
-    // 将图片预加载到浏览器缓存中
+    /** 将图片预加载到浏览器缓存 */
     function preloadImage(url) {
         return new Promise(function (resolve) {
             var img = new Image();
             img.onload = function () {
+                // WHY: decode() 确保图片已解码，避免首次绘制时的解码延迟闪烁
                 img.decode().then(function () { resolve(true); }, function () { resolve(true); });
             };
             img.onerror = function () { resolve(false); };
@@ -227,18 +242,25 @@
         });
     }
 
-    // 展示壁纸：预加载 → front 层淡入 → 稳定到 back 层，零白屏
+    /**
+     * 完整展示管线：预加载 → front 层淡入 → 稳定到 back 层 → 生成缩略图
+     *
+     * WHY 使用两次 requestAnimationFrame：
+     *   第一次 rAF 确保 DOM 在设置 backgroundImage 后才开始计算样式；
+     *   第二次 rAF 确保浏览器已应用 backgroundImage，再添加 CSS transition 类
+     *   才能触发淡入动画。跳过其中任意一步都会导致过渡不生效。
+     */
     function applyWallpaper(url, mode) {
         return preloadImage(url).then(function () {
-            front.style.backgroundImage = 'url(' + url + ')';
+            wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
             return new Promise(function (resolve) {
                 requestAnimationFrame(function () {
                     requestAnimationFrame(function () {
-                        front.classList.add('active');
+                        wallpaperFrontEl.classList.add('active');
                         setTimeout(function () {
-                            back.style.backgroundImage = 'url(' + url + ')';
-                            front.classList.remove('active');
-                            front.style.backgroundImage = '';
+                            wallpaperBackEl.style.backgroundImage = 'url(' + url + ')';
+                            wallpaperFrontEl.classList.remove('active');
+                            wallpaperFrontEl.style.backgroundImage = '';
                             resolve();
                         }, TRANSITION_MS + 50);
                     });
@@ -246,12 +268,18 @@
             });
         }).then(function () {
             currentMode = mode;
-            wpInfo.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
+            wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
             return generateThumbnail(url);
         });
     }
 
-    // 生成缩略图存入 localStorage，供 preload.js 同步绘制首帧
+    /**
+     * 生成缩略图存入 localStorage，供 preload.js 同步绘制首帧。
+     *
+     * WHY 640px 宽 JPEG 0.55 质量：
+     *   缩略图以 CSS url(data:...) 格式存入 localStorage，需要控制在 quota 内。
+     *   640px 在 1920 屏幕上也足够锐利。JPEG 0.55 是体积与画质的平衡点。
+     */
     function generateThumbnail(url) {
         return new Promise(function (resolve) {
             var img = new Image();
@@ -272,7 +300,7 @@
         });
     }
 
-    // 读取/写入缩略图数组（与 local_images 数组索引对齐）
+    // 读/写本地缩略图数组（与 IDB local_images 数组索引对齐）
     function loadThumbs() {
         try { return JSON.parse(localStorage.getItem(LOCAL_THUMBS_KEY) || '[]'); }
         catch (e) { return []; }
@@ -283,16 +311,16 @@
     }
 
     /* ================================================================
-       壁纸 — Bing 获取与缓存
+       8. 壁纸 — Bing 每日壁纸获取与缓存
        ================================================================ */
 
-    // 语言代码 → Bing 市场代码
+    /** 语言代码 → Bing 市场代码（部分语言无 Bing 直营市场，回退 en-US） */
     function bingMkt(lang) {
         var map = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'en': 'en-US', 'ja': 'ja-JP', 'ko': 'ko-KR', 'fr': 'fr-FR', 'de': 'de-DE', 'es': 'es-ES', 'it': 'it-IT', 'pt': 'pt-BR', 'ru': 'ru-RU', 'ar': 'ar-SA', 'hi': 'hi-IN', 'tr': 'tr-TR', 'pl': 'pl-PL', 'vi': 'vi-VN' };
         return map[lang] || 'en-US';
     }
 
-    // 获取 Bing JSON API → 返回图像直链，先试主 API，不行再试备用，返回 {url, api}
+    /** 获取 Bing JSON API → 返回图像直链。先试主 API，失败再试备用。返回 {url, api} */
     function fetchBingUrl() {
         var mkt = bingMkt(currentLang);
         function tryFetch(url, api) {
@@ -304,6 +332,7 @@
                 throw new Error('no url in response');
             });
         }
+        // WHY: Date.now() 作为 cache-buster，防止浏览器/CDN 缓存过期响应
         var primary = BING_PRIMARY(mkt) + '&t=' + Date.now();
         return tryFetch(primary, 'primary').catch(function () {
             var fallback = BING_FALLBACK(mkt) + '&t=' + Date.now();
@@ -311,7 +340,7 @@
         });
     }
 
-    // 以 CORS 方式下载图片 Blob（用于存入 IDB）
+    /** CORS 方式下载图片 Blob（用于存入 IDB） */
     function downloadBingBlob(url) {
         return fetch(url, { mode: 'cors' }).then(function (r) {
             if (!r.ok) throw new Error('fetch failed');
@@ -319,23 +348,24 @@
         });
     }
 
-    // 读取已缓存的 Bing 元数据
     function loadBingMeta() {
-        try {
-            var raw = localStorage.getItem(META_KEY);
-            return raw ? JSON.parse(raw) : {};
-        } catch (e) { return {}; }
+        try { var raw = localStorage.getItem(META_KEY); return raw ? JSON.parse(raw) : {}; }
+        catch (e) { return {}; }
     }
 
-    // 写入 Bing 元数据
     function saveBingMeta(meta) {
-        try {
-            localStorage.setItem(META_KEY, JSON.stringify(meta));
-        } catch (e) { /* quota 满了 */ }
+        try { localStorage.setItem(META_KEY, JSON.stringify(meta)); }
+        catch (e) { /* quota 满了 */ }
     }
 
-    // 下载 Blob 并存入 IDB，同时更新 meta（src 即去重 key）
-    // URL 没变时先查 IDB：blob 还在就跳过下载，丢了才回退下载
+    /**
+     * 下载 Blob 并存入 IDB，同时更新 meta。
+     *
+     * WHY 用 src（图像直链 URL）作为去重 key：
+     *   Bing 每天只换一次图。如果 URL 没变，说明还是同一张，跳过下载。
+     *   但 IDB 中的旧 blob 可能已被浏览器清理 —— 所以即使 URL 相同，
+     *   也要检查 blob 是否真的存在，丢了就回退下载。
+     */
     function cacheBingBlob(url, provider, today) {
         var meta = loadBingMeta();
         var isNew = meta.src !== url;
@@ -363,11 +393,18 @@
                 var kb = (blob.size / 1024).toFixed(0);
                 log('Bing', 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB');
                 return idbPut(BING_KEY, blob).then(function () { return blob; });
-            }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
+            }).catch(function () { warn('Bing', 'got the URL but failed to download image, kept last image'); });
         }
     }
 
-    // 后台静默获取最新 Bing 壁纸并缓存（本地壁纸模式下使用）
+    /**
+     * 后台静默缓存最新 Bing 壁纸。
+     *
+     * WHY 在本地壁纸模式下也需要它：
+     *   用户可能随时切回 Bing 模式。在后台提前缓存好今天的 Bing 图，
+     *   切换时无需等待网络请求。同时 meta.date 防重复请求，
+     *   每个新标签页只跑一次。
+     */
     function cacheBingInBackground() {
         var today = new Date().toDateString();
         var meta = loadBingMeta();
@@ -382,10 +419,88 @@
     }
 
     /* ================================================================
-       壁纸 — 主加载流程
+       9. 壁纸 — 主加载流程
+
+       优先级：本地壁纸轮播 > 今日 Bing 缓存 > Bing 网络获取
        ================================================================ */
 
-    // 主流程：并行读取本地和 Bing 缓存，按优先级决定用哪个源
+    /** 尝试加载本地壁纸（轮播）。成功返回 true，否则返回 false */
+    function tryLoadLocalWallpaper(localImages) {
+        if (!localImages || !localImages.length) return Promise.resolve(false);
+
+        var idx = (parseInt(localStorage.getItem(LOCAL_INDEX_KEY)) || 0) % localImages.length;
+        var img = localImages[idx];
+        var blob = img.blob;
+
+        // WHY: IDB 取回的 blob 可能丢失 MIME type。
+        // 用存储时保存的 mime 字段重建 Blob，否则背景图不会被正确渲染。
+        if ((!blob.type || blob.type === '') && img.mime) {
+            try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
+        }
+
+        localStorage.setItem(LOCAL_INDEX_KEY, (idx + 1) % localImages.length);
+        log('Local', 'image ' + (idx + 1) + '/' + localImages.length + (img.name ? '  ·  ' + img.name : ''));
+
+        return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
+            // 自愈：修复因非原子写入导致的缺失缩略图
+            if (thumb) {
+                var thumbs = loadThumbs();
+                // WHY: 只在长度匹配时才补 —— 如果长度不等说明有更严重的同步问题，不应覆盖
+                if (thumbs.length === localImages.length && !thumbs[idx]) {
+                    thumbs[idx] = thumb;
+                    saveThumbs(thumbs);
+                }
+            }
+            // 后台预缓存 Bing，确保用户切回 Bing 模式时不需要等待网络
+            cacheBingInBackground();
+            return true;
+        });
+    }
+
+    /** 尝试用已缓存的 Bing blob 展示。成功返回 true，否则返回 false */
+    function tryLoadCachedBing(bingBlob, meta, today) {
+        if (!bingBlob || meta.date !== today) return Promise.resolve(false);
+
+        log('Bing', 'wallpaper is fresh  ·  date: ' + meta.date + ', nothing to do');
+        return applyWallpaper(URL.createObjectURL(bingBlob), 'bing').then(function () { return true; });
+    }
+
+    /** 从网络获取 Bing 壁纸（无可用缓存时的最终回退） */
+    function loadBingFromNetwork(meta, today) {
+        currentMode = 'bing';
+        wallpaperInfoEl.textContent = t('wpBing');
+        log('Bing', meta.date ? 'wallpaper is old (cache: ' + meta.date + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
+
+        // 路径 A：meta 里有今天的 src 但没 blob —— 先用 src 展示，异步下载 blob
+        if (meta.src && meta.date === today) {
+            return applyWallpaper(meta.src, 'bing').then(function () {
+                return cacheBingBlob(meta.src, meta.provider || 'primary', today);
+            });
+        }
+
+        // WHY: 在等待网络请求时，把旧 URL 先垫到 back 层防止白屏。
+        // 仅当 back 层没有背景图时才写 —— preload.js 可能已经写入了。
+        if (meta.src && !wallpaperBackEl.style.backgroundImage) {
+            wallpaperBackEl.style.backgroundImage = 'url(' + meta.src + ')';
+        }
+
+        // 路径 B：完全无缓存，从头获取 URL → 展示 → 下载 blob
+        return fetchBingUrl().then(function (r) {
+            return applyWallpaper(r.url, 'bing').then(function () {
+                return cacheBingBlob(r.url, r.api, today);
+            });
+        }).catch(function () {
+            // 网络全挂了：回退到旧 URL（如果 back 层还没有图的话）
+            if (!wallpaperBackEl.style.backgroundImage && meta.src) {
+                wallpaperBackEl.style.backgroundImage = 'url(' + meta.src + ')';
+            }
+        });
+    }
+
+    /**
+     * 主加载流程 —— 按优先级尝试三个来源。
+     * 并行读取 IDB（本地图片 + Bing blob），根据模式和历史决定用哪个。
+     */
     function loadWallpaper() {
         var lastMode = localStorage.getItem(MODE_KEY) || 'bing';
         var meta = loadBingMeta();
@@ -398,83 +513,49 @@
             var localImages = results[0];
             var bingBlob = results[1];
 
-            // 分支1：本地壁纸优先（支持轮播）
-            if (lastMode === 'local' && localImages && localImages.length) {
-                var idx = (parseInt(localStorage.getItem(LOCAL_INDEX_KEY)) || 0) % localImages.length;
-                var img = localImages[idx];
-                var blob = img.blob;
-                // IDB 取回的 blob 可能丢失 MIME，用存储时保存的 MIME 修复
-                if ((!blob.type || blob.type === '') && img.mime) {
-                    try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
-                }
-                localStorage.setItem(LOCAL_INDEX_KEY, (idx + 1) % localImages.length);
-                log('Local', 'image ' + (idx + 1) + '/' + localImages.length + (img.name ? '  ·  ' + img.name : ''));
-                return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
-                    // 自愈：长度匹配时补缺失的缩略图，防止稀疏数组覆盖正常数据
-                    if (thumb) {
-                        var thumbs = loadThumbs();
-                        if (thumbs.length === localImages.length && !thumbs[idx]) {
-                            thumbs[idx] = thumb;
-                            saveThumbs(thumbs);
-                        }
-                    }
-                    cacheBingInBackground();
+            // 优先级 1：本地模式且有图片 → 轮播
+            if (lastMode === 'local') {
+                return tryLoadLocalWallpaper(localImages).then(function (loaded) {
+                    if (loaded) return;
+                    // 本地模式但无图片（最后一张被删了），继续到 Bing 路径
+                    return tryLoadCachedBing(bingBlob, meta, today).then(function (loaded) {
+                        if (!loaded) return loadBingFromNetwork(meta, today);
+                    });
                 });
             }
 
-            // 分支2：Bing blob 缓存是今天的，直接用
-            if (bingBlob && meta.date === today) {
-                log('Bing', 'wallpaper is fresh  ·  date: ' + meta.date + ', nothing to do');
-                return applyWallpaper(URL.createObjectURL(bingBlob), 'bing');
-            }
-
-            // 分支3：没有可用缓存，走网络获取
-            currentMode = 'bing';
-            wpInfo.textContent = t('wpBing');
-            log('Bing', meta.date ? 'wallpaper is old (cache: ' + meta.date + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
-
-            // 3a：meta 里有今天的 src 但没 blob，先用 src 展示再异步下载 blob
-            if (meta.src && meta.date === today) {
-                return applyWallpaper(meta.src, 'bing').then(function () {
-                    return cacheBingBlob(meta.src, meta.provider || 'primary', today);
-                });
-            }
-
-            // 旧 URL 临时垫到 back 层，防止白屏（仅当缩略图也不可用时）
-            if (meta.src && !back.style.backgroundImage) {
-                back.style.backgroundImage = 'url(' + meta.src + ')';
-            }
-
-            // 3b：完全无缓存，从头获取 URL → 展示 → 下载 blob
-            return fetchBingUrl().then(function (r) {
-                return applyWallpaper(r.url, 'bing').then(function () {
-                    return cacheBingBlob(r.url, r.api, today);
-                });
-            }).catch(function () {
-                if (!back.style.backgroundImage && meta.src) {
-                    back.style.backgroundImage = 'url(' + meta.src + ')';
-                }
+            // 优先级 2：今日 Bing 缓存可用 → 直接用
+            return tryLoadCachedBing(bingBlob, meta, today).then(function (loaded) {
+                if (loaded) return;
+                // 优先级 3：缓存不可用 → 走网络
+                return loadBingFromNetwork(meta, today);
             });
         });
     }
 
     /* ================================================================
-       壁纸 — 本地上传
+       10. 壁纸 — 本地上传、删除与画廊
        ================================================================ */
 
-    // 生成简易唯一 ID
     function generateId() {
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
 
-    // 保存单张本地壁纸（show 为 true 时展示并切到本地模式，false 则只存库）
+    /**
+     * 保存单张本地壁纸。
+     *
+     * @param {File} file - 用户选择的图片文件
+     * @param {boolean} show - true: 同时展示为当前壁纸并切到本地模式；false: 只存库
+     * @returns {Promise<boolean>} 是否保存成功
+     */
     function saveLocalImage(file, show) {
         var blobUrl = URL.createObjectURL(file);
         var newImage = { id: generateId(), blob: file, mime: file.type || '', name: file.name || '' };
 
-        // 先查重，避免展示了重复图又跳过
         return idbGet(LOCAL_IMAGES_KEY).then(function (images) {
             images = images || [];
+
+            // WHY: 用 name + size 去重，而不是仅靠 name。防止用户上传同名的不同文件。
             if (images.some(function (img) { return img.name === file.name && img.blob.size === file.size; })) {
                 log('Local', 'duplicate skipped: ' + file.name);
                 return false;
@@ -486,7 +567,9 @@
 
             return start.then(function (thumb) {
                 if (!thumb) { warn('Local', 'thumbnail failed for ' + file.name); return false; }
-                // 重新读取以获取最新状态（批量导入时前一张可能已写入）
+
+                // WHY: 重新读取 IDB 以获取最新状态。
+                // 批量导入时前一张图片可能已写入，多次读取保证不互相覆盖。
                 return idbGet(LOCAL_IMAGES_KEY).then(function (imgs) {
                     imgs = imgs || [];
                     var thumbs = loadThumbs();
@@ -498,19 +581,13 @@
         }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
     }
 
-    // 画廊 "+" 按钮专用：展示并刷新 UI
-    function setLocalWallpaper(file, keepOpen) {
-        saveLocalImage(file, true).then(function () {
-            if (keepOpen) refreshLocalGallery(); else closeSettings();
-        }).catch(function () {
-            if (!keepOpen) closeSettings();
-        });
-    }
-
-    // 删除单张本地壁纸
+    /** 删除单张本地壁纸，同步清理缩略图。删除最后一张时自动切回 Bing 模式 */
     function deleteLocalImage(id) {
         idbGet(LOCAL_IMAGES_KEY).then(function (images) {
             if (!images) return;
+
+            // WHY: 先找到被删项的索引，再 splice 缩略图数组的对应位置。
+            // filter 之前记录索引，因为 filter 后索引会改变。
             var delIdx = -1;
             for (var i = 0; i < images.length; i++) {
                 if (images[i].id === id) { delIdx = i; break; }
@@ -519,17 +596,19 @@
             var thumbs = loadThumbs();
             if (delIdx >= 0 && delIdx < thumbs.length) thumbs.splice(delIdx, 1);
 
+            // 全部删完 → 清空所有数据，切回 Bing
             if (images.length === 0) {
                 return idbDelete(LOCAL_IMAGES_KEY).then(function () {
                     saveThumbs([]);
                     localStorage.removeItem(LOCAL_INDEX_KEY);
                     localStorage.setItem(MODE_KEY, 'bing');
                     currentMode = 'bing';
-                    wpInfo.textContent = t('wpBing');
+                    wallpaperInfoEl.textContent = t('wpBing');
                     removeLocalGallery();
                     loadWallpaper();
                 });
             }
+
             return idbPut(LOCAL_IMAGES_KEY, images).then(function () {
                 saveThumbs(thumbs);
                 refreshLocalGallery();
@@ -537,10 +616,17 @@
         }).catch(function () { });
     }
 
-    // 重置为 Bing 每日壁纸
+    /**
+     * 重置为 Bing 每日壁纸模式。
+     *
+     * WHY 删除 bing_thumb + local_thumbs：
+     *   这些缩略图是 CSS url(data:...) 格式，可能很大。
+     *   切回 Bing 时不再需要它们，清理可释放 localStorage 配额。
+     */
     function resetToBing() {
         idbGet(LOCAL_IMAGES_KEY).then(function (images) {
             var count = (images && images.length) || 0;
+            // WHY: 多于 1 张时才弹确认框 —— 防止误操作丢失收藏的壁纸
             if (count > 1 && !confirm(t('resetConfirm'))) return;
 
             currentMode = 'bing';
@@ -553,72 +639,67 @@
             return idbDelete(LOCAL_IMAGES_KEY).then(function () {
                 return loadWallpaper();
             }).then(function () {
-                wpInfo.textContent = t('wpBing');
+                wallpaperInfoEl.textContent = t('wpBing');
                 closeSettings();
             });
-        }).catch(function () {
-            closeSettings();
-        });
+        }).catch(function () { closeSettings(); });
     }
 
     /* ================================================================
-       UI — 设置面板与语言面板
+       11. UI — 设置面板与语言面板
        ================================================================ */
 
-    // 打开设置面板，互斥关闭语言面板
     function openSettings() {
-        if (langOpen) closeLangPanel();
-        if (panelOpen) return;
-        panelOpen = true;
+        if (isLangPanelOpen) closeLangPanel();
+        if (isSettingsPanelOpen) return;
+        isSettingsPanelOpen = true;
         settingsPanel.classList.add('active');
         settingsBtn.classList.add('panel-open');
-        clearTimeout(hideTimeout);
-        // 本地模式下展示画廊
+        clearTimeout(cornerHideTimer);
         if (currentMode === 'local') refreshLocalGallery();
         else { uploadBtn.style.display = ''; resetBtn.style.display = ''; }
     }
 
-    // 关闭设置面板
     function closeSettings() {
-        if (!panelOpen) return;
-        panelOpen = false;
+        if (!isSettingsPanelOpen) return;
+        isSettingsPanelOpen = false;
         settingsPanel.classList.remove('active');
         settingsBtn.classList.remove('panel-open');
         revokeGalleryUrls();
     }
 
-    // 打开语言面板，互斥关闭设置面板
     function openLangPanel() {
-        if (panelOpen) closeSettings();
-        if (langOpen) return;
-        langOpen = true;
+        if (isSettingsPanelOpen) closeSettings();
+        if (isLangPanelOpen) return;
+        isLangPanelOpen = true;
         langPanel.classList.add('active');
-        clearTimeout(hideTimeout);
+        clearTimeout(cornerHideTimer);
     }
 
-    // 关闭语言面板
     function closeLangPanel() {
-        if (!langOpen) return;
-        langOpen = false;
+        if (!isLangPanelOpen) return;
+        isLangPanelOpen = false;
         langPanel.classList.remove('active');
     }
 
-    // 关闭所有面板
     function closeAll() { closeSettings(); closeLangPanel(); }
 
-    // --- 本地壁纸画廊 ---
+    /* ================================================================
+       12. UI — 本地壁纸画廊
+       ================================================================ */
 
-    var _galleryUrls = [];
+    // 追踪画廊中创建的 blob URL，关闭画廊时必须清理，防止内存泄漏
+    var _galleryBlobUrls = [];
 
     function revokeGalleryUrls() {
-        _galleryUrls.forEach(function (url) { URL.revokeObjectURL(url); });
-        _galleryUrls = [];
+        _galleryBlobUrls.forEach(function (url) { URL.revokeObjectURL(url); });
+        _galleryBlobUrls = [];
     }
 
     function removeLocalGallery() {
         revokeGalleryUrls();
-        var g = document.getElementById('localGallery');
-        if (g) g.style.display = 'none';
+        var gallery = document.getElementById('localGallery');
+        if (gallery) gallery.style.display = 'none';
         uploadBtn.style.display = '';
         resetBtn.style.display = '';
     }
@@ -630,167 +711,214 @@
         }).catch(function () { });
     }
 
-    function renderLocalGallery(images, thumbs) {
-        revokeGalleryUrls();
+    /** 获取或创建画廊容器 DOM 元素 */
+    function ensureGalleryContainer() {
         var gallery = document.getElementById('localGallery');
         if (!gallery) {
             gallery = document.createElement('div');
             gallery.id = 'localGallery';
             gallery.className = 'local-gallery';
-            wpInfo.parentNode.insertBefore(gallery, uploadBtn);
+            wallpaperInfoEl.parentNode.insertBefore(gallery, uploadBtn);
         }
-
+        // 清空旧内容
         while (gallery.firstChild) gallery.removeChild(gallery.firstChild);
         gallery.style.display = 'block';
+        return gallery;
+    }
 
-        wpInfo.textContent = t('wpLocal') + ' · ' + images.length + ' ' + t('imageCount');
-
+    /** 构建缩略图网格，每张卡片含删除按钮 */
+    function buildGalleryGrid(images, thumbs) {
         var grid = document.createElement('div');
         grid.className = 'local-gallery-grid';
 
         images.forEach(function (img, i) {
             var card = document.createElement('div');
             card.className = 'local-thumb';
+
+            // WHY: 优先用预生成的 base64 缩略图（localStorage），速度远快于 blob URL。
+            // 仅在缩略图缺失时（遗留数据）回退到 blob URL。
             var bg = thumbs[i];
             if (!bg && img.blob && img.blob.size > 0) {
                 var url = URL.createObjectURL(img.blob);
-                _galleryUrls.push(url);
+                _galleryBlobUrls.push(url);
                 bg = 'url(' + url + ')';
             }
             if (bg) card.style.backgroundImage = bg;
 
-            var del = document.createElement('button');
-            del.className = 'local-thumb-del';
-            del.title = t('deleteImage') + (img.name ? ': ' + img.name : '');
-            del.setAttribute('data-id', img.id);
-            del.addEventListener('click', function (e) {
+            var delBtn = document.createElement('button');
+            delBtn.className = 'local-thumb-del';
+            delBtn.title = t('deleteImage') + (img.name ? ': ' + img.name : '');
+            delBtn.setAttribute('data-id', img.id);
+            delBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 deleteLocalImage(this.dataset.id);
             });
-            card.appendChild(del);
+            card.appendChild(delBtn);
             grid.appendChild(card);
         });
 
+        return grid;
+    }
+
+    /**
+     * 渲染本地壁纸画廊。
+     *
+     * WHY 在面板打开时实时渲染而非缓存 DOM：
+     *   图片可能在上传/删除后改变，每次打开面板都是最新的。
+     *   缩略图数量 ≤ 12，DOM 构建成本可忽略。
+     */
+    function renderLocalGallery(images, thumbs) {
+        revokeGalleryUrls();
+        var gallery = ensureGalleryContainer();
+
+        wallpaperInfoEl.textContent = t('wpLocal') + ' · ' + images.length + ' ' + t('imageCount');
+
+        var grid = buildGalleryGrid(images, thumbs);
         gallery.appendChild(grid);
 
+        // WHY: 上限 12 张 —— localStorage 缩略图占用空间，12 张已足够轮播多样性
         if (images.length < 12) {
             var addBtn = document.createElement('button');
             addBtn.className = 'panel-btn primary';
             addBtn.textContent = '+ ' + t('addImage');
             addBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
-                _uploadKeepOpen = true;
+                _keepGalleryOpen = true;
                 fileInput.click();
             });
             gallery.appendChild(addBtn);
         }
 
-        // 画廊显示时隐藏原有的上传按钮
         uploadBtn.style.display = 'none';
     }
 
     /* ================================================================
-       UI — 角落按钮与搜索栏显隐
+       13. UI — 角落按钮与搜索栏显隐逻辑
+
+       WHY 角落按钮默认隐藏：
+         保持壁纸的干净视觉效果。按钮仅在鼠标移到右上角时淡入。
+         面板打开时始终保持可见，避免用户找不到关闭按钮。
        ================================================================ */
 
-    // 显示右上角设置和语言按钮
     function showCorners() {
         settingsBtn.classList.add('visible');
         langBtn.classList.add('visible');
     }
 
-    // 延迟隐藏角落按钮（面板打开时不隐藏）
+    /**
+     * 延迟隐藏角落按钮。
+     *
+     * WHY 400ms 延迟：
+     *   防止用户鼠标稍微移出触发区域就立即隐藏。
+     *   但如果面板正在打开状态，隐藏会被跳过 —— 面板需要这些按钮。
+     */
     function hideCorners() {
-        if (panelOpen || langOpen) return;
-        clearTimeout(hideTimeout);
-        hideTimeout = setTimeout(function () {
-            if (!mouseNearCorner && !panelOpen && !langOpen) {
+        if (isSettingsPanelOpen || isLangPanelOpen) return;
+        clearTimeout(cornerHideTimer);
+        cornerHideTimer = setTimeout(function () {
+            if (!isMouseInCornerZone && !isSettingsPanelOpen && !isLangPanelOpen) {
                 settingsBtn.classList.remove('visible');
                 langBtn.classList.remove('visible');
             }
         }, 400);
     }
 
-    // 鼠标是否在右上角触发区域
+    /** 鼠标是否在右上角触发区域（宽 180px × 高 130px） */
     function isNearTopRight(x, y) { return x > window.innerWidth - 180 && y < 130; }
 
-    // 鼠标是否在屏幕中央区域（用于触发搜索栏）
+    /**
+     * 鼠标是否在屏幕中心区域。
+     *
+     * WHY 只在中心区域触发搜索栏：
+     *   用户移到角落操作按钮时不应弹出搜索栏。
+     *   30%-70% 的宽高范围覆盖了用户的自然视线焦点。
+     */
     function isInCenter(x, y) {
         var w = window.innerWidth, h = window.innerHeight;
         return x > w * 0.3 && x < w * 0.7 && y > h * 0.42 && y < h * 0.58;
     }
 
-    // 显示搜索栏（受 searchMode 约束）
     function showSearch() {
         if (searchMode === 'never') return;
         if (searchMode === 'always') { searchBar.classList.add('visible'); return; }
-        clearTimeout(searchTimeout);
+        clearTimeout(searchHideTimer);
         searchBar.classList.add('visible');
     }
 
-    // 延迟隐藏搜索栏（输入框聚焦时不隐藏）
+    /**
+     * 延迟隐藏搜索栏。
+     *
+     * WHY 150ms 延迟 + 聚焦保护：
+     *   用户可能在搜索栏和页面其他区域之间移动鼠标。
+     *   输入框聚焦时绝不隐藏 —— 用户在打字。
+     */
     function hideSearch() {
         if (searchMode === 'always') return;
         if (document.activeElement === searchInput) return;
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function () {
-            if (!mouseOnSearch && document.activeElement !== searchInput) searchBar.classList.remove('visible');
+        clearTimeout(searchHideTimer);
+        searchHideTimer = setTimeout(function () {
+            if (!isMouseInSearchZone && document.activeElement !== searchInput) searchBar.classList.remove('visible');
         }, 150);
     }
 
     /* ================================================================
-       UI — 搜索设置控件
+       14. UI — 搜索设置控件
        ================================================================ */
 
-    // 应用搜索栏显示模式：hover / always / never
     function applySearchMode(mode) {
         searchMode = mode;
         searchBar.classList.toggle('visible', mode === 'always');
     }
 
-    // 应用图标透明度
+    /**
+     * 应用图标透明度。
+     *
+     * WHY 用 CSS 自定义属性 --icon-opacity：
+     *   所有角落图标和面板元素的透明度由一个值统一控制。
+     *   修改 CSS 变量一次即可刷新所有元素，无需逐个操作 DOM。
+     */
     function applyOpacity(val) {
         currentOpacity = parseFloat(val);
         document.documentElement.style.setProperty('--icon-opacity', currentOpacity);
         opacityRange.value = currentOpacity;
-        opacityNum.value = currentOpacity;
+        opacityNumInput.value = currentOpacity;
     }
 
-    // 切换搜索引擎
     function applyEngine(engine) {
         currentEngine = engine;
         engineIndex = ENGINES.indexOf(engine);
         engineIcon.innerHTML = ENGINE_SVG[engine] || ENGINE_SVG.google;
-        engineSel.value = engine;
+        engineSelect.value = engine;
         saveSettings();
     }
 
-    // 轮换到下一个搜索引擎
     function nextEngine() {
         engineIndex = (engineIndex + 1) % ENGINES.length;
         applyEngine(ENGINES[engineIndex]);
     }
 
-    // 持久化搜索设置
     function saveSettings() {
         localStorage.setItem(SEARCH_MODE_KEY, searchMode);
         localStorage.setItem(OPACITY_KEY, currentOpacity);
         localStorage.setItem(ENGINE_KEY, currentEngine);
     }
 
-    // 从 localStorage 恢复搜索设置并应用
     function loadSettings() {
         var mode = localStorage.getItem(SEARCH_MODE_KEY) || 'always';
         var opacity = parseFloat(localStorage.getItem(OPACITY_KEY)) || 0.45;
         var engine = localStorage.getItem(ENGINE_KEY) || 'google';
-        searchModeSel.value = mode;
+        searchModeSelect.value = mode;
         applySearchMode(mode);
         applyOpacity(opacity);
         applyEngine(engine);
     }
 
     /* ================================================================
-       搜索引擎
+       15. 搜索引擎配置
+
+       WHY 内联 SVG：
+         无需外部图标字体或图片文件。SVG 体积小、可缩放、支持 CSS 着色。
+         直接嵌入 JS 避免了额外的 HTTP 请求。
        ================================================================ */
 
     var ENGINES = ['google', 'bing', 'baidu', 'duckduckgo'];
@@ -802,7 +930,7 @@
         baidu: '<svg height="1em" viewBox="0 0 24 24" width="1em"><path d="M8.859 11.735c1.017-1.71 4.059-3.083 6.202.286 1.579 2.284 4.284 4.397 4.284 4.397s2.027 1.601.73 4.684c-1.24 2.956-5.64 1.607-6.005 1.49l-.024-.009s-1.746-.568-3.776-.112c-2.026.458-3.773.286-3.773.286l-.045-.001c-.328-.01-2.38-.187-3.001-2.968-.675-3.028 2.365-4.687 2.592-4.968.226-.288 1.802-1.37 2.816-3.085zm.986 1.738v2.032h-1.64s-1.64.138-2.213 2.014c-.2 1.252.177 1.99.242 2.148.067.157.596 1.073 1.927 1.342h3.078v-7.514l-1.394-.022zm3.588 2.191l-1.44.024v3.956s.064.985 1.44 1.344h3.541v-5.3h-1.528v3.979h-1.46s-.466-.068-.553-.447v-3.556zM9.82 16.715v3.06H8.58s-.863-.045-1.126-1.049c-.136-.445.02-.959.088-1.16.063-.203.353-.671.951-.85H9.82zm9.525-9.036c2.086 0 2.646 2.06 2.646 2.742 0 .688.284 3.597-2.309 3.655-2.595.057-2.704-1.77-2.704-3.08 0-1.374.277-3.317 2.367-3.317zM4.24 6.08c1.523-.135 2.645 1.55 2.762 2.513.07.625.393 3.486-1.975 4-2.364.515-3.244-2.249-2.984-3.544 0 0 .28-2.797 2.197-2.969zm8.847-1.483c.14-1.31 1.69-3.316 2.931-3.028 1.236.285 2.367 1.944 2.137 3.37-.224 1.428-1.345 3.313-3.095 3.082-1.748-.226-2.143-1.823-1.973-3.424zM9.425 1c1.307 0 2.364 1.519 2.364 3.398 0 1.879-1.057 3.4-2.364 3.4s-2.367-1.521-2.367-3.4C7.058 2.518 8.118 1 9.425 1z" fill="#2932E1"/></svg>'
     };
 
-    // Web 模式搜索行为
+    /** Web 模式的搜索行为 —— 在新标签页打开对应引擎的搜索结果 */
     var doSearch = function (query) {
         if (!query.trim()) return;
         var urls = { google: 'https://www.google.com/search?q=', bing: 'https://www.bing.com/search?q=', baidu: 'https://www.baidu.com/s?wd=', duckduckgo: 'https://duckduckgo.com/?q=' };
@@ -810,10 +938,15 @@
     };
 
     /* ================================================================
-       扩展模式 — 覆盖搜索行为
+       16. 扩展模式
+
+       WHY 使用 chrome.search.query() 替代多引擎：
+         Chrome Web Store 单一用途政策要求扩展只能做一件事。
+         用浏览器的默认搜索引擎执行搜索（chrome.search.query），
+         而不是让用户在多个引擎间选择，满足 CWS 合规要求。
+         permission manifest 中的 "search" 权限也是为此 API 必需的。
        ================================================================ */
 
-    // 扩展模式：用 chrome.search.query 替代多引擎选择，符合 CWS 单一用途政策
     function setupExtensionMode() {
         doSearch = function (query) {
             if (!query.trim()) return;
@@ -823,114 +956,150 @@
                 window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_self');
             }
         };
+        // 扩展模式下搜索引擎图标变为静态放大镜，不可点击切换
         engineIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><g clip-path="url(#a)"><path d="M14 12.94 10.16 9.1c1.25-1.76 1.1-4.2-.48-5.78a4.49 4.49 0 0 0-6.36 0 4.49 4.49 0 0 0 0 6.36 4.486 4.486 0 0 0 5.78.48L12.94 14 14 12.94ZM4.38 8.62a3 3 0 0 1 0-4.24 3 3 0 0 1 4.24 0 3 3 0 0 1 0 4.24 3 3 0 0 1-4.24 0Z"/></g><defs><clipPath id="a"><path d="M0 0h16v16H0z"/></clipPath></defs></svg>';
         engineIcon.style.opacity = '0.45';
         engineIcon.style.pointerEvents = 'none';
-        engineSel.closest('.setting-row').style.display = 'none';
+        // 隐藏搜索引擎选择行 —— 扩展模式下不适用
+        engineSelect.closest('.setting-row').style.display = 'none';
     }
 
     /* ================================================================
-       事件绑定
+       17. 事件绑定
+
+       WHY 所有事件绑定集中管理：
+         方便一目了然地看到整个页面的交互逻辑，
+         避免绑定代码散落在各功能函数中难以追踪。
        ================================================================ */
 
-    settingsBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        panelOpen ? closeSettings() : openSettings();
-    });
-    settingsBtn.addEventListener('mouseenter', function () { mouseNearCorner = true; showCorners(); });
-    settingsBtn.addEventListener('mouseleave', function () { mouseNearCorner = false; if (!panelOpen && !langOpen) hideCorners(); });
+    // 标记画廊 "+" 按钮触发的上传（保持面板打开）
+    var _keepGalleryOpen = false;
 
-    langBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        langOpen ? closeLangPanel() : openLangPanel();
-    });
-    langBtn.addEventListener('mouseenter', function () { mouseNearCorner = true; showCorners(); });
-    langBtn.addEventListener('mouseleave', function () { mouseNearCorner = false; if (!panelOpen && !langOpen) hideCorners(); });
+    function bindEvents() {
+        // --- 角落按钮：点击与悬停 ---
 
-    document.addEventListener('mousemove', function (e) {
-        if (isNearTopRight(e.clientX, e.clientY)) showCorners();
-        else if (!mouseNearCorner && !panelOpen && !langOpen) hideCorners();
-        if (isInCenter(e.clientX, e.clientY)) showSearch();
-        else hideSearch();
-    });
-
-    searchBar.addEventListener('mouseenter', function () { mouseOnSearch = true; clearTimeout(searchTimeout); });
-    searchBar.addEventListener('mouseleave', function () { mouseOnSearch = false; hideSearch(); });
-    searchInput.addEventListener('focus', function () { searchBar.classList.add('visible'); clearTimeout(searchTimeout); });
-    searchInput.addEventListener('blur', function () { hideSearch(); });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeAll(); hideCorners(); }
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); panelOpen ? closeSettings() : openSettings(); }
-        if (e.key === 'Enter' && document.activeElement === searchInput) doSearch(searchInput.value);
-    });
-
-    document.addEventListener('click', function (e) {
-        if (panelOpen && !settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettings();
-        if (langOpen && !langPanel.contains(e.target) && e.target !== langBtn && !langBtn.contains(e.target)) closeLangPanel();
-        hideCorners();
-    });
-
-    settingsPanel.addEventListener('mouseenter', function () { clearTimeout(hideTimeout); mouseNearCorner = true; });
-    settingsPanel.addEventListener('mouseleave', function () { mouseNearCorner = false; hideTimeout = setTimeout(function () { closeSettings(); hideCorners(); }, 500); });
-    settingsPanel.addEventListener('click', function (e) { e.stopPropagation(); });
-
-    langPanel.addEventListener('mouseenter', function () { clearTimeout(hideTimeout); mouseNearCorner = true; });
-    langPanel.addEventListener('mouseleave', function () { mouseNearCorner = false; hideTimeout = setTimeout(function () { closeLangPanel(); hideCorners(); }, 500); });
-    langPanel.addEventListener('click', function (e) { e.stopPropagation(); });
-
-    var _uploadKeepOpen = false;
-
-    uploadBtn.addEventListener('click', function (e) { e.stopPropagation(); _uploadKeepOpen = false; fileInput.click(); });
-    fileInput.addEventListener('change', function () {
-        var all = Array.from(fileInput.files || []);
-        var files = all.filter(function (f) { return f.type && f.type.match(/^image\//); });
-        fileInput.value = '';
-        if (!files.length) return;
-
-        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
-            images = images || [];
-            var slots = Math.max(0, 12 - images.length);
-            if (!slots) return;
-
-            var saved = 0;
-            var p = Promise.resolve();
-            files.forEach(function (file) {
-                p = p.then(function () {
-                    if (saved >= slots) return;
-                    var show = saved === 0;
-                    return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
-                });
-            });
-            return p.then(function () {
-                log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (slots: ' + slots + ')');
-                if (_uploadKeepOpen) refreshLocalGallery(); else closeSettings();
-            });
-        }).catch(function (e) {
-            warn('Local', 'batch save failed: ' + e.message);
-            if (!_uploadKeepOpen) closeSettings();
+        settingsBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            isSettingsPanelOpen ? closeSettings() : openSettings();
         });
-    });
-    resetBtn.addEventListener('click', function (e) { e.stopPropagation(); resetToBing(); });
-    advToggle.addEventListener('click', function (e) { e.stopPropagation(); advSection.classList.toggle('show'); });
-    searchModeSel.addEventListener('change', function () { applySearchMode(searchModeSel.value); saveSettings(); });
-    opacityRange.addEventListener('input', function () { applyOpacity(opacityRange.value); saveSettings(); });
-    opacityNum.addEventListener('change', function () {
-        var val = parseFloat(opacityNum.value);
-        if (isNaN(val)) val = 0.45;
-        val = Math.min(1, Math.max(0, val));
-        applyOpacity(val);
-        saveSettings();
-    });
-    engineSel.addEventListener('change', function () { applyEngine(engineSel.value); });
-    resetAdvBtn.addEventListener('click', function () { applySearchMode('always'); searchModeSel.value = 'always'; applyEngine('google'); applyOpacity(0.45); saveSettings(); });
-    engineIcon.addEventListener('click', function (e) { e.stopPropagation(); nextEngine(); });
+        settingsBtn.addEventListener('mouseenter', function () { isMouseInCornerZone = true; showCorners(); });
+        settingsBtn.addEventListener('mouseleave', function () { isMouseInCornerZone = false; if (!isSettingsPanelOpen && !isLangPanelOpen) hideCorners(); });
+
+        langBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            isLangPanelOpen ? closeLangPanel() : openLangPanel();
+        });
+        langBtn.addEventListener('mouseenter', function () { isMouseInCornerZone = true; showCorners(); });
+        langBtn.addEventListener('mouseleave', function () { isMouseInCornerZone = false; if (!isSettingsPanelOpen && !isLangPanelOpen) hideCorners(); });
+
+        // --- 全局鼠标跟踪 ---
+
+        document.addEventListener('mousemove', function (e) {
+            if (isNearTopRight(e.clientX, e.clientY)) showCorners();
+            else if (!isMouseInCornerZone && !isSettingsPanelOpen && !isLangPanelOpen) hideCorners();
+            if (isInCenter(e.clientX, e.clientY)) showSearch();
+            else hideSearch();
+        });
+
+        // --- 搜索栏 ---
+
+        searchBar.addEventListener('mouseenter', function () { isMouseInSearchZone = true; clearTimeout(searchHideTimer); });
+        searchBar.addEventListener('mouseleave', function () { isMouseInSearchZone = false; hideSearch(); });
+        searchInput.addEventListener('focus', function () { searchBar.classList.add('visible'); clearTimeout(searchHideTimer); });
+        searchInput.addEventListener('blur', function () { hideSearch(); });
+
+        // --- 键盘快捷键 ---
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { closeAll(); hideCorners(); }
+            // WHY: Ctrl+Shift+W (Cmd+Shift+W on Mac) 作为设置面板的键盘快捷键
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); isSettingsPanelOpen ? closeSettings() : openSettings(); }
+            if (e.key === 'Enter' && document.activeElement === searchInput) doSearch(searchInput.value);
+        });
+
+        // --- 全局点击关闭 ---
+
+        document.addEventListener('click', function (e) {
+            if (isSettingsPanelOpen && !settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettings();
+            if (isLangPanelOpen && !langPanel.contains(e.target) && e.target !== langBtn && !langBtn.contains(e.target)) closeLangPanel();
+            hideCorners();
+        });
+
+        // --- 面板鼠标交互 ---
+
+        settingsPanel.addEventListener('mouseenter', function () { clearTimeout(cornerHideTimer); isMouseInCornerZone = true; });
+        settingsPanel.addEventListener('mouseleave', function () { isMouseInCornerZone = false; cornerHideTimer = setTimeout(function () { closeSettings(); hideCorners(); }, 500); });
+        settingsPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+
+        langPanel.addEventListener('mouseenter', function () { clearTimeout(cornerHideTimer); isMouseInCornerZone = true; });
+        langPanel.addEventListener('mouseleave', function () { isMouseInCornerZone = false; cornerHideTimer = setTimeout(function () { closeLangPanel(); hideCorners(); }, 500); });
+        langPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+
+        // --- 设置面板内控件 ---
+
+        uploadBtn.addEventListener('click', function (e) { e.stopPropagation(); _keepGalleryOpen = false; fileInput.click(); });
+
+        fileInput.addEventListener('change', function () {
+            var all = Array.from(fileInput.files || []);
+            var files = all.filter(function (f) { return f.type && f.type.match(/^image\//); });
+            fileInput.value = '';
+
+            if (!files.length) return;
+
+            idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+                images = images || [];
+                var slots = Math.max(0, 12 - images.length);
+                if (!slots) return;
+
+                var saved = 0;
+                // WHY: 用 Promise 链串行处理所有文件 —— 每个 saveLocalImage
+                // 都会读写 IDB，并行执行会导致数据竞争。
+                var chain = Promise.resolve();
+                files.forEach(function (file) {
+                    chain = chain.then(function () {
+                        if (saved >= slots) return;
+                        // WHY: 只有第一张成功保存的图展示为壁纸，
+                        // 其余仅存入库中 —— 避免批量导入时反复切换壁纸造成闪烁
+                        var show = saved === 0;
+                        return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
+                    });
+                });
+                return chain.then(function () {
+                    log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (slots: ' + slots + ')');
+                    if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
+                });
+            }).catch(function (e) {
+                warn('Local', 'batch save failed: ' + e.message);
+                if (!_keepGalleryOpen) closeSettings();
+            });
+        });
+
+        resetBtn.addEventListener('click', function (e) { e.stopPropagation(); resetToBing(); });
+        advancedToggleEl.addEventListener('click', function (e) { e.stopPropagation(); advancedSectionEl.classList.toggle('show'); });
+        searchModeSelect.addEventListener('change', function () { applySearchMode(searchModeSelect.value); saveSettings(); });
+        opacityRange.addEventListener('input', function () { applyOpacity(opacityRange.value); saveSettings(); });
+        opacityNumInput.addEventListener('change', function () {
+            var val = parseFloat(opacityNumInput.value);
+            if (isNaN(val)) val = 0.45;
+            val = Math.min(1, Math.max(0, val));
+            applyOpacity(val);
+            saveSettings();
+        });
+        engineSelect.addEventListener('change', function () { applyEngine(engineSelect.value); });
+        resetAdvancedBtn.addEventListener('click', function () { applySearchMode('always'); searchModeSelect.value = 'always'; applyEngine('google'); applyOpacity(0.45); saveSettings(); });
+
+        /**
+         * WHY 点击搜索引擎图标会轮换引擎：
+         *   Web 模式下的趣味功能。用户无需打开设置面板即可切换。
+         *   扩展模式下此行为被禁用（图标不可点击），改用 chrome.search.query。
+         */
+        engineIcon.addEventListener('click', function (e) { e.stopPropagation(); nextEngine(); });
+    }
 
     /* ================================================================
-       启动
+       18. 启动引导
        ================================================================ */
 
-    // 初始化：确定语言 → 恢复设置 → 刷新 UI → 加载壁纸 → 扩展模式覆盖
     function init() {
         currentLang = localStorage.getItem(LANG_KEY) || detectLang();
         if (!I18N[currentLang]) currentLang = 'en';
@@ -939,6 +1108,7 @@
         updateLangUI();
         loadWallpaper();
         if (IS_EXTENSION) setupExtensionMode();
+        bindEvents();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
