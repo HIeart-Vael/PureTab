@@ -4,8 +4,8 @@
 
 **PlainTab v3.1.2**
 
-- It is recommended to install online from the [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) – this enables automatic updates and is more hassle‑free.
-- For manual installation: download the `Source code (zip)` archive below, unzip it, then go to `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the unzipped folder. We do not provide a `.crx` file (since Chrome M76+, external sideloading of `.crx` files is disallowed).
+- Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) for automatic updates.
+- Or download the `.crx` file below and drag it into `chrome://extensions`.
 
 **Changelog (v3.1.2)**
 
@@ -21,8 +21,8 @@ v3.1.2 is a maintenance release focused on Chrome Web Store compliance and inter
 
 **PlainTab v3.1.2**
 
-- 建议前往 [Chrome 网上应用店](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) 在线安装，这样能自动更新，更省心。
-- 如需本地安装：请下载下方的 `Source code (zip)` 压缩包，解压后进入 `chrome://extensions` 页面，开启「开发者模式」，然后点击「加载已解压的扩展程序」，选择解压后的文件夹即可。我们不提供 `.crx` 文件（自 Chrome M76 起，已禁止外部侧载 `.crx` 文件）。
+- 前往 [Chrome 网上应用店](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) 安装，可自动更新。
+- 或下载下方 `.crx` 文件，拖入 `chrome://extensions` 页面即可。
 
 **更新日志 (v3.1.2)**
 
