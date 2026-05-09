@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="Versiia">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="Versiia">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -253,7 +253,7 @@ PlainTab/
 - **[`js/`](../js/)** — tri faila, zagruzhaemye po poriadku: `preload.js` → `languages.js` → `newtab.js` (poriadok nelzia meniat)
 - **[`_locales/`](../_locales/)** — soderzhit tolko `extName` i `extDesc` dlia manifesta rasshireniia; vse stroki UI upravliaiutsia [`languages.js`](../js/languages.js)
 - **[`imgs/`](../imgs/)** — skrinshoty i promo-izobrazheniia, neobkhodimye dlia Chrome Web Store
-- **[`docs/`](../docs/)** i **[`changelog/`](../changelog/)** — mnogoiazychnaia dokumentatsiia, 16 iazykov v otdelnykh failakh
+- **[`docs/`](../docs/)** — mnogoiazychnaia dokumentatsiia, 16 iazykov v otdelnykh failakh
 
 ---
 
@@ -266,7 +266,7 @@ Neskolko dogovorennostei:
 - **Ne dobavliaite etapy sborki** — `index.html` dolzhen rabotat napriamuiu v brauzere
 - **Ne rasshiriaite razresheniia** — `manifest.json` soderzhit tolko razreshenie `search`
 
-📋 [Zhurnal izmenenii](CHANGELOG.md)
+📋 [Zhurnal izmenenii](changelog.md)
 
 ---
 

@@ -1,5 +1,7 @@
 Journal des mises à jour
 
+• v3.1.2 · Renommage de _locales/pt en pt_BR pour la conformité Chrome Web Store; unification du format du changelog en style compact; renommage des fichiers portugais en pt_BR pour la cohérence.
+
 • v3.1.1 · Passage de l'API Bing en mode concurrent Promise.any avec un timeout AbortController de 8 secondes ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération.
 
 • v3.1.0 · Galerie locale de fonds d'écran : téléversement/suppression/rotation de plusieurs fonds d'écran locaux, sélection par lots ; refonte du code ; amélioration du style des panneaux ; localisation multilingue complétée ; correction CSP — suppression des domaines JSON API.

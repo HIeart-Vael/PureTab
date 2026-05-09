@@ -1,5 +1,15 @@
 # Changelog · 更新日志
 
+## v3.1.2
+
+- `fix`: 将 `_locales/pt` 重命名为 `pt_BR` 以符合 Chrome Web Store 规范——Chrome 只识别 `pt_BR`/`pt_PT`，不识别裸 `pt`
+- `style`: 统一全部 16 语言 changelog 格式为紧凑单行 `• vX.Y.Z · ...` 风格
+- `chore`: 葡萄牙语 README 和 changelog 文件同步重命名为 `pt_BR`
+
+- `fix`: renamed `_locales/pt` to `pt_BR` for Chrome Web Store compliance — Chrome only recognizes `pt_BR`/`pt_PT`, not bare `pt`
+- `style`: unified all 16-language changelog format to compact single-line `• vX.Y.Z · ...` style
+- `chore`: renamed Portuguese README and changelog files to `pt_BR` for consistency
+
 ## v3.1.1
 并发 Bing API 请求：通过 `Promise.any` 同时发起两个端点请求，最快响应胜出；添加 8 秒 `AbortController` 超时机制，确保连接安全关闭；更新全部 16 语言 README，反映并发竞速模式并新增 `Promise.any` / `AbortController` 延迟优化技术说明。
 Concurrent Bing API requests: both endpoints fired simultaneously via `Promise.any`, fastest response wins; added 8-second `AbortController` timeout for clean connection teardown; updated all 16 READMEs to reflect concurrent race pattern and add `Promise.any`/`AbortController` latency techniques.
@@ -29,8 +39,8 @@ Dark mode adaptive background, restructured codebase, multilingual footer bar.
 Switched to Chrome Search API for CWS single-purpose compliance.
 
 ## v3.0.0
-全面重写：双图层架构实现零闪烁壁纸渲染，添加保底灰色背景。（详见 [V3_NOTE.md](./V3_NOTE.md)）
-Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See [V3_NOTE.md](./V3_NOTE.md))
+全面重写：双图层架构实现零闪烁壁纸渲染，添加保底灰色背景。
+Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background.
 
 ## v2.2.7
 新增英/日/韩/俄/简中五语 README，默认搜索模式改为「始终显示」。

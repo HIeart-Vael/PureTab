@@ -1,0 +1,75 @@
+PlainTab è un'estensione per browser che rende ogni nuova scheda un piacere per gli occhi.
+
+Perché? Perché la tua nuova scheda merita uno sfondo bello, non pubblicità, notizie e collegamenti rapidi.
+
+Perché scegliere PlainTab?
+
+• 【Libertà di sfondo】
+• Aggiornamento automatico quotidiano con l'immagine del giorno Bing — due endpoint globali in contemporanea, velocissimo ovunque tu sia.
+• Caricamento locale velocissimo — gli sfondi sono memorizzati sul tuo computer e caricati all'istante all'apertura di una nuova scheda, un ordine di grandezza più veloce della rete.
+• Supporto fino a 12 sfondi locali con rotazione automatica a ogni nuova scheda. Galleria 3×4 per visualizzare, eliminare e cambiare in qualsiasi momento.
+
+• 【Privacy assoluta】
+• Nessuna pubblicità, nessun tracciamento, nessuna raccolta di dati.
+• Tutti gli sfondi sono archiviati offline sul tuo computer — niente upload, niente sincronizzazione, nessun passaggio attraverso server esterni. La tua navigazione appartiene solo a te.
+
+• 【Veloce, non invadente】
+• JavaScript nativo puro, zero dipendenze esterne. Nessun framework di terze parti — si apre immediatamente.
+• Gli sfondi generano in background un'anteprima ultraleggera. Alla prossima nuova scheda, viene caricata all'istante dalla memoria locale, senza passare dalla rete.
+
+• 【Flessibile, non complicato】
+• Rilevamento automatico della lingua tra 16 lingue disponibili.
+• Barra di ricerca: mostra al passaggio del mouse / sempre visibile / nascosta.
+• Motore di ricerca: Google / Bing / Baidu / DuckDuckGo (modalità Web).
+
+• 【Open source trasparente】
+• Codice sorgente completamente aperto: https://github.com/kaininx/PlainTab
+• Demo online: https://plaintab.netlify.app
+
+✨ Combinazione consigliata (dallo sviluppatore):
+• 📌 Nuova scheda: installa l'estensione e imposta fino a 12 sfondi diversi, senza limiti di dimensione.
+• 📌 Pagina iniziale: imposta il browser su https://plaintab.netlify.app , mantenendo la modalità Bing predefinita.
+• 📌 Pulsante Home: imposta su https://kaininx.github.io/PlainTab/ — è la pagina GitHub Pages del progetto, con sfondi aggiuntivi a tua scelta.
+
+PlainTab fa per te se sei stanco:
+• di nuove schede piene di pubblicità, notizie e collegamenti rapidi inutili
+• di estensioni che raccolgono di nascosto i tuoi dati in background
+• di un browser che rallenta per troppe estensioni — vuoi velocità nativa
+• di vedere sempre la stessa immagine su ogni nuova scheda
+
+Supporto e feedback
+• Ti piace PlainTab? Lasciaci una recensione sul Chrome Web Store.
+• GitHub: https://github.com/kaininx/PlainTab
+• Domande o suggerimenti? Apri una Issue.
+
+Registro delle modifiche
+
+• v3.1.2 · Rinominata _locales/pt in pt_BR per la conformità con il Chrome Web Store; unificato il formato del changelog in stile compatto; rinominate le versioni portoghesi in pt_BR per coerenza.
+
+• v3.1.1 · API Bing passata alla modalità concorrente Promise.any con timeout AbortController di 8 secondi; aggiornati tutti i 16 README per riflettere la nuova strategia di recupero.
+
+• v3.1.0 · Galleria sfondi locale: caricamento/eliminazione/rotazione di più sfondi locali, selezione batch di file; refactoring del codice; stile dei pannelli migliorato; localizzazione multilingua completata; correzione CSP — rimossi i domini delle API JSON.
+
+• v3.0.5 · Aggiornamento del proxy API Bing (richieste regionalizzate + deduplicazione delle immagini); ottimizzazione della cache degli sfondi; unificazione delle chiavi localStorage; aggiunti changelog in 16 lingue; miglioramento dei log e della semantica del codice.
+
+• v3.0.4 · Correzione del fallimento di caricamento degli sfondi: la whitelist CSP img-src non includeva i domini CDN di Bing, bloccando le immagini reindirizzate dal proxy API.
+
+• v3.0.3 · Accelerazione del rendering del primo fotogramma tramite CSSOM, rafforzamento della sicurezza CSP, pulizia del codice morto, aggiunta di icone SVG e materiale promozionale.
+
+• v3.0.2 · Sfondo adattivo per la modalità scura, refactoring della struttura del codice, barra informativa multilingua in basso.
+
+• v3.0.1 · Integrazione dell'API Chrome Search, superamento della verifica di conformità allo scopo unico del Chrome Web Store.
+
+• v3.0.0 · Riscrittura completa: architettura a due livelli che elimina il flash bianco della nuova scheda, aggiunto sfondo grigio di riserva.
+
+• v2.2.7 · Aggiunti README in inglese, giapponese, coreano, russo e cinese semplificato; modalità di ricerca predefinita cambiata in «mostra sempre».
+
+• v2.2.6 · Ottimizzazione della logica di caricamento degli sfondi e della cache delle anteprime, riordino delle costanti dell'API Bing.
+
+• v2.2.5 · Precaricamento degli sfondi e ottimizzazione del primo fotogramma, eliminazione dello schermo bianco della nuova scheda.
+
+• v2.2.4 · Migrazione dell'archiviazione degli sfondi da localStorage a IndexedDB.
+
+• v2.2.3 · Caricamento di sfondi locali, miglioramento dell'esperienza di cambio motore di ricerca.
+
+• v1.2.0 · Prima uscita: sistema di sfondi, interfaccia in 16 lingue, localizzazione Chrome i18n, licenza MIT.

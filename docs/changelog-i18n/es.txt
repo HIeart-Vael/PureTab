@@ -1,5 +1,7 @@
 Registro de cambios
 
+• v3.1.2 · Se renombró _locales/pt a pt_BR para cumplir con Chrome Web Store; se unificó el formato del changelog al estilo compacto; se renombraron los archivos portugueses a pt_BR para mantener consistencia.
+
 • v3.1.1 · Se cambió la API de Bing al modo de concurrencia Promise.any con un tiempo de espera AbortController de 8 segundos; se actualizaron los 16 README de idiomas para reflejar la nueva estrategia de obtención.
 
 • v3.1.0 · Galería local de fondos: sube, elimina y rota múltiples fondos locales, selección por lotes; refactorización del código; mejora de estilos en paneles; localización multilingüe mejorada; corrección de CSP eliminando dominios de API JSON.

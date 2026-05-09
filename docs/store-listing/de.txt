@@ -1,0 +1,75 @@
+PlainTab ist eine Browsererweiterung, die jeden neuen Tab zu einem optischen Genuss macht.
+
+Warum? Weil Ihr neuer Tab ein schönes Hintergrundbild verdient — keine Werbung, keine Nachrichten, keine Schnellzugriffe.
+
+Warum PlainTab?
+
+• 【Wandbildfreiheit】
+• Tägliche automatische Aktualisierung mit dem Bing-Bild des Tages — zwei globale Endpunkte im Wettlauf, blitzschnell egal wo Sie sind.
+• Extrem schnelle lokale Wandbilder — die Bilder werden auf Ihrem Gerät gespeichert und beim Öffnen eines neuen Tabs sofort geladen, eine Größenordnung schneller als Netzwerkzugriffe.
+• Unterstützt bis zu 12 lokale Wandbilder mit automatischer Rotation bei jedem neuen Tab. 3×4 Galerieansicht, jederzeit löschbar und austauschbar.
+
+• 【Absoluter Datenschutz】
+• Keine Werbung, kein Tracking, keine Datensammlung.
+• Alle Wandbilder werden offline auf Ihrem Gerät gespeichert — kein Hochladen, keine Synchronisation, keine Übertragung über Server. Ihr Surfverhalten gehört nur Ihnen.
+
+• 【Blitzschnell, unaufdringlich】
+• Reines natives JavaScript, null externe Abhängigkeiten. Kein Drittanbieter-Framework — beim Öffnen sofort bereit.
+• Wandbilder erstellen im Hintergrund eine extrem leichte Vorschauminiatur. Beim nächsten neuen Tab wird sie direkt vom Gerät geladen — ohne Netzwerk.
+
+• 【Flexibel, nicht kompliziert】
+• Automatische Spracherkennung aus 16 Sprachen.
+• Suchleiste: bei Mauszeiger-Kontakt einblenden / immer anzeigen / ausblenden.
+• Suchmaschine: Google / Bing / Baidu / DuckDuckGo (im Web-Modus).
+
+• 【Open Source, transparent】
+• Vollständig quelloffen: https://github.com/kaininx/PlainTab
+• Online-Demo: https://plaintab.netlify.app
+
+✨ Empfohlene Kombination (vom Entwickler):
+• 📌 Neuer Tab: Installieren Sie die Erweiterung und legen Sie bis zu 12 verschiedene Wandbilder beliebiger Größe fest.
+• 📌 Startseite: Setzen Sie die Startseite des Browsers auf https://plaintab.netlify.app , um den täglichen Bing-Modus zu nutzen.
+• 📌 Home-Button: Setzen Sie ihn auf https://kaininx.github.io/PlainTab/ — das GitHub Pages dieser Erweiterung, mit zusätzlichen eigenen Wandbildern.
+
+PlainTab ist genau richtig, wenn Sie genug haben von:
+• Werbung, Nachrichten und nutzlosen Schnellzugriffen auf dem neuen Tab
+• Browsererweiterungen, die im Hintergrund heimlich Ihre Daten sammeln
+• trägem Browser durch zu viele Erweiterungen — Sie wollen native Geschwindigkeit
+• dem immer gleichen Bild auf jedem neuen Tab
+
+Support und Feedback
+• Gefällt Ihnen PlainTab? Bewerten Sie uns im Chrome Web Store.
+• GitHub: https://github.com/kaininx/PlainTab
+• Fragen oder Anregungen? Eröffnen Sie ein Issue.
+
+Änderungsprotokoll
+
+• v3.1.2 · _locales/pt in pt_BR umbenannt — Chrome erkennt nur pt_BR/pt_PT, nicht pt; Changelog-Format auf kompakte Einzeiler vereinheitlicht; portugiesische Dateien auf pt_BR umgestellt.
+
+• v3.1.1 · Bing-API auf Promise.any-Wettlaufmodus mit 8-Sekunden-AbortController-Timeout umgestellt; alle 16 READMEs mit der neuen Abrufstrategie aktualisiert.
+
+• v3.1.0 · Lokale Wandbildergalerie: Hochladen/Löschen/Rotation mehrerer lokaler Wandbilder, Batch-Dateiauswahl; Code-Refactoring; verbessertes Panel-Design; erweiterte Mehrsprachen-Lokalisierung; CSP-Fix — Entfernung der JSON-API-Domains.
+
+• v3.0.5 · Bing-API-Proxy aktualisiert (regionalisierte Anfragen + Bilddeduplizierung); Wandbild-Cache optimiert; localStorage-Schlüssel vereinheitlicht; 16-sprachige Changelogs hinzugefügt; verbesserte Protokollierung und Codesemantik.
+
+• v3.0.4 · Fehlerbehebung beim Laden von Wandbildern: CSP img-src fehlten Bing-CDN-Domains, sodass umgeleitete Bilder blockiert wurden.
+
+• v3.0.3 · CSSOM-Beschleunigung des ersten Renderings, CSP-Sicherheitsverschärfung, toten Code entfernt, SVG-Icons und Promo-Material hinzugefügt.
+
+• v3.0.2 · Dunkelmodus-adaptiver Hintergrund, Code-Struktur-Refactoring, untere mehrsprachige Hinweiszeile.
+
+• v3.0.1 · Integration der Chrome Search API, Bestehen der Chrome Web Store Single-Purpose-Compliance-Prüfung.
+
+• v3.0.0 · Komplette Neufassung: Zweischichten-Architektur beseitigt weißen Bildschirm-Flash beim Öffnen neuer Tabs, grauer Reservehintergrund hinzugefügt.
+
+• v2.2.7 · READMEs auf Englisch, Japanisch, Koreanisch, Russisch und vereinfachtem Chinesisch hinzugefügt; Standard-Suchmodus auf «immer anzeigen» geändert.
+
+• v2.2.6 · Optimierung der Wandbild-Ladelogik und Miniatur-Caches, Bereinigung der Bing-API-Konstanten.
+
+• v2.2.5 · Wandbild-Vorabladung und Erstbild-Optimierung, Beseitigung des weißen Bildschirms beim neuen Tab.
+
+• v2.2.4 · Wandbildspeicher von localStorage zu IndexedDB migriert.
+
+• v2.2.3 · Lokaler Wandbild-Upload, verbesserte Suchmaschinenumschaltung.
+
+• v1.2.0 · Erste Veröffentlichung: Wandbildsystem, 16-sprachige Oberfläche, Chrome-i18n-Lokalisierung, MIT-Lizenz.

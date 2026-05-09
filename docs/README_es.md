@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -253,7 +253,7 @@ PlainTab/
 - **[`js/`](../js/)** — Tres archivos que se cargan en orden: `preload.js` → `languages.js` → `newtab.js` (el orden no se puede alterar)
 - **[`_locales/`](../_locales/)** — Solo contiene `extName` y `extDesc` para el manifiesto de la extension; todas las cadenas de UI son gestionadas por [`languages.js`](../js/languages.js)
 - **[`imgs/`](../imgs/)** — Capturas de pantalla e imagenes promocionales requeridas por Chrome Web Store
-- **[`docs/`](../docs/)** y **[`changelog/`](../changelog/)** — Documentacion multilingue, 16 idiomas cada uno con su propio archivo independiente
+- **[`docs/`](../docs/)** — Documentacion multilingue, 16 idiomas cada uno con su propio archivo independiente
 
 ---
 
@@ -266,7 +266,7 @@ Algunas convenciones:
 - **No anadir pasos de compilacion**—`index.html` se ejecuta directamente en el navegador
 - **No ampliar permisos**—`manifest.json` solo conserva el permiso `search`
 
-📋 [Registro de cambios](CHANGELOG.md)
+📋 [Registro de cambios](changelog.md)
 
 ---
 

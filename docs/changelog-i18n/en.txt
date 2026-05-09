@@ -1,5 +1,7 @@
 Changelog
 
+• v3.1.2 · Renamed _locales/pt to pt_BR for Chrome Web Store compliance; unified changelog format to compact style; renamed Portuguese files to pt_BR for consistency.
+
 • v3.1.1 · Switched Bing API to Promise.any race mode with 8-second AbortController timeout; updated all 16 language READMEs to reflect the new fetch strategy.
 
 • v3.1.0 · Local wallpaper gallery: upload/delete/rotate multiple local wallpapers, batch file selection; code refactoring; improved panel styling; comprehensive i18n localization; fixed CSP by removing JSON API domains.

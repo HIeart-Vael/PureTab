@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="الإصدار">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="الإصدار">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -253,7 +253,7 @@ PlainTab/
 - **[`js/`](../js/)** — ثلاثة ملفات تُحمّل بالترتيب: `preload.js` ← `languages.js` ← `newtab.js` (الترتيب لا يمكن تغييره)
 - **[`_locales/`](../_locales/)** — يحتوي فقط على `extName` و `extDesc` لبيان الإضافة؛ جميع سلاسل واجهة المستخدم تُدار بواسطة [`languages.js`](../js/languages.js)
 - **[`imgs/`](../imgs/)** — لقطات شاشة وصور ترويجية مطلوبة لمتجر Chrome Web Store
-- **[`docs/`](../docs/)** و **[`changelog/`](../changelog/)** — توثيق متعدد اللغات، 16 لغة كل منها في ملف مستقل
+- **[`docs/`](../docs/)** — توثيق متعدد اللغات، 16 لغة كل منها في ملف مستقل
 
 ---
 
@@ -266,7 +266,7 @@ PlainTab/
 - **لا تضف خطوات بناء**—`index.html` يُشغّل مباشرة في المتصفح
 - **لا توسع الأذونات**—`manifest.json` يحتفظ فقط بإذن `search`
 
-📋 [سجل التحديثات](CHANGELOG.md)
+📋 [سجل التحديثات](changelog.md)
 
 ---
 
