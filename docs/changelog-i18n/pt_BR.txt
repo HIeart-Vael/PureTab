@@ -1,4 +1,5 @@
 Registro de alterações
+• v3.1.4 · Refatorada a nomenclatura de constantes de armazenamento e unificada a migração IDB em transação de duas fases para ordenação recuperável; otimizado o salto de migração para novos usuários; adicionada deduplicação em lote com limite de 12 imagens
 
 • v3.1.3 · Implementada migração de versão de armazenamento para localStorage e IndexedDB, unificada a nomenclatura de chaves, corrigida a lógica de persistência de miniaturas no modo local.
 

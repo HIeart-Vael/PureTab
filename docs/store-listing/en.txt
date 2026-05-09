@@ -44,6 +44,8 @@ Support & Feedback
 
 Changelog
 
+• v3.1.4 · Refactored storage constant naming and merged IDB migration into two-phase transaction for crash-recoverable ordering; optimized new user migration skip; added batch upload deduplication with 12-image cap
+
 • v3.1.3 · Implemented storage version migration for localStorage and IndexedDB, unified storage key naming, fixed thumbnail persistence logic in local mode.
 
 • v3.1.2 · Renamed _locales/pt to pt_BR for Chrome Web Store compliance; unified changelog format to compact style; renamed Portuguese files to pt_BR for consistency.

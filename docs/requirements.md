@@ -16,7 +16,7 @@ Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Cloudfla
 |------|------|------|
 | Bing 每日壁纸 | ✅ | 双 API 并发竞速（`Promise.any` + 8s `AbortController` 超时），按语言区域获取 |
 | Bing 去重缓存 | ✅ | URL + 日期双重判断，同一天同 URL 不重复下载 blob，IDB 丢数据时回退下载 |
-| 本地上传壁纸 | ✅ | 支持单张/批量（input multiple），同名+同大小去重，上限 12 张 |
+| 本地上传壁纸 | ✅ | 支持单张/批量（input multiple），文件名去重（同批次+跨批次），上限 12 张 |
 | 本地壁纸轮播 | ✅ | 每次新标签页递增 `ptab_local_index`，取对应壁纸，循环 |
 | 双层零闪切换 | ✅ | `#wallpaperBack` 始终有图，`#wallpaperFront` 做 CSS opacity 淡入过渡，过渡完成后稳定到 back 层 |
 | 首帧缩略图 | ✅ | `preload.js` 同步读取 localStorage 缩略图写入 back 层，浏览器首帧前完成 |
@@ -106,6 +106,13 @@ Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Cloudfla
 ---
 
 ## 六、迭代历史
+
+### 2026-05（v3.1.4）
+
+- **存储常量重命名**：`KEY_*` → `LS_KEY_*`/`DB_KEY_*`，区分 localStorage 与 IndexedDB 键名，提高代码可读性
+- **迁移重构为两阶段事务**：IDB 先 put 新 key（非破坏），localStorage 写入 order/thumbs 成功后，再删旧 key。迁移中断可安全重试
+- **新用户迁移优化**：无 `ptab_version` 的新用户直接跳过迁移，不创建无效 IDB 事务
+- **批量上传去重**：按文件名同批次内去重 + 跨批次查库去重，超出 12 张自动截断
 
 ### 2026-05（v3.1.3）
 
