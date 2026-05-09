@@ -1,5 +1,7 @@
 Changelog
 
+• v3.1.3 · Implemented storage version migration for localStorage and IndexedDB, unified storage key naming, fixed thumbnail persistence logic in local mode.
+
 • v3.1.2 · Renamed _locales/pt to pt_BR for Chrome Web Store compliance; unified changelog format to compact style; renamed Portuguese files to pt_BR for consistency.
 
 • v3.1.1 · Switched Bing API to Promise.any race mode with 8-second AbortController timeout; updated all 16 language READMEs to reflect the new fetch strategy.

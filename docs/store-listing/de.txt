@@ -44,6 +44,8 @@ Support und Feedback
 
 Änderungsprotokoll
 
+• v3.1.3 · Speicherversionsmigration für localStorage und IndexedDB implementiert, Speicher-Schlüsselnamen vereinheitlicht, Miniaturansicht-Persistenzlogik im lokalen Modus korrigiert.
+
 • v3.1.2 · _locales/pt in pt_BR umbenannt — Chrome erkennt nur pt_BR/pt_PT, nicht pt; Changelog-Format auf kompakte Einzeiler vereinheitlicht; portugiesische Dateien auf pt_BR umgestellt.
 
 • v3.1.1 · Bing-API auf Promise.any-Wettlaufmodus mit 8-Sekunden-AbortController-Timeout umgestellt; alle 16 READMEs mit der neuen Abrufstrategie aktualisiert.

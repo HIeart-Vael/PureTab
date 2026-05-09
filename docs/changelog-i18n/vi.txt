@@ -1,5 +1,7 @@
 Nhật Ký Cập Nhật
 
+• v3.1.3 · Đã triển khai di chuyển phiên bản lưu trữ cho localStorage và IndexedDB, thống nhất cách đặt tên khóa lưu trữ, sửa logic lưu trữ hình thu nhỏ trong chế độ cục bộ.
+
 • v3.1.2 · Đã đổi tên _locales/pt thành pt_BR để tuân thủ Chrome Web Store; thống nhất định dạng changelog sang kiểu gọn nhẹ; đổi tên tệp tiếng Bồ Đào Nha thành pt_BR cho nhất quán.
 
 • v3.1.1 · Chuyển Bing API sang chế độ chạy đua Promise.any và thêm AbortController 8 giây; cập nhật toàn bộ README 16 ngôn ngữ để phản ánh chiến lược tải mới.

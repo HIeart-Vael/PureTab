@@ -44,6 +44,8 @@ Assistance et retours
 
 Journal des mises à jour
 
+• v3.1.3 · Implémentation de la migration de version de stockage pour localStorage et IndexedDB, unification des noms de clés, correction de la logique de persistance des miniatures en mode local.
+
 • v3.1.2 · Renommage de _locales/pt en pt_BR pour la conformité Chrome Web Store; unification du format du changelog en style compact; renommage des fichiers portugais en pt_BR pour la cohérence.
 
 • v3.1.1 · Passage de l'API Bing en mode concurrent Promise.any avec un timeout AbortController de 8 secondes ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération.

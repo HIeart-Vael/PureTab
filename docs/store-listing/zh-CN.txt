@@ -44,6 +44,8 @@ PlainTab 适合，如果你受够了：
 
 更新日志
 
+• v3.1.3 · 实现了 localStorage 与 IndexedDB 存储版本迁移机制，统一存储键名，修复缩略图在本地模式下的持久化逻辑。
+
 • v3.1.2 · 将 _locales/pt 重命名为 pt_BR 以符合 Chrome Web Store 规范；统一 changelog 为紧凑格式；葡萄牙语相关文件同步重命名为 pt_BR。
 
 • v3.1.1 · 将 Bing API 切换为 Promise.any 竞速模式并添加 8 秒 AbortController 超时；更新全部 16 语言 README 以反映新的获取策略。

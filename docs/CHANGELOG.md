@@ -1,5 +1,21 @@
 # Changelog · 更新日志
 
+## v3.1.3
+
+存储版本迁移：实现 localStorage 与 IndexedDB 的 schema 版本化迁移机制，统一键名风格，修复缩略图在本地模式下的有条件持久化逻辑。
+
+- `feat`: 实现了 localStorage 与 IndexedDB 存储版本迁移机制
+- `fix`: 更新 localStorage 键名以保持代码库一致性
+- `fix`: 缩略图生成根据当前模式有条件地持久化到 localStorage
+- `docs`: 简化了 Chrome Web Store 和手动安装说明
+
+Storage version migration: implemented schema versioned migration for localStorage and IndexedDB, unified key naming conventions, fixed conditional thumbnail persistence in local mode.
+
+- `feat`: Implemented storage version migration for localStorage and IndexedDB
+- `fix`: Updated localStorage key naming for consistency across the codebase
+- `fix`: Updated thumbnail generation to conditionally persist to localStorage based on current mode
+- `docs`: Simplified installation instructions for Chrome Web Store and manual installation
+
 ## v3.1.2
 
 - `fix`: 将 `_locales/pt` 重命名为 `pt_BR` 以符合 Chrome Web Store 规范——Chrome 只识别 `pt_BR`/`pt_PT`，不识别裸 `pt`

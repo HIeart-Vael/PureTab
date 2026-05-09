@@ -55,30 +55,32 @@ Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Cloudfla
 
 | 键 | 类型 | 用途 |
 |----|------|------|
-| `bing_thumb` | string | Bing 当前壁纸缩略图，CSS 格式 `url(data:image/jpeg;base64,...)` |
-| `local_thumbs` | JSON array | 本地壁纸缩略图数组，索引与 IDB `local_images` 对齐 |
+| `ptab_version` | string→int | 数据 schema 版本号（当前 `2`），供未来迁移检测 |
+| `ptab_bing_thumb` | string | Bing 当前壁纸缩略图，CSS 格式 `url(data:image/jpeg;base64,...)` |
+| `ptab_local_thumbs` | JSON array | 本地壁纸缩略图数组，索引与 IDB `ptab_local_images` 对齐 |
 | `ptab_local_index` | string→int | 本地壁纸轮播指针，每次新标签页递增 |
-| `ptab_wallpaper_source` | `'bing'` / `'local'` | 当前壁纸模式 |
+| `ptab_mode` | `'bing'` / `'local'` | 当前壁纸模式 |
 | `ptab_bing_meta` | JSON | `{src, date, provider}`，Bing 去重 + 新鲜度 |
 | `ptab_lang` | string | 语言代码 |
-| `ptab_search_visibility` | `'always'` / `'hover'` / `'never'` | 搜索栏显隐模式 |
+| `ptab_search_mode` | `'always'` / `'hover'` / `'never'` | 搜索栏显隐模式 |
 | `ptab_icon_opacity` | float string | 图标不透明度 |
 | `ptab_search_engine` | string | 搜索引擎 |
 
 ### 3.2 IndexedDB
 
-数据库 `PlainTab` v1，store `wallpaper`。
+数据库 `PlainTab`，当前版本 `DB_VERSION = 2`，store `wallpaper`。
 
 | 键 | 类型 | 用途 |
 |----|------|------|
-| `bing` | Blob | Bing 今日壁纸原图 |
-| `local_images` | Array of `{id, blob, mime, name}` | 本地壁纸集合，最多 12 个 |
+| `ptab_bing_blob` | Blob | Bing 今日壁纸原图 |
+| `ptab_local_images` | Array of `{id, blob, mime, name}` | 本地壁纸集合，最多 12 个 |
 
 ### 3.3 数据一致性约束
 
-- `local_images[i].blob` ←→ `local_thumbs[i]` 索引严格对齐
+- `ptab_local_images[i].blob` ←→ `ptab_local_thumbs[i]` 索引严格对齐
 - 上传时 blob 写入 IDB 和缩略图写入 localStorage 在同一个 Promise 链中，但分属两个存储系统无法原子操作。写 IDB 在前，写 localStorage 在后，崩溃时缩略图可能缺失，下次轮播触发自愈补充
 - 删除时同步 `splice` 两端数组，最后一个元素删除时清空两个数组
+- `ptab_version` 记录当前数据 schema 版本，供未来存储结构变更时的迁移检测
 
 ---
 
@@ -104,6 +106,13 @@ Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Cloudfla
 ---
 
 ## 六、迭代历史
+
+### 2026-05（v3.1.3）
+
+- **存储版本迁移机制**：实现 localStorage 与 IndexedDB 的 schema 版本化迁移系统（`LS_VERSION`/`DB_VERSION`），支持未来存储结构安全演进
+- **存储键名统一**：全部 localStorage 和 IDB 键名统一为 `ptab_` 前缀风格（`ptab_bing_thumb`、`ptab_local_thumbs`、`ptab_mode`、`ptab_search_mode` 等）
+- **缩略图持久化修复**：`generateThumbnail()` 现在根据当前壁纸模式有条件地持久化——Bing 模式下正常存，本地模式下不覆盖 Bing 缩略图
+- **发布说明优化**：简化安装指引，Chrome Web Store 和手动安装说明更加清晰
 
 ### 2026-05（v3.1.2）
 
