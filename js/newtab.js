@@ -8,21 +8,24 @@
     var BING_PRIMARY = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
     var BING_FALLBACK = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
 
-    // *** localStorage / IndexedDB 的 key 名 —— 任何改动都会破坏已部署版本 ***
-    var DB_NAME = 'PlainTab';
+    // *** localStorage / IndexedDB 的 key 名
+    var LS_VERSION = 2;
     var DB_VERSION = 1;
-    var STORE = 'wallpaper';
-    var BING_THUMB_KEY = 'bing_thumb';
-    var LANG_KEY = 'ptab_lang';
-    var MODE_KEY = 'ptab_wallpaper_source';
-    var SEARCH_MODE_KEY = 'ptab_search_visibility';
-    var OPACITY_KEY = 'ptab_icon_opacity';
-    var ENGINE_KEY = 'ptab_search_engine';
-    var META_KEY = 'ptab_bing_meta';
-    var BING_KEY = 'bing';
-    var LOCAL_IMAGES_KEY = 'local_images';
-    var LOCAL_INDEX_KEY = 'ptab_local_index';
-    var LOCAL_THUMBS_KEY = 'local_thumbs';
+    var DB_NAME = 'PlainTab';
+    var DB_STORE_NAME = 'wallpaper';
+
+    var KEY_VERSION = 'ptab_version';
+    var KEY_BING_THUMB = 'ptab_bing_thumb';
+    var KEY_LANG = 'ptab_lang';
+    var KEY_MODE = 'ptab_mode';
+    var KEY_SEARCH_MODE = 'ptab_search_mode';
+    var KEY_ICON_OPACITY = 'ptab_icon_opacity';
+    var KEY_SEARCH_ENGINE = 'ptab_search_engine';
+    var KEY_BING_META = 'ptab_bing_meta';
+    var KEY_BING_BLOB = 'ptab_bing_blob';
+    var KEY_LOCAL_IMAGES = 'ptab_local_images';
+    var KEY_LOCAL_INDEX = 'ptab_local_index';
+    var KEY_LOCAL_THUMBS = 'ptab_local_thumbs';
 
     var TRANSITION_MS = 500;
     var THUMB_MAX_W = 640;
@@ -148,7 +151,7 @@
             btn.textContent = lang.name;
             btn.addEventListener('click', function () {
                 if (lang.code !== currentLang) {
-                    localStorage.setItem(LANG_KEY, lang.code);
+                    localStorage.setItem(KEY_LANG, lang.code);
                     currentLang = lang.code;
                     updateLangUI();
                 }
@@ -170,7 +173,7 @@
         return new Promise(function (resolve, reject) {
             var req = indexedDB.open(DB_NAME, DB_VERSION);
             req.onupgradeneeded = function (e) {
-                if (!e.target.result.objectStoreNames.contains(STORE)) e.target.result.createObjectStore(STORE);
+                if (!e.target.result.objectStoreNames.contains(DB_STORE_NAME)) e.target.result.createObjectStore(DB_STORE_NAME);
             };
             req.onsuccess = function (e) {
                 _dbConnection = e.target.result;
@@ -185,8 +188,8 @@
     function idbPut(key, value) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
-                var tx = db.transaction(STORE, 'readwrite');
-                tx.objectStore(STORE).put(value, key);
+                var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                tx.objectStore(DB_STORE_NAME).put(value, key);
                 tx.oncomplete = resolve;
                 tx.onerror = function (e) { reject(e.target.error); };
             });
@@ -196,8 +199,8 @@
     function idbGet(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
-                var tx = db.transaction(STORE, 'readonly');
-                var req = tx.objectStore(STORE).get(key);
+                var tx = db.transaction(DB_STORE_NAME, 'readonly');
+                var req = tx.objectStore(DB_STORE_NAME).get(key);
                 req.onsuccess = function () { resolve(req.result); };
                 req.onerror = function (e) { reject(e.target.error); };
             });
@@ -207,8 +210,8 @@
     function idbDelete(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
-                var tx = db.transaction(STORE, 'readwrite');
-                tx.objectStore(STORE).delete(key);
+                var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                tx.objectStore(DB_STORE_NAME).delete(key);
                 tx.oncomplete = resolve;
                 tx.onerror = function (e) { reject(e.target.error); };
             });
@@ -292,7 +295,7 @@
                 var ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 var thumb = 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
-                try { localStorage.setItem(BING_THUMB_KEY, thumb); } catch (e) { /* quota 满了 */ }
+                try { localStorage.setItem(KEY_BING_THUMB, thumb); } catch (e) { /* quota 满了 */ }
                 resolve(thumb);
             };
             img.onerror = function () { resolve(null); };
@@ -302,11 +305,11 @@
 
     // 读/写本地缩略图数组（与 IDB local_images 数组索引对齐）
     function loadThumbs() {
-        try { return JSON.parse(localStorage.getItem(LOCAL_THUMBS_KEY) || '[]'); }
+        try { return JSON.parse(localStorage.getItem(KEY_LOCAL_THUMBS) || '[]'); }
         catch (e) { return []; }
     }
     function saveThumbs(thumbs) {
-        try { localStorage.setItem(LOCAL_THUMBS_KEY, JSON.stringify(thumbs)); }
+        try { localStorage.setItem(KEY_LOCAL_THUMBS, JSON.stringify(thumbs)); }
         catch (e) { /* quota 满了 */ }
     }
 
@@ -353,12 +356,12 @@
     }
 
     function loadBingMeta() {
-        try { var raw = localStorage.getItem(META_KEY); return raw ? JSON.parse(raw) : {}; }
+        try { var raw = localStorage.getItem(KEY_BING_META); return raw ? JSON.parse(raw) : {}; }
         catch (e) { return {}; }
     }
 
     function saveBingMeta(meta) {
-        try { localStorage.setItem(META_KEY, JSON.stringify(meta)); }
+        try { localStorage.setItem(KEY_BING_META, JSON.stringify(meta)); }
         catch (e) { /* quota 满了 */ }
     }
 
@@ -375,7 +378,7 @@
         var isNew = meta.src !== url;
 
         if (!isNew) {
-            return idbGet(BING_KEY).then(function (blob) {
+            return idbGet(KEY_BING_BLOB).then(function (blob) {
                 if (blob) {
                     var kb = (blob.size / 1024).toFixed(0);
                     log('Bing', 'wallpaper unchanged, skipped  ·  ' + provider + '  ·  ' + kb + ' KB');
@@ -396,7 +399,7 @@
                 saveBingMeta(meta);
                 var kb = (blob.size / 1024).toFixed(0);
                 log('Bing', 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB');
-                return idbPut(BING_KEY, blob).then(function () { return blob; });
+                return idbPut(KEY_BING_BLOB, blob).then(function () { return blob; });
             }).catch(function () { warn('Bing', 'got the URL but failed to download image, kept last image'); });
         }
     }
@@ -432,7 +435,7 @@
     function tryLoadLocalWallpaper(localImages) {
         if (!localImages || !localImages.length) return Promise.resolve(false);
 
-        var idx = (parseInt(localStorage.getItem(LOCAL_INDEX_KEY)) || 0) % localImages.length;
+        var idx = (parseInt(localStorage.getItem(KEY_LOCAL_INDEX)) || 0) % localImages.length;
         var img = localImages[idx];
         var blob = img.blob;
 
@@ -442,7 +445,7 @@
             try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
         }
 
-        localStorage.setItem(LOCAL_INDEX_KEY, (idx + 1) % localImages.length);
+        localStorage.setItem(KEY_LOCAL_INDEX, (idx + 1) % localImages.length);
         log('Local', 'image ' + (idx + 1) + '/' + localImages.length + (img.name ? '  ·  ' + img.name : ''));
 
         return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
@@ -506,13 +509,13 @@
      * 并行读取 IDB（本地图片 + Bing blob），根据模式和历史决定用哪个。
      */
     function loadWallpaper() {
-        var lastMode = localStorage.getItem(MODE_KEY) || 'bing';
+        var lastMode = localStorage.getItem(KEY_MODE) || 'bing';
         var meta = loadBingMeta();
         var today = new Date().toDateString();
 
         return Promise.all([
-            idbGet(LOCAL_IMAGES_KEY),
-            idbGet(BING_KEY)
+            idbGet(KEY_LOCAL_IMAGES),
+            idbGet(KEY_BING_BLOB)
         ]).then(function (results) {
             var localImages = results[0];
             var bingBlob = results[1];
@@ -556,7 +559,7 @@
         var blobUrl = URL.createObjectURL(file);
         var newImage = { id: generateId(), blob: file, mime: file.type || '', name: file.name || '' };
 
-        return idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+        return idbGet(KEY_LOCAL_IMAGES).then(function (images) {
             images = images || [];
 
             // WHY: 用 name + size 去重，而不是仅靠 name。防止用户上传同名的不同文件。
@@ -566,7 +569,7 @@
             }
 
             var start = show
-                ? (localStorage.setItem(MODE_KEY, 'local'), applyWallpaper(blobUrl, 'local'))
+                ? (localStorage.setItem(KEY_MODE, 'local'), applyWallpaper(blobUrl, 'local'))
                 : generateThumbnail(blobUrl);
 
             return start.then(function (thumb) {
@@ -574,12 +577,12 @@
 
                 // WHY: 重新读取 IDB 以获取最新状态。
                 // 批量导入时前一张图片可能已写入，多次读取保证不互相覆盖。
-                return idbGet(LOCAL_IMAGES_KEY).then(function (imgs) {
+                return idbGet(KEY_LOCAL_IMAGES).then(function (imgs) {
                     imgs = imgs || [];
                     var thumbs = loadThumbs();
                     imgs.push(newImage);
                     thumbs.push(thumb);
-                    return idbPut(LOCAL_IMAGES_KEY, imgs).then(function () { saveThumbs(thumbs); return true; });
+                    return idbPut(KEY_LOCAL_IMAGES, imgs).then(function () { saveThumbs(thumbs); return true; });
                 });
             });
         }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
@@ -587,7 +590,7 @@
 
     /** 删除单张本地壁纸，同步清理缩略图。删除最后一张时自动切回 Bing 模式 */
     function deleteLocalImage(id) {
-        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+        idbGet(KEY_LOCAL_IMAGES).then(function (images) {
             if (!images) return;
 
             // WHY: 先找到被删项的索引，再 splice 缩略图数组的对应位置。
@@ -602,10 +605,10 @@
 
             // 全部删完 → 清空所有数据，切回 Bing
             if (images.length === 0) {
-                return idbDelete(LOCAL_IMAGES_KEY).then(function () {
+                return idbDelete(KEY_LOCAL_IMAGES).then(function () {
                     saveThumbs([]);
-                    localStorage.removeItem(LOCAL_INDEX_KEY);
-                    localStorage.setItem(MODE_KEY, 'bing');
+                    localStorage.removeItem(KEY_LOCAL_INDEX);
+                    localStorage.setItem(KEY_MODE, 'bing');
                     currentMode = 'bing';
                     wallpaperInfoEl.textContent = t('wpBing');
                     removeLocalGallery();
@@ -613,7 +616,7 @@
                 });
             }
 
-            return idbPut(LOCAL_IMAGES_KEY, images).then(function () {
+            return idbPut(KEY_LOCAL_IMAGES, images).then(function () {
                 saveThumbs(thumbs);
                 refreshLocalGallery();
             });
@@ -628,19 +631,19 @@
      *   切回 Bing 时不再需要它们，清理可释放 localStorage 配额。
      */
     function resetToBing() {
-        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+        idbGet(KEY_LOCAL_IMAGES).then(function (images) {
             var count = (images && images.length) || 0;
             // WHY: 多于 1 张时才弹确认框 —— 防止误操作丢失收藏的壁纸
             if (count > 1 && !confirm(t('resetConfirm'))) return;
 
             currentMode = 'bing';
             removeLocalGallery();
-            localStorage.removeItem(BING_THUMB_KEY);
-            localStorage.removeItem(LOCAL_THUMBS_KEY);
-            localStorage.removeItem(LOCAL_INDEX_KEY);
-            localStorage.setItem(MODE_KEY, 'bing');
+            localStorage.removeItem(KEY_BING_THUMB);
+            localStorage.removeItem(KEY_LOCAL_THUMBS);
+            localStorage.removeItem(KEY_LOCAL_INDEX);
+            localStorage.setItem(KEY_MODE, 'bing');
 
-            return idbDelete(LOCAL_IMAGES_KEY).then(function () {
+            return idbDelete(KEY_LOCAL_IMAGES).then(function () {
                 return loadWallpaper();
             }).then(function () {
                 wallpaperInfoEl.textContent = t('wpBing');
@@ -710,7 +713,7 @@
 
     function refreshLocalGallery() {
         if (currentMode !== 'local') return;
-        idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+        idbGet(KEY_LOCAL_IMAGES).then(function (images) {
             if (images && images.length) renderLocalGallery(images, loadThumbs());
         }).catch(function () { });
     }
@@ -902,15 +905,15 @@
     }
 
     function saveSettings() {
-        localStorage.setItem(SEARCH_MODE_KEY, searchMode);
-        localStorage.setItem(OPACITY_KEY, currentOpacity);
-        localStorage.setItem(ENGINE_KEY, currentEngine);
+        localStorage.setItem(KEY_SEARCH_MODE, searchMode);
+        localStorage.setItem(KEY_ICON_OPACITY, currentOpacity);
+        localStorage.setItem(KEY_SEARCH_ENGINE, currentEngine);
     }
 
     function loadSettings() {
-        var mode = localStorage.getItem(SEARCH_MODE_KEY) || 'always';
-        var opacity = parseFloat(localStorage.getItem(OPACITY_KEY)) || 0.45;
-        var engine = localStorage.getItem(ENGINE_KEY) || 'google';
+        var mode = localStorage.getItem(KEY_SEARCH_MODE) || 'always';
+        var opacity = parseFloat(localStorage.getItem(KEY_ICON_OPACITY)) || 0.45;
+        var engine = localStorage.getItem(KEY_SEARCH_ENGINE) || 'google';
         searchModeSelect.value = mode;
         applySearchMode(mode);
         applyOpacity(opacity);
@@ -1050,7 +1053,7 @@
 
             if (!files.length) return;
 
-            idbGet(LOCAL_IMAGES_KEY).then(function (images) {
+            idbGet(KEY_LOCAL_IMAGES).then(function (images) {
                 images = images || [];
                 var slots = Math.max(0, 12 - images.length);
                 if (!slots) return;
@@ -1105,7 +1108,8 @@
        ================================================================ */
 
     function init() {
-        currentLang = localStorage.getItem(LANG_KEY) || detectLang();
+        localStorage.setItem(KEY_VERSION, LS_VERSION);
+        currentLang = localStorage.getItem(KEY_LANG) || detectLang();
         if (!I18N[currentLang]) currentLang = 'en';
         log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + currentLang);
         loadSettings();
