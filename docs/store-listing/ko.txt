@@ -44,6 +44,8 @@ PlainTab이 적합한 분들:
 
 변경 내역
 
+• v3.1.3 · localStorage와 IndexedDB를 위한 스토리지 버전 마이그레이션 구현, 스토리지 키 이름 통일, 로컬 모드에서 썸네일 지속성 로직 수정.
+
 • v3.1.2 · Chrome Web Store 규정 준수를 위해 _locales/pt를 pt_BR로 이름 변경; 변경 로그 형식을 간결한 스타일로 통일; 포르투갈어 파일을 pt_BR로 일관성 있게 이름 변경.
 
 • v3.1.1 · Bing API를 Promise.any 경쟁 모드로 전환하고 8초 AbortController 타임아웃 추가. 전체 16개 언어 README를 새로운 가져오기 전략에 맞게 업데이트.

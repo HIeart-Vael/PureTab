@@ -44,6 +44,8 @@ PlainTab はこんな方におすすめ：
 
 更新履歴
 
+• v3.1.3 · localStorage と IndexedDB のストレージバージョン移行を実装し、ストレージキー名を統一、ローカルモードでのサムネイル永続化ロジックを修正。
+
 • v3.1.2 · Chrome Web Store 対応のため _locales/pt を pt_BR に名称変更；changelog フォーマットをコンパクトな1行形式に統一；ポルトガル語関連ファイルを pt_BR に合わせて名称変更。
 
 • v3.1.1 · Bing API を Promise.any 競速モードに切り替え、8 秒の AbortController タイムアウトを追加。全 16 言語の README を新しい取得戦略に合わせて更新。

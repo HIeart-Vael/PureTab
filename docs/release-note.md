@@ -2,34 +2,36 @@
 
 ---
 
-**PlainTab v3.1.2**
+**PlainTab v3.1.3**
 
 - Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) for automatic updates.
 - Or download the `.crx` file below and drag it into `chrome://extensions`.
 
-**Changelog (v3.1.2)**
+**Changelog (v3.1.3)**
 
-- `fix`: renamed `_locales/pt` to `pt_BR` for Chrome Web Store compliance — Chrome only recognizes `pt_BR`/`pt_PT`, not bare `pt`
-- `style`: unified all 16-language changelog format to compact single-line `• vX.Y.Z · ...` style
-- `chore`: renamed Portuguese README and changelog files to `pt_BR` for consistency
+- `feat`: Implemented storage version migration for localStorage and IndexedDB
+- `fix`: Updated localStorage key naming for consistency across the codebase
+- `fix`: Updated thumbnail generation to conditionally persist to localStorage based on current mode
+- `docs`: Simplified installation instructions for Chrome Web Store and manual installation
 
-**Summary (v3.1.2)**
+**Summary (v3.1.3)**
 
-v3.1.2 is a maintenance release focused on Chrome Web Store compliance and internal consistency. Chrome's localization system requires Portuguese locale directories to use the region-qualified names `pt_BR` (Brazil) or `pt_PT` (Portugal) — the bare `pt` directory is rejected during store review. All `_locales/pt`, `changelog/pt.txt`, and `docs/README_pt.md` files have been renamed to their `pt_BR` counterparts. Additionally, the changelog format has been unified across all 16 languages to a compact single-line style for cleaner release tracking.
+v3.1.3 introduces a storage version migration system for both localStorage and IndexedDB, enabling safe schema evolution as PlainTab grows. All localStorage keys have been unified to a consistent naming convention across the codebase. Thumbnail generation logic has been fixed to conditionally persist based on the current wallpaper mode — thumbnails are now only persisted when relevant, preventing stale data in local rotation mode. Installation instructions in the release note have been simplified for better clarity.
 
 ---
 
-**PlainTab v3.1.2**
+**PlainTab v3.1.3**
 
 - 前往 [Chrome 网上应用店](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) 安装，可自动更新。
 - 或下载下方 `.crx` 文件，拖入 `chrome://extensions` 页面即可。
 
-**更新日志 (v3.1.2)**
+**更新日志 (v3.1.3)**
 
-- `fix`: 将 `_locales/pt` 重命名为 `pt_BR` 以符合 Chrome Web Store 规范——Chrome 只识别 `pt_BR`/`pt_PT`，不识别裸 `pt`
-- `style`: 统一全部 16 语言 changelog 格式为紧凑单行 `• vX.Y.Z · ...` 风格
-- `chore`: 葡萄牙语 README 和 changelog 文件同步重命名为 `pt_BR`
+- `feat`: 实现了 localStorage 与 IndexedDB 存储版本迁移机制
+- `fix`: 更新 localStorage 键名以保持代码库一致性
+- `fix`: 缩略图生成根据当前模式有条件地持久化到 localStorage
+- `docs`: 简化了 Chrome Web Store 和手动安装说明
 
-**总结 (v3.1.2)**
+**总结 (v3.1.3)**
 
-v3.1.2 是一次维护性版本，专注于 Chrome Web Store 合规与内部一致性。Chrome 本地化系统要求葡萄牙语区域目录使用带地区后缀的名称 `pt_BR`（巴西）或 `pt_PT`（葡萄牙）——裸 `pt` 目录会被商店审核拒绝。所有 `_locales/pt`、`changelog/pt.txt` 和 `docs/README_pt.md` 文件均已重命名为 `pt_BR`。此外，全部 16 种语言的 changelog 格式已统一为紧凑单行风格，便于更清晰地追踪版本记录。
+v3.1.3 引入了 localStorage 与 IndexedDB 的存储版本迁移系统，支持随着 PlainTab 发展安全地演进存储结构。所有 localStorage 键名已统一为一致的命名规范。缩略图生成逻辑已修复为根据当前壁纸模式有条件地持久化——缩略图仅在相关时保存，避免本地轮播模式下的过期数据残留。发布说明中的安装指引已简化，更加清晰明了。

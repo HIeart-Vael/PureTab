@@ -1,5 +1,7 @@
 Registro delle modifiche
 
+• v3.1.3 · Implementata la migrazione della versione di archiviazione per localStorage e IndexedDB, unificata la denominazione delle chiavi, corretta la logica di persistenza delle miniature in modalità locale.
+
 • v3.1.2 · Rinominata _locales/pt in pt_BR per la conformità con il Chrome Web Store; unificato il formato del changelog in stile compatto; rinominate le versioni portoghesi in pt_BR per coerenza.
 
 • v3.1.1 · API Bing passata alla modalità concorrente Promise.any con timeout AbortController di 8 secondi; aggiornati tutti i 16 README per riflettere la nuova strategia di recupero.

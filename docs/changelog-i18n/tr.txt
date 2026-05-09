@@ -1,5 +1,7 @@
 Güncelleme Geçmişi
 
+• v3.1.3 · localStorage ve IndexedDB için depolama sürüm geçişi uygulandı, depolama anahtar adlandırması birleştirildi, yerel modda küçük resim kalıcılık mantığı düzeltildi.
+
 • v3.1.2 · Chrome Web Store uyumluluğu için _locales/pt, pt_BR olarak yeniden adlandırıldı; changelog biçimi tek satırlık kompak stilde birleştirildi; Portekizce dosyalar tutarlılık için pt_BR olarak yeniden adlandırıldı.
 
 • v3.1.1 · Bing API'si Promise.any yarış moduna geçirildi ve 8 saniyelik AbortController zaman aşımı eklendi; yeni getirme stratejisini yansıtmak için 16 dildeki README dosyalarının tamamı güncellendi.
