@@ -1,43 +1,29 @@
-Değişiklik günlüğü
+Güncelleme Geçmişi
 
-• v3.1.1
-  • Bing API, Promise.any yarışı ve 8 saniyelik AbortController zaman aşımına geçirildi; yeni getirme stratejisini yansıtmak ve Promise.any/AbortController gecikme tekniklerini eklemek için 16 dildeki tüm README'ler güncellendi.
+• v3.1.1 · Bing API'si Promise.any yarış moduna geçirildi ve 8 saniyelik AbortController zaman aşımı eklendi; yeni getirme stratejisini yansıtmak için 16 dildeki README dosyalarının tamamı güncellendi.
 
-• v3.1.0
-  • Yerel duvar kağıdı galerisi: birden fazla duvar kağıdını toplu seçimle yükleme/silme/döndürme; kod yeniden yapılandırma (anlamsal adlandırma, uzun fonksiyonları bölme, tasarım yorumları); panel başlık stilleri iyileştirildi; çok dilli yerelleştirme geliştirildi; JSON API alanlarını kaldırmak için CSP düzeltildi.
+• v3.1.0 · Yerel duvar kağıdı galerisi: birden çok yerel duvar kağıdını yükleme/silme/döngüye alma, toplu dosya seçimi; kod yeniden düzenlemesi; panel stilleri iyileştirildi; çoklu dil desteği genişletildi; CSP'den JSON API alan adları kaldırıldı.
 
-• v3.0.5
-  • Bing API proxy yükseltildi (bölge desteği + görüntü tekilleştirme); duvar kağıdı önbellekleme optimize edildi (indirmeden önce IDB'yi kontrol et); localStorage anahtarları birleştirildi; 16 dilde changelog dosyaları eklendi; günlük kaydı ve kod anlam bilgisi iyileştirildi.
+• v3.0.5 · Bing API vekili yükseltildi (bölgeselleştirilmiş istek + görsel yineleme koruması); duvar kağıdı önbelleği optimize edildi; localStorage anahtar adları birleştirildi; 16 dilde changelog eklendi; günlük kaydı ve kod anlam bilgisi iyileştirildi.
 
-• v3.0.4
-  • Duvar kağıdı yükleme hatası düzeltildi: CSP `img-src` izin listesinde Bing CDN kaynakları (`www.bing.com`, `cn.bing.com`) eksikti, bu nedenle proxy API'lerinden yönlendirilen görüntüler tarayıcı tarafından engelleniyordu.
+• v3.0.4 · Duvar kağıdı yükleme hatası düzeltildi: CSP img-src beyaz listesinde Bing CDN alan adı eksik olduğundan vekil API yönlendirmesi sonrası görseller tarayıcı tarafından engelleniyordu.
 
-• v3.0.3
-  • Daha hızlı ilk boyama için kritik ön yükleme yolunda CSSOM atlandı; CSP güçlendirildi; ölü kod kaldırıldı; SVG simgeleri ve tanıtım materyalleri eklendi.
+• v3.0.3 · CSSOM ile ilk kare işleme hızlandırıldı, CSP güvenliği güçlendirildi, ölü kod temizlendi, SVG simgeler ve tanıtım materyalleri eklendi.
 
-• v3.0.2
-  • Karanlık mod uyumlu arka plan, kod yapısı yeniden düzenlendi, çok dilli alt bilgi çubuğu.
+• v3.0.2 · Karanlık modda uyarlanabilir arka plan, kod yapısı yeniden düzenlendi, altta çok dilli bilgi çubuğu eklendi.
 
-• v3.0.1
-  • CWS tek amaçlı uyumluluğu için Chrome Search API'ye geçildi.
+• v3.0.1 · Chrome Search API entegre edildi, Chrome Web Mağazası tek amaç uyumluluğu denetiminden geçildi.
 
-• v3.0.0
-  • Tamamen yeniden yazma: yedek arka plan ile titreşimsiz duvar kağıdı oluşturma için çift katmanlı mimari. (Bkz. V3_NOTE.md)
+• v3.0.0 · Tamamen yeniden yazıldı: yeni sekme beyaz ekran parlamasını ortadan kaldırmak için çift katman mimarisi, yedek gri arka plan eklendi.
 
-• v2.2.7
-  • 5 dilde README dosyaları eklendi, varsayılan arama modu "her zaman göster" olarak ayarlandı.
+• v2.2.7 · İngilizce/Japonca/Korece/Rusça/Basitleştirilmiş Çince olmak üzere beş dilde README eklendi, varsayılan arama modu "her zaman göster" olarak değiştirildi.
 
-• v2.2.6
-  • Duvar kağıdı yükleme ve küçük resim önbellekleme optimize edildi; Bing API sabitleri temizlendi.
+• v2.2.6 · Duvar kağıdı yükleme mantığı ve küçük resim önbelleği optimize edildi, Bing API sabitleri düzenlendi.
 
-• v2.2.5
-  • Yeni sekme açıldığında beyaz flaşı ortadan kaldırmak için duvar kağıdı ön yükleme ve ilk kare optimizasyonu eklendi.
+• v2.2.5 · Duvar kağıdı ön yükleme ve ilk kare iyileştirmeleri, yeni sekme beyaz ekranı giderildi.
 
-• v2.2.4
-  • Duvar kağıdı depolaması localStorage'dan IndexedDB'ye taşındı.
+• v2.2.4 · Duvar kağıdı depolama birimi localStorage'dan IndexedDB'ye taşındı.
 
-• v2.2.3
-  • Yerel duvar kağıdı yükleme eklendi ve arama motoru değiştirme deneyimi iyileştirildi.
+• v2.2.3 · Yerel duvar kağıdı yükleme ve arama motoru geçiş deneyimi iyileştirildi.
 
-• v1.2.0
-  • İlk sürüm: tek bir HTML sayfasından duvar kağıdı sistemi, 16 dil arayüzü, Chrome i18n yerelleştirme ve MIT lisansı ile tam bir uzantıya dönüşüm.
+• v1.2.0 · İlk sürüm: duvar kağıdı sistemi, 16 dil arayüzü, Chrome i18n yerelleştirmesi, MIT lisansı.

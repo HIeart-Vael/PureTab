@@ -1,43 +1,29 @@
-Dziennik zmian
+Historia Aktualizacji
 
-• v3.1.1
-  • Przełączono Bing API na tryb wyścigu z Promise.any i 8-sekundowym limitem czasu AbortController; zaktualizowano wszystkie 16 README, aby odzwierciedlić nową strategię pobierania i dodać techniki opóźnienia Promise.any/AbortController.
+• v3.1.1 · Przełączenie API Bing w tryb wyścigu Promise.any z 8-sekundowym limitem AbortController; aktualizacja wszystkich 16 wersji językowych README odzwierciedlająca nową strategię pobierania.
 
-• v3.1.0
-  • Galeria lokalnych tapet: przesyłanie, usuwanie, rotacja wielu tapet z wyborem wsadowym; refaktoryzacja kodu (nazewnictwo semantyczne, podział funkcji, komentarze projektowe); ulepszone style tytułów paneli; rozszerzona lokalizacja wielojęzyczna; poprawione CSP w celu usunięcia domen JSON API.
+• v3.1.0 · Galeria tapet lokalnych: przesyłanie/usuwanie/rotacja wielu tapet lokalnych, wybór wsadowy plików; refaktoryzacja kodu; poprawa stylów paneli; rozszerzenie lokalizacji wielojęzycznej; naprawa CSP — usunięcie domen JSON API.
 
-• v3.0.5
-  • Zaktualizowano proxy Bing API (obsługa regionalna + deduplikacja obrazów); zoptymalizowano buforowanie tapet (sprawdzanie IDB przed pobraniem); ujednolicono klucze localStorage; dodano pliki changelog w 16 językach; ulepszono rejestrowanie i semantykę kodu.
+• v3.0.5 · Ulepszenie proxy API Bing (zapytania regionalne + deduplikacja obrazów); optymalizacja pamięci podręcznej tapet; ujednolicenie nazw kluczy localStorage; dodanie changelog w 16 językach; poprawa logowania i semantyki kodu.
 
-• v3.0.4
-  • Naprawiono ładowanie tapety: na liście dozwolonych CSP `img-src` brakowało źródeł CDN Bing (`www.bing.com`, `cn.bing.com`), więc obrazy przekierowywane z proxy API były blokowane przez przeglądarkę.
+• v3.0.4 · Naprawa błędu ładowania tapety: na białej liście CSP img-src brakowało domen CDN Bing, przez co obrazy po przekierowaniu z proxy API były blokowane przez przeglądarkę.
 
-• v3.0.3
-  • Ominięto CSSOM na ścieżce krytycznej wstępnego ładowania dla szybszego pierwszego renderowania; wzmocniono CSP; usunięto martwy kod; dodano ikony SVG i materiały promocyjne.
+• v3.0.3 · Przyspieszenie renderowania pierwszej klatki przez CSSOM, wzmocnienie bezpieczeństwa CSP, usunięcie martwego kodu, dodanie ikon SVG i materiałów promocyjnych.
 
-• v3.0.2
-  • Adaptacyjne tło dla trybu ciemnego, zrestrukturyzowany kod, wielojęzyczny pasek dolny.
+• v3.0.2 · Adaptacyjne tło w trybie ciemnym, refaktoryzacja struktury kodu, dolny pasek informacji wielojęzycznej.
 
-• v3.0.1
-  • Przełączono na Chrome Search API w celu zgodności z polityką jednego celu CWS.
+• v3.0.1 · Integracja Chrome Search API, pomyślne przejście audytu zgodności z zasadą pojedynczego celu Chrome Web Store.
 
-• v3.0.0
-  • Całkowita przebudowa: dwuwarstwowa architektura do renderowania tapety bez migotania z zapasowym szarym tłem. (Zobacz V3_NOTE.md)
+• v3.0.0 · Całkowity przepis: architektura dwuwarstwowa eliminująca białe miganie ekranu nowej karty, dodano zapasowe szare tło.
 
-• v2.2.7
-  • Dodano README w 5 językach, domyślny tryb wyszukiwania ustawiono na "zawsze widoczny".
+• v2.2.7 · Dodano README w pięciu językach (angielski, japoński, koreański, rosyjski, chiński uproszczony), domyślny tryb wyszukiwania zmieniono na "zawsze widoczny".
 
-• v2.2.6
-  • Zoptymalizowano ładowanie tapet i buforowanie miniatur; uporządkowano stałe API Bing.
+• v2.2.6 · Optymalizacja logiki ładowania tapet i pamięci podręcznej miniaturek, uporządkowanie stałych API Bing.
 
-• v2.2.5
-  • Dodano wstępne ładowanie tapety i optymalizację pierwszej klatki, aby wyeliminować białe migotanie podczas otwierania nowej karty.
+• v2.2.5 · Wstępne ładowanie tapety i optymalizacja pierwszej klatki, eliminacja białego ekranu nowej karty.
 
-• v2.2.4
-  • Przeniesiono przechowywanie tapet z localStorage do IndexedDB.
+• v2.2.4 · Migracja przechowywania tapet z localStorage do IndexedDB.
 
-• v2.2.3
-  • Dodano przesyłanie lokalnej tapety i poprawiono UX zmiany wyszukiwarki.
+• v2.2.3 · Przesyłanie lokalnych tapet, poprawa obsługi przełączania wyszukiwarki.
 
-• v1.2.0
-  • Pierwsze wydanie: ewolucja z pojedynczej strony HTML do pełnego rozszerzenia z systemem tapet, 16-języcznym interfejsem, lokalizacją Chrome i18n i licencją MIT.
+• v1.2.0 · Pierwsze wydanie: system tapet, interfejs w 16 językach, lokalizacja Chrome i18n, licencja MIT.

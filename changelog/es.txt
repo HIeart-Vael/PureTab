@@ -1,43 +1,29 @@
 Registro de cambios
 
-• v3.1.1
-  • Cambió la API de Bing a modo de competencia con Promise.any y tiempo de espera de 8s con AbortController; actualizó los 16 README para reflejar la nueva estrategia de obtención y añadió técnicas de latencia con Promise.any/AbortController.
+• v3.1.1 · Se cambió la API de Bing al modo de concurrencia Promise.any con un tiempo de espera AbortController de 8 segundos; se actualizaron los 16 README de idiomas para reflejar la nueva estrategia de obtención.
 
-• v3.1.0
-  • Galería de fondos locales: subir, eliminar, rotar múltiples fondos con selección por lotes; refactorización de código (nombres semánticos, división de funciones, comentarios de diseño); mejora de estilos de títulos de paneles; localización multilingüe mejorada; CSP corregido para eliminar dominios de API JSON.
+• v3.1.0 · Galería local de fondos: sube, elimina y rota múltiples fondos locales, selección por lotes; refactorización del código; mejora de estilos en paneles; localización multilingüe mejorada; corrección de CSP eliminando dominios de API JSON.
 
-• v3.0.5
-  • Proxy de API Bing actualizado (soporte regional + deduplicación de imágenes); caché de fondos optimizado (verificar IDB antes de descargar); claves de localStorage unificadas; archivos changelog en 16 idiomas añadidos; registros y semántica de código mejorados.
+• v3.0.5 · Actualización del proxy de la API de Bing (peticiones regionalizadas + deduplicación de imágenes); optimización del caché de fondos; unificación de nombres de claves en localStorage; nuevo changelog en 16 idiomas; mejora de logs y semántica del código.
 
-• v3.0.4
-  • Corregida la carga de fondos: la lista blanca CSP `img-src` no incluía los orígenes del CDN de Bing (`www.bing.com`, `cn.bing.com`), por lo que las imágenes redirigidas desde las API proxy eran bloqueadas por el navegador.
+• v3.0.4 · Corrección de fallo al cargar fondos: la lista blanca CSP img-src no incluía el dominio CDN de Bing, por lo que las imágenes redirigidas por el proxy API eran bloqueadas por el navegador.
 
-• v3.0.3
-  • Se omitió CSSOM en la ruta crítica de precarga para acelerar la primera pintura; se reforzó CSP; se eliminó código muerto; se añadieron iconos SVG y materiales promocionales.
+• v3.0.3 · Omitir CSSOM para acelerar el renderizado del primer fotograma, refuerzo de seguridad CSP, limpieza de código muerto, nuevos iconos SVG y material promocional.
 
-• v3.0.2
-  • Fondo adaptativo para modo oscuro, código reestructurado, barra inferior multilingüe.
+• v3.0.2 · Fondo adaptativo en modo oscuro, reestructuración del código, barra de información multilingüe en la parte inferior.
 
-• v3.0.1
-  • Migrado a Chrome Search API para cumplir con la política de propósito único de CWS.
+• v3.0.1 · Integración de Chrome Search API para superar la auditoría de cumplimiento de propósito único de Chrome Web Store.
 
-• v3.0.0
-  • Reescritura completa: arquitectura de doble capa para renderizado de fondos sin parpadeos con fondo de respaldo. (Ver V3_NOTE.md)
+• v3.0.0 · Reescritura completa: arquitectura de doble capa para eliminar el parpadeo de pantalla blanca en nuevas pestañas, añadido fondo gris de respaldo.
 
-• v2.2.7
-  • Añadidos README en 5 idiomas, modo de búsqueda predeterminado cambiado a "siempre visible".
+• v2.2.7 · Nuevos README en inglés, japonés, coreano, ruso y chino simplificado; modo de búsqueda predeterminado cambiado a "siempre visible".
 
-• v2.2.6
-  • Optimizada la carga de fondos y la caché de miniaturas; limpieza de constantes de la API de Bing.
+• v2.2.6 · Optimización de la lógica de carga de fondos y del caché de miniaturas, reorganización de constantes de la API de Bing.
 
-• v2.2.5
-  • Añadida precarga de fondos y optimización del primer fotograma para eliminar el parpadeo en blanco al abrir una nueva pestaña.
+• v2.2.5 · Precarga de fondos y optimización del primer fotograma, eliminando la pantalla blanca en nuevas pestañas.
 
-• v2.2.4
-  • Migrado el almacenamiento de fondos de localStorage a IndexedDB.
+• v2.2.4 · Migración del almacenamiento de fondos de localStorage a IndexedDB.
 
-• v2.2.3
-  • Añadida la carga de fondos locales y mejorada la experiencia de cambio de motor de búsqueda.
+• v2.2.3 · Subida de fondos locales, mejora en la experiencia de cambio de motor de búsqueda.
 
-• v1.2.0
-  • Lanzamiento inicial: evolucionado de una sola página HTML a una extensión completa con sistema de fondos, interfaz en 16 idiomas, localización Chrome i18n y licencia MIT.
+• v1.2.0 · Primera publicación: sistema de fondos, interfaz en 16 idiomas, localización Chrome i18n, licencia MIT.

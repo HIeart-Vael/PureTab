@@ -1,43 +1,29 @@
 Änderungsprotokoll
 
-• v3.1.1
-  • Bing-API auf Promise.any-Race mit 8s-AbortController-Timeout umgestellt; alle 16 READMEs aktualisiert, um die neue Abrufstrategie sowie Promise.any/AbortController-Latenztechniken zu dokumentieren.
+• v3.1.1 · Bing-API auf Promise.any-Wettlaufmodus mit 8-Sekunden-AbortController-Timeout umgestellt; alle 16 READMEs mit der neuen Abrufstrategie aktualisiert.
 
-• v3.1.0
-  • Lokale Hintergrundbild-Galerie: Hochladen, Löschen, Rotieren mehrerer Hintergründe mit Stapelauswahl; Code-Refactoring (semantische Benennung, Aufteilung langer Funktionen, Designkommentare); verbesserte Panel-Titelstile; erweiterte mehrsprachige Lokalisierung; CSP korrigiert, um JSON-API-Domänen zu entfernen.
+• v3.1.0 · Lokale Wandbildergalerie: Hochladen/Löschen/Rotation mehrerer lokaler Wandbilder, Batch-Dateiauswahl; Code-Refactoring; verbessertes Panel-Design; erweiterte Mehrsprachen-Lokalisierung; CSP-Fix — Entfernung der JSON-API-Domains.
 
-• v3.0.5
-  • Bing-API-Proxy aktualisiert (Regionsunterstützung + Bilddeduplizierung); Hintergrund-Caching optimiert (IDB vor Download prüfen); localStorage-Schlüssel vereinheitlicht; 16-sprachige Changelog-Dateien hinzugefügt; Protokollierung und Code-Semantik verbessert.
+• v3.0.5 · Bing-API-Proxy aktualisiert (regionalisierte Anfragen + Bilddeduplizierung); Wandbild-Cache optimiert; localStorage-Schlüssel vereinheitlicht; 16-sprachige Changelogs hinzugefügt; verbesserte Protokollierung und Codesemantik.
 
-• v3.0.4
-  • Hintergrundbild-Ladefehler behoben: CSP `img-src`-Whitelist enthielt keine Bing-CDN-Ursprünge (`www.bing.com`, `cn.bing.com`), sodass von Proxy-APIs umgeleitete Bilder vom Browser blockiert wurden.
+• v3.0.4 · Fehlerbehebung beim Laden von Wandbildern: CSP img-src fehlten Bing-CDN-Domains, sodass umgeleitete Bilder blockiert wurden.
 
-• v3.0.3
-  • CSSOM auf dem kritischen Preload-Pfad umgangen für schnelleres erstes Rendering; CSP verstärkt; toten Code entfernt; SVG-Icons und Werbematerialien hinzugefügt.
+• v3.0.3 · CSSOM-Beschleunigung des ersten Renderings, CSP-Sicherheitsverschärfung, toten Code entfernt, SVG-Icons und Promo-Material hinzugefügt.
 
-• v3.0.2
-  • Dunkelmodus-adaptiver Hintergrund, Codebasis umstrukturiert, mehrsprachige Fußzeile.
+• v3.0.2 · Dunkelmodus-adaptiver Hintergrund, Code-Struktur-Refactoring, untere mehrsprachige Hinweiszeile.
 
-• v3.0.1
-  • Auf Chrome Search API umgestellt für CWS Single-Purpose-Compliance.
+• v3.0.1 · Integration der Chrome Search API, Bestehen der Chrome Web Store Single-Purpose-Compliance-Prüfung.
 
-• v3.0.0
-  • Komplette Neuentwicklung: Zwei-Schichten-Architektur für flimmerfreies Hintergrund-Rendering mit Fallback-Hintergrund. (Siehe V3_NOTE.md)
+• v3.0.0 · Komplette Neufassung: Zweischichten-Architektur beseitigt weißen Bildschirm-Flash beim Öffnen neuer Tabs, grauer Reservehintergrund hinzugefügt.
 
-• v2.2.7
-  • READMEs in 5 Sprachen hinzugefügt, Standardsuchmodus auf "Immer anzeigen" gesetzt.
+• v2.2.7 · READMEs auf Englisch, Japanisch, Koreanisch, Russisch und vereinfachtem Chinesisch hinzugefügt; Standard-Suchmodus auf «immer anzeigen» geändert.
 
-• v2.2.6
-  • Hintergrundbild-Ladung und Thumbnail-Caching optimiert; Bing-API-Konstanten bereinigt.
+• v2.2.6 · Optimierung der Wandbild-Ladelogik und Miniatur-Caches, Bereinigung der Bing-API-Konstanten.
 
-• v2.2.5
-  • Vorabladen von Hintergrundbildern und First-Frame-Optimierung hinzugefügt, um den weißen Blitz beim Öffnen eines neuen Tabs zu beseitigen.
+• v2.2.5 · Wandbild-Vorabladung und Erstbild-Optimierung, Beseitigung des weißen Bildschirms beim neuen Tab.
 
-• v2.2.4
-  • Hintergrundbild-Speicherung von localStorage auf IndexedDB migriert.
+• v2.2.4 · Wandbildspeicher von localStorage zu IndexedDB migriert.
 
-• v2.2.3
-  • Lokales Hintergrundbild-Upload und verbesserte Suchmaschinen-Wechsel-UX hinzugefügt.
+• v2.2.3 · Lokaler Wandbild-Upload, verbesserte Suchmaschinenumschaltung.
 
-• v1.2.0
-  • Erstveröffentlichung: Entwicklung von einer einzelnen HTML-Seite zu einer vollständigen Erweiterung mit Hintergrundbildsystem, 16-sprachiger Oberfläche, Chrome i18n Lokalisierung und MIT-Lizenz.
+• v1.2.0 · Erste Veröffentlichung: Wandbildsystem, 16-sprachige Oberfläche, Chrome-i18n-Lokalisierung, MIT-Lizenz.
