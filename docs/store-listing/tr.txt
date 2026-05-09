@@ -44,6 +44,8 @@ Destek ve Geri Bildirim
 
 Güncelleme Geçmişi
 
+• v3.1.4 · Depolama sabitleri yeniden adlandırıldı ve IDB geçişi çökme sonrası kurtarılabilir sıralama için iki aşamalı işlemde birleştirildi; yeni kullanıcı geçiş atlaması optimize edildi; toplu yüklemede tekilleştirme ve 12 görsel sınırı eklendi
+
 • v3.1.3 · localStorage ve IndexedDB için depolama sürüm geçişi uygulandı, depolama anahtar adlandırması birleştirildi, yerel modda küçük resim kalıcılık mantığı düzeltildi.
 
 • v3.1.2 · Chrome Web Store uyumluluğu için _locales/pt, pt_BR olarak yeniden adlandırıldı; changelog biçimi tek satırlık kompak stilde birleştirildi; Portekizce dosyalar tutarlılık için pt_BR olarak yeniden adlandırıldı.

@@ -1,5 +1,21 @@
 # Changelog · 更新日志
 
+## v3.1.4
+
+重构存储常量与迁移逻辑，拆分 IDB 迁移为两阶段事务确保崩溃可恢复，新增批量上传去重。
+
+- `refactor`: 存储常量重命名（KEY_* → LS_KEY_*/DB_KEY_*），区分 localStorage 与 IndexedDB 键名
+- `refactor`: 合并 IDB 迁移为两段事务，先 put 新键后删旧键，确保 LS 写入失败时重试可恢复
+- `refactor`: 新用户直接写版本号跳过迁移，避免无效的 IDB 事务
+- `fix`: 批量上传增加文件名去重（同批次内与跨批次），超出 12 张上限自动截断
+
+Refactored storage constants and migration logic, split IDB migration into two-phase transaction for crash-recoverable ordering, added batch upload dedup.
+
+- `refactor`: Renamed storage constants (KEY_* → LS_KEY_*/DB_KEY_*) to distinguish localStorage vs IndexedDB keys
+- `refactor`: Merged IDB migration into two-phase transaction — put new keys before deleting old ones, retry-safe if LS write fails
+- `refactor`: New users skip migration by writing version directly, avoiding unnecessary IDB transactions
+- `fix`: Batch upload now deduplicates by file name (within and across batches), auto-caps at 12 images
+
 ## v3.1.3
 
 存储版本迁移：实现 localStorage 与 IndexedDB 的 schema 版本化迁移机制，统一键名风格，修复缩略图在本地模式下的有条件持久化逻辑。

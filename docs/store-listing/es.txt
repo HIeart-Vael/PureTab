@@ -44,6 +44,8 @@ Soporte y comentarios
 
 Registro de cambios
 
+• v3.1.4 · Refactorizada la nomenclatura de constantes de almacenamiento y unificada la migración IDB en transacción bifásica para ordenación recuperable ante fallos; optimizada la omisión de migración para nuevos usuarios; añadida deduplicación en carga por lotes con límite de 12 imágenes
+
 • v3.1.3 · Implementada la migración de versión de almacenamiento para localStorage e IndexedDB, unificada la nomenclatura de claves, corregida la lógica de persistencia de miniaturas en modo local.
 
 • v3.1.2 · Se renombró _locales/pt a pt_BR para cumplir con Chrome Web Store; se unificó el formato del changelog al estilo compacto; se renombraron los archivos portugueses a pt_BR para mantener consistencia.

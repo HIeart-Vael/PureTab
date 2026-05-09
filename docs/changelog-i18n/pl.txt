@@ -1,4 +1,5 @@
 Historia Aktualizacji
+• v3.1.4 · Zrefaktoryzowano nazewnictwo stałych pamięci i scalono migrację IDB w transakcję dwufazową z odpornością na awarie; zoptymalizowano pomijanie migracji dla nowych użytkowników; dodano deduplikację przy przesyłaniu wsadowym z limitem 12 obrazów
 
 • v3.1.3 · Zaimplementowano migrację wersji przechowywania dla localStorage i IndexedDB, ujednolicono nazewnictwo kluczy, naprawiono logikę trwałości miniatur w trybie lokalnym.
 

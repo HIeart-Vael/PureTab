@@ -44,6 +44,8 @@ Wsparcie i Opinie
 
 Historia Aktualizacji
 
+• v3.1.4 · Zrefaktoryzowano nazewnictwo stałych pamięci i scalono migrację IDB w transakcję dwufazową z odpornością na awarie; zoptymalizowano pomijanie migracji dla nowych użytkowników; dodano deduplikację przy przesyłaniu wsadowym z limitem 12 obrazów
+
 • v3.1.3 · Zaimplementowano migrację wersji przechowywania dla localStorage i IndexedDB, ujednolicono nazewnictwo kluczy, naprawiono logikę trwałości miniatur w trybie lokalnym.
 
 • v3.1.2 · Zmiana nazwy _locales/pt na pt_BR w celu zgodności z Chrome Web Store; ujednolicenie formatu changelogu do zwięzłego stylu; zmiana nazw plików portugalskich na pt_BR dla spójności.

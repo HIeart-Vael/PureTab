@@ -19,7 +19,7 @@ This ensures at least one layer always holds a rendered image — no frame is ev
 
 ### JS file loading order (critical)
 
-1. **`js/preload.js`** — synchronous IIFE, runs before anything else. Reads `localStorage.ptab_bing_thumb` (Bing) or `ptab_local_thumbs[idx]` (local multi-image rotation) and writes it into `#wallpaperBack` via `back.style.backgroundImage`. Must be in `<head>` or immediately after `#wallpaperBack` in the DOM.
+1. **`js/preload.js`** — synchronous IIFE, runs before anything else. Reads `localStorage.ptab_mode` then either `ptab_img_order[idx]` → `ptab_img_thumbs[id]` (local) or `ptab_bing_thumb` (Bing). Must be in `<head>` or immediately after `#wallpaperBack` in the DOM.
 2. **`js/languages.js`** — defines `window.I18N` (16 locales) and `window.LanguageList`. Must load before `newtab.js`.
 3. **`js/newtab.js`** — the main application (~945 lines). IIFE with clear sections: Constants, Environment detection, DOM refs, State, Utils, i18n, IndexedDB storage, Wallpaper (Bing fetch, local multi-image upload with rotation, dual-layer apply), UI (panels, corner buttons, search bar, local gallery), Extension mode override, Bootstrap.
 
@@ -34,16 +34,21 @@ This ensures at least one layer always holds a rendered image — no frame is ev
 
 - **IndexedDB** (`PlainTab`, v1, store `wallpaper`): stores raw image blobs.
   - `ptab_bing_blob` — single Blob for the Bing daily wallpaper
-  - `ptab_local_images` — array of `{id, blob, mime, name}` objects (max 12), one per user-uploaded wallpaper
-  - IDB reads are done in parallel via `Promise.all` in `loadWallpaper()`
+  - `ptab_img_<id>` — per-image blob entries: `{blob, mime, name}` for each user-uploaded wallpaper (max 12). Each image is its own IDB key, allowing single-key read/write/delete without touching other images
 - **localStorage**:
   - `ptab_version` — data schema version (`2`), for future migration detection
-  - `ptab_bing_thumb` — single thumbnail data URL (CSS-ready `url(data:...)`), written by `generateThumbnail()`, read by `preload.js` for Bing mode and as fallback
-  - `ptab_local_thumbs` — JSON array of thumbnail data URLs, index-aligned with IDB `ptab_local_images`. Written on upload, synced on delete, self-healed on rotation
-  - `ptab_local_index` — rotation index for local wallpapers, incremented each new tab, modulo image count
+  - `ptab_bing_thumb` — single thumbnail data URL (CSS-ready `url(data:...)`), written by `applyWallpaper()` only in Bing mode, read by `preload.js`
+  - `ptab_img_order` — JSON array of image IDs `["id1","id2",...]`, determines rotation order. Single source of truth for which images exist
+  - `ptab_img_thumbs` — JSON object `{id1: "url(data:...)", id2: ...}`, id→thumb map. Lookup via `thumbs[order[idx]]`, never by array index
+  - `ptab_local_index` — rotation index for local wallpapers, incremented each new tab, modulo order.length
   - `ptab_bing_meta` — `{src, date, provider}` for Bing image dedup and freshness checks. `src` doubles as the dedup key
   - `ptab_mode` — `'bing'` or `'local'`
   - `ptab_lang`, `ptab_search_mode`, `ptab_icon_opacity`, `ptab_search_engine` — UI preferences
+
+**Crash consistency design (v2):**
+- **Upload**: write blob to IDB first (`ptab_img_<id>`), then update order + thumbs in localStorage. If crash before order update, blob is orphaned and safely ignored
+- **Delete**: remove id from order first, then delete thumb from map, finally delete IDB blob. If crash after order change, blob is unreachable but harmless
+- **Gallery**: reads all `ptab_img_<id>` in parallel via `Promise.all`, fallback to blob URL only if thumb is missing
 
 **Version bump rules:**
 - **localStorage keys added, removed, or renamed** → increment `LS_VERSION` in `newtab.js` and write migration logic
@@ -53,17 +58,17 @@ This ensures at least one layer always holds a rendered image — no frame is ev
 
 ### Multi-image local wallpaper
 
-Users can upload up to 12 local wallpapers. Each new tab rotates to the next image via `ptab_local_index`.
+Users can upload up to 12 local wallpapers. Each new tab rotates to the next image via `ptab_local_index` modulo `ptab_img_order.length`.
 
-**Upload flow**: `saveLocalImage(file, show)` reads IDB for dedup (name + size), generates thumbnail via canvas, then atomically pushes blob to IDB `ptab_local_images` and thumbnail to localStorage `ptab_local_thumbs` at the same index. Gallery "+" button is hidden when 12 images exist — no runtime limit check in the save path.
+**Upload flow**: `saveLocalImage(file, show)` generates thumbnail via canvas, writes blob to IDB as `ptab_img_<id>` (single key), then appends id to `ptab_img_order` and thumb to `ptab_img_thumbs[id]`. Blob is written first — if crash before order update, orphan blob is safely ignored.
 
-**Batch upload**: File input has `multiple` attribute. Change handler reads current count, calculates `slots = 12 - N`, then iterates ALL selected files — skipping duplicates — until `slots` new images are saved. Only the first successfully saved image is shown as wallpaper; the rest are saved silently.
+**Batch upload**: File input has `multiple` attribute. Change handler reads `ptab_img_order.length`, calculates `slots = 12 - N`, then serializes all files via Promise chain. Only the first successfully saved image is shown as wallpaper; the rest are saved silently.
 
-**Gallery** (`renderLocalGallery`): renders a 3×4 grid using pre-generated base64 thumbnails from `ptab_local_thumbs` (not blob URLs). Falls back to `URL.createObjectURL` only if a thumbnail is missing (legacy data). All blob URLs created this way are tracked in `_galleryUrls` and revoked on gallery close via `revokeGalleryUrls()`. Up to 12 thumbnails — when full, the "+" button is hidden.
+**Gallery** (`renderLocalGallery`): loads all `ptab_img_<id>` in parallel via `Promise.all`, renders 3×4 grid using `ptab_img_thumbs[id]` (base64). Falls back to `URL.createObjectURL` only if thumb is missing. Blob URLs tracked in `_galleryUrls` and revoked on close.
 
-**Deletion**: `deleteLocalImage(id)` removes the blob from IDB and `splice`s the thumbnail at the same index from `ptab_local_thumbs`. Deleting the last local image clears both arrays and switches back to Bing mode.
+**Deletion**: `deleteLocalImage(id)` removes id from `ptab_img_order` first (unreachable), then deletes `ptab_img_thumbs[id]`, finally `idbDelete(ptab_img_<id>)`. No splice or index alignment needed.
 
-**Reset to Bing**: `resetToBing()` clears `ptab_local_images` (IDB), `ptab_local_thumbs`, `ptab_bing_thumb`, `ptab_local_index` (localStorage), and switches mode to `'bing'`.
+**Reset to Bing**: `resetToBing()` deletes each `ptab_img_<id>` from IDB sequentially, clears `ptab_img_order`/`ptab_img_thumbs`/`ptab_bing_thumb`/`ptab_local_index`, switches mode to `'bing'`.
 
 ### CSS architecture
 
@@ -97,7 +102,7 @@ Market codes are derived from the current UI language via `bingMkt()`. Both endp
 ### Known pitfalls
 
 - **Blob MIME loss in IDB**: Blobs retrieved from IndexedDB may lose their MIME type. `loadWallpaper()` recovers it: if `blob.type` is empty and `img.mime` was stored, a new `Blob([blob], {type: img.mime})` is created. Always store `mime` alongside blobs.
-- **Non-atomic thumbnail/blob write**: `saveLocalImage()` writes blob to IDB and thumbnail to localStorage in sequence (not a transaction). If the page crashes between these writes, `ptab_local_thumbs` will be one item shorter than `ptab_local_images`. The self-healing logic in `loadWallpaper()` only repairs when `thumbs.length === localImages.length`, so a length mismatch prevents repair and the missing thumbnail is permanent until that index is rotated to and regenerated.
+- **Non-atomic blob/order write**: `saveLocalImage()` writes blob to IDB first, then updates `ptab_img_order` + `ptab_img_thumbs` in localStorage. If the page crashes before order update, the blob is orphaned in IDB but safely excluded from rotation (order doesn't reference it). The self-healing logic in `loadWallpaper()` only repairs when `thumbs.length === localImages.length`, so a length mismatch prevents repair and the missing thumbnail is permanent until that index is rotated to and regenerated.
 - **`_uploadKeepOpen` is module-scoped**: In the batch upload handler, `_uploadKeepOpen` is set before `fileInput.click()` and read after the promise chain. Multiple rapid clicks on the gallery "+" button could theoretically cause a race, though the UI makes this very hard to trigger.
 - **Gallery blob URL lifecycle**: `renderLocalGallery()` only creates blob URLs as a fallback when a thumbnail is missing. All created blob URLs are tracked in `_galleryUrls` and revoked on gallery close via `revokeGalleryUrls()`. Always call `revokeGalleryUrls()` before clearing gallery DOM.
 
@@ -155,8 +160,8 @@ Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `style:`.
 | 219 | `preloadImage(url)` | Preload image into memory, returns promise |
 | 231 | `applyWallpaper(url, mode)` | Full display pipeline: preload → front layer fade-in → stabilize to back → generate thumbnail. Returns thumb value |
 | 255 | `generateThumbnail(url)` | Canvas-resize image to 640px wide JPEG, save to `ptab_bing_thumb`. Returns thumb value or null |
-| 276 | `loadThumbs()` | Parse `ptab_local_thumbs` JSON array from localStorage |
-| 280 | `saveThumbs(thumbs)` | Serialize thumbs array to `ptab_local_thumbs` in localStorage |
+| 276 | `loadThumbs()` | Parse `ptab_img_thumbs` JSON object from localStorage |
+| 280 | `saveThumbs(thumbs)` | Serialize thumbs object to `ptab_img_thumbs` in localStorage |
 | 290 | `bingMkt(lang)` | Language code → Bing market code mapping |
 | 296 | `fetchBingUrl()` | Fetch Bing JSON API (Promise.any race, 8s timeout), returns `{url, api}` |
 | 315 | `downloadBingBlob(url)` | CORS-fetch image URL as Blob |
