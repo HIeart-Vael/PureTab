@@ -272,12 +272,18 @@
         }).then(function () {
             currentMode = mode;
             wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
-            return generateThumbnail(url);
+            return generateThumbnail(url).then(function (thumb) {
+                if (mode === 'bing' && thumb) {
+                    try { localStorage.setItem(KEY_BING_THUMB, thumb); } catch (e) { /* quota */ }
+                }
+                return thumb;
+            });
         });
     }
 
     /**
-     * 生成缩略图存入 localStorage，供 preload.js 同步绘制首帧。
+     * 生成缩略图（纯计算，不写 localStorage）。
+     * 调用方根据 mode 决定是否持久化到 ptab_bing_thumb。
      *
      * WHY 640px 宽 JPEG 0.55 质量：
      *   缩略图以 CSS url(data:...) 格式存入 localStorage，需要控制在 quota 内。
@@ -295,7 +301,6 @@
                 var ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 var thumb = 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
-                try { localStorage.setItem(KEY_BING_THUMB, thumb); } catch (e) { /* quota 满了 */ }
                 resolve(thumb);
             };
             img.onerror = function () { resolve(null); };
