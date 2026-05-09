@@ -9,26 +9,29 @@
     var BING_FALLBACK = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
 
     // *** localStorage / IndexedDB 的 key 名
+    // LS_* = localStorage, DB_* = IndexedDB
     var LS_VERSION = 2;
     var DB_VERSION = 1;
+
+    var LS_KEY_VERSION = 'ptab_version';
+    var LS_KEY_BING_THUMB = 'ptab_bing_thumb';
+    var LS_KEY_LANG = 'ptab_lang';
+    var LS_KEY_MODE = 'ptab_mode';
+    var LS_KEY_SEARCH_MODE = 'ptab_search_mode';
+    var LS_KEY_ICON_OPACITY = 'ptab_icon_opacity';
+    var LS_KEY_SEARCH_ENGINE = 'ptab_search_engine';
+    var LS_KEY_BING_META = 'ptab_bing_meta';
+    var DB_KEY_BING_BLOB = 'ptab_bing_blob';
+    var DB_KEY_IMG_PREFIX = 'ptab_img_';
+    var LS_KEY_IMG_ORDER = 'ptab_img_order';
+    var LS_KEY_IMG_THUMBS = 'ptab_img_thumbs';
+    var LS_KEY_LOCAL_INDEX = 'ptab_local_index';
+
     var DB_NAME = 'PlainTab';
     var DB_STORE_NAME = 'wallpaper';
 
-    var KEY_VERSION = 'ptab_version';
-    var KEY_BING_THUMB = 'ptab_bing_thumb';
-    var KEY_LANG = 'ptab_lang';
-    var KEY_MODE = 'ptab_mode';
-    var KEY_SEARCH_MODE = 'ptab_search_mode';
-    var KEY_ICON_OPACITY = 'ptab_icon_opacity';
-    var KEY_SEARCH_ENGINE = 'ptab_search_engine';
-    var KEY_BING_META = 'ptab_bing_meta';
-    var KEY_BING_BLOB = 'ptab_bing_blob';
-    var KEY_LOCAL_IMAGES = 'ptab_local_images';
-    var KEY_LOCAL_INDEX = 'ptab_local_index';
-    var KEY_LOCAL_THUMBS = 'ptab_local_thumbs';
-
-    var TRANSITION_MS = 500;
-    var THUMB_MAX_W = 640;
+    var TRANSITION_MS = 500; // 壁纸淡入过渡时长（ms），必须与 CSS 中的 transition-duration 保持一致
+    var THUMB_MAX_W = 640;   // 生成缩略图的最大宽度（px）
 
     var log = function (tag, msg) { console.log('[' + tag + '] ' + msg); };
     var warn = function (tag, msg) { console.warn('[' + tag + '] ' + msg); };
@@ -151,7 +154,7 @@
             btn.textContent = lang.name;
             btn.addEventListener('click', function () {
                 if (lang.code !== currentLang) {
-                    localStorage.setItem(KEY_LANG, lang.code);
+                    localStorage.setItem(LS_KEY_LANG, lang.code);
                     currentLang = lang.code;
                     updateLangUI();
                 }
@@ -274,7 +277,7 @@
             wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
             return generateThumbnail(url).then(function (thumb) {
                 if (mode === 'bing' && thumb) {
-                    try { localStorage.setItem(KEY_BING_THUMB, thumb); } catch (e) { /* quota */ }
+                    try { localStorage.setItem(LS_KEY_BING_THUMB, thumb); } catch (e) { /* quota */ }
                 }
                 return thumb;
             });
@@ -308,14 +311,25 @@
         });
     }
 
-    // 读/写本地缩略图数组（与 IDB local_images 数组索引对齐）
-    function loadThumbs() {
-        try { return JSON.parse(localStorage.getItem(KEY_LOCAL_THUMBS) || '[]'); }
+    // 本地图片 order 与缩略图（id 做钥匙）
+    function imgKey(id) { return DB_KEY_IMG_PREFIX + id; }
+
+    function loadOrder() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY_IMG_ORDER) || '[]'); }
         catch (e) { return []; }
     }
+    function saveOrder(order) {
+        try { localStorage.setItem(LS_KEY_IMG_ORDER, JSON.stringify(order)); }
+        catch (e) { /* quota */ }
+    }
+
+    function loadThumbs() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY_IMG_THUMBS) || '{}'); }
+        catch (e) { return {}; }
+    }
     function saveThumbs(thumbs) {
-        try { localStorage.setItem(KEY_LOCAL_THUMBS, JSON.stringify(thumbs)); }
-        catch (e) { /* quota 满了 */ }
+        try { localStorage.setItem(LS_KEY_IMG_THUMBS, JSON.stringify(thumbs)); }
+        catch (e) { /* quota */ }
     }
 
     /* ================================================================
@@ -361,12 +375,12 @@
     }
 
     function loadBingMeta() {
-        try { var raw = localStorage.getItem(KEY_BING_META); return raw ? JSON.parse(raw) : {}; }
+        try { var raw = localStorage.getItem(LS_KEY_BING_META); return raw ? JSON.parse(raw) : {}; }
         catch (e) { return {}; }
     }
 
     function saveBingMeta(meta) {
-        try { localStorage.setItem(KEY_BING_META, JSON.stringify(meta)); }
+        try { localStorage.setItem(LS_KEY_BING_META, JSON.stringify(meta)); }
         catch (e) { /* quota 满了 */ }
     }
 
@@ -383,7 +397,7 @@
         var isNew = meta.src !== url;
 
         if (!isNew) {
-            return idbGet(KEY_BING_BLOB).then(function (blob) {
+            return idbGet(DB_KEY_BING_BLOB).then(function (blob) {
                 if (blob) {
                     var kb = (blob.size / 1024).toFixed(0);
                     log('Bing', 'wallpaper unchanged, skipped  ·  ' + provider + '  ·  ' + kb + ' KB');
@@ -404,7 +418,7 @@
                 saveBingMeta(meta);
                 var kb = (blob.size / 1024).toFixed(0);
                 log('Bing', 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB');
-                return idbPut(KEY_BING_BLOB, blob).then(function () { return blob; });
+                return idbPut(DB_KEY_BING_BLOB, blob).then(function () { return blob; });
             }).catch(function () { warn('Bing', 'got the URL but failed to download image, kept last image'); });
         }
     }
@@ -437,35 +451,34 @@
        ================================================================ */
 
     /** 尝试加载本地壁纸（轮播）。成功返回 true，否则返回 false */
-    function tryLoadLocalWallpaper(localImages) {
-        if (!localImages || !localImages.length) return Promise.resolve(false);
+    function tryLoadLocalWallpaper(order) {
+        if (!order || !order.length) return Promise.resolve(false);
 
-        var idx = (parseInt(localStorage.getItem(KEY_LOCAL_INDEX)) || 0) % localImages.length;
-        var img = localImages[idx];
-        var blob = img.blob;
+        var idx = (parseInt(localStorage.getItem(LS_KEY_LOCAL_INDEX)) || 0) % order.length;
+        var id = order[idx];
 
-        // WHY: IDB 取回的 blob 可能丢失 MIME type。
-        // 用存储时保存的 mime 字段重建 Blob，否则背景图不会被正确渲染。
-        if ((!blob.type || blob.type === '') && img.mime) {
-            try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
-        }
+        return idbGet(imgKey(id)).then(function (img) {
+            if (!img || !img.blob) { warn('Local', 'image ' + id + ' missing, skipping'); return false; }
 
-        localStorage.setItem(KEY_LOCAL_INDEX, (idx + 1) % localImages.length);
-        log('Local', 'image ' + (idx + 1) + '/' + localImages.length + (img.name ? '  ·  ' + img.name : ''));
-
-        return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
-            // 自愈：修复因非原子写入导致的缺失缩略图
-            if (thumb) {
-                var thumbs = loadThumbs();
-                // WHY: 只在长度匹配时才补 —— 如果长度不等说明有更严重的同步问题，不应覆盖
-                if (thumbs.length === localImages.length && !thumbs[idx]) {
-                    thumbs[idx] = thumb;
-                    saveThumbs(thumbs);
-                }
+            var blob = img.blob;
+            if ((!blob.type || blob.type === '') && img.mime) {
+                try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
             }
-            // 后台预缓存 Bing，确保用户切回 Bing 模式时不需要等待网络
-            cacheBingInBackground();
-            return true;
+
+            localStorage.setItem(LS_KEY_LOCAL_INDEX, (idx + 1) % order.length);
+            log('Local', 'image ' + (idx + 1) + '/' + order.length + (img.name ? '  ·  ' + img.name : ''));
+
+            return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
+                if (thumb) {
+                    var thumbs = loadThumbs();
+                    if (!thumbs[id]) {
+                        thumbs[id] = thumb;
+                        saveThumbs(thumbs);
+                    }
+                }
+                cacheBingInBackground();
+                return true;
+            });
         });
     }
 
@@ -514,22 +527,16 @@
      * 并行读取 IDB（本地图片 + Bing blob），根据模式和历史决定用哪个。
      */
     function loadWallpaper() {
-        var lastMode = localStorage.getItem(KEY_MODE) || 'bing';
+        var lastMode = localStorage.getItem(LS_KEY_MODE) || 'bing';
         var meta = loadBingMeta();
         var today = new Date().toDateString();
+        var order = loadOrder();
 
-        return Promise.all([
-            idbGet(KEY_LOCAL_IMAGES),
-            idbGet(KEY_BING_BLOB)
-        ]).then(function (results) {
-            var localImages = results[0];
-            var bingBlob = results[1];
-
+        return idbGet(DB_KEY_BING_BLOB).then(function (bingBlob) {
             // 优先级 1：本地模式且有图片 → 轮播
             if (lastMode === 'local') {
-                return tryLoadLocalWallpaper(localImages).then(function (loaded) {
+                return tryLoadLocalWallpaper(order).then(function (loaded) {
                     if (loaded) return;
-                    // 本地模式但无图片（最后一张被删了），继续到 Bing 路径
                     return tryLoadCachedBing(bingBlob, meta, today).then(function (loaded) {
                         if (!loaded) return loadBingFromNetwork(meta, today);
                     });
@@ -560,100 +567,85 @@
      * @param {boolean} show - true: 同时展示为当前壁纸并切到本地模式；false: 只存库
      * @returns {Promise<boolean>} 是否保存成功
      */
+    /**
+     * 保存单张本地壁纸。先落 blob（IDB），再关联 order + thumb。
+     * 任何一步崩溃：blob 是孤儿，不参与轮播，下次会被忽略。
+     */
     function saveLocalImage(file, show) {
+        var id = generateId();
         var blobUrl = URL.createObjectURL(file);
-        var newImage = { id: generateId(), blob: file, mime: file.type || '', name: file.name || '' };
 
-        return idbGet(KEY_LOCAL_IMAGES).then(function (images) {
-            images = images || [];
+        var start = show
+            ? (localStorage.setItem(LS_KEY_MODE, 'local'), applyWallpaper(blobUrl, 'local'))
+            : generateThumbnail(blobUrl).then(function (thumb) {
+                URL.revokeObjectURL(blobUrl);
+                return thumb;
+            });
 
-            // WHY: 用 name + size 去重，而不是仅靠 name。防止用户上传同名的不同文件。
-            if (images.some(function (img) { return img.name === file.name && img.blob.size === file.size; })) {
-                log('Local', 'duplicate skipped: ' + file.name);
-                return false;
-            }
+        return start.then(function (thumb) {
+            if (!thumb) { warn('Local', 'thumbnail failed for ' + file.name); return false; }
 
-            var start = show
-                ? (localStorage.setItem(KEY_MODE, 'local'), applyWallpaper(blobUrl, 'local'))
-                : generateThumbnail(blobUrl);
-
-            return start.then(function (thumb) {
-                if (!thumb) { warn('Local', 'thumbnail failed for ' + file.name); return false; }
-
-                // WHY: 重新读取 IDB 以获取最新状态。
-                // 批量导入时前一张图片可能已写入，多次读取保证不互相覆盖。
-                return idbGet(KEY_LOCAL_IMAGES).then(function (imgs) {
-                    imgs = imgs || [];
-                    var thumbs = loadThumbs();
-                    imgs.push(newImage);
-                    thumbs.push(thumb);
-                    return idbPut(KEY_LOCAL_IMAGES, imgs).then(function () { saveThumbs(thumbs); return true; });
-                });
+            return idbPut(imgKey(id), { blob: file, mime: file.type || '', name: file.name || '' }).then(function () {
+                var order = loadOrder();
+                var thumbs = loadThumbs();
+                order.push(id);
+                thumbs[id] = thumb;
+                saveOrder(order);
+                saveThumbs(thumbs);
+                return true;
             });
         }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
     }
 
-    /** 删除单张本地壁纸，同步清理缩略图。删除最后一张时自动切回 Bing 模式 */
+    /** 删除单张本地壁纸。先切 order 引用，再删 thumb，最后删 IDB blob。 */
     function deleteLocalImage(id) {
-        idbGet(KEY_LOCAL_IMAGES).then(function (images) {
-            if (!images) return;
+        var order = loadOrder();
+        if (!order.length) return;
 
-            // WHY: 先找到被删项的索引，再 splice 缩略图数组的对应位置。
-            // filter 之前记录索引，因为 filter 后索引会改变。
-            var delIdx = -1;
-            for (var i = 0; i < images.length; i++) {
-                if (images[i].id === id) { delIdx = i; break; }
-            }
-            images = images.filter(function (img) { return img.id !== id; });
-            var thumbs = loadThumbs();
-            if (delIdx >= 0 && delIdx < thumbs.length) thumbs.splice(delIdx, 1);
+        var newOrder = order.filter(function (oid) { return oid !== id; });
+        saveOrder(newOrder);
 
-            // 全部删完 → 清空所有数据，切回 Bing
-            if (images.length === 0) {
-                return idbDelete(KEY_LOCAL_IMAGES).then(function () {
-                    saveThumbs([]);
-                    localStorage.removeItem(KEY_LOCAL_INDEX);
-                    localStorage.setItem(KEY_MODE, 'bing');
-                    currentMode = 'bing';
-                    wallpaperInfoEl.textContent = t('wpBing');
-                    removeLocalGallery();
-                    loadWallpaper();
-                });
-            }
+        var thumbs = loadThumbs();
+        delete thumbs[id];
+        saveThumbs(thumbs);
 
-            return idbPut(KEY_LOCAL_IMAGES, images).then(function () {
-                saveThumbs(thumbs);
-                refreshLocalGallery();
-            });
-        }).catch(function () { });
+        if (newOrder.length === 0) {
+            localStorage.removeItem(LS_KEY_LOCAL_INDEX);
+            localStorage.setItem(LS_KEY_MODE, 'bing');
+            currentMode = 'bing';
+            wallpaperInfoEl.textContent = t('wpBing');
+            removeLocalGallery();
+            return idbDelete(imgKey(id)).then(function () { loadWallpaper(); }).catch(function () { });
+        }
+
+        return idbDelete(imgKey(id)).then(function () {
+            refreshLocalGallery();
+        }).catch(function (e) { warn('Local', 'delete blob failed: ' + (e && e.message)); });
     }
 
-    /**
-     * 重置为 Bing 每日壁纸模式。
-     *
-     * WHY 删除 bing_thumb + local_thumbs：
-     *   这些缩略图是 CSS url(data:...) 格式，可能很大。
-     *   切回 Bing 时不再需要它们，清理可释放 localStorage 配额。
-     */
+    /** 重置为 Bing 模式。逐条删 IDB blob，再清 localStorage。 */
     function resetToBing() {
-        idbGet(KEY_LOCAL_IMAGES).then(function (images) {
-            var count = (images && images.length) || 0;
-            // WHY: 多于 1 张时才弹确认框 —— 防止误操作丢失收藏的壁纸
-            if (count > 1 && !confirm(t('resetConfirm'))) return;
+        var order = loadOrder();
+        var count = order.length;
+        if (count > 1 && !confirm(t('resetConfirm'))) return;
 
-            currentMode = 'bing';
-            removeLocalGallery();
-            localStorage.removeItem(KEY_BING_THUMB);
-            localStorage.removeItem(KEY_LOCAL_THUMBS);
-            localStorage.removeItem(KEY_LOCAL_INDEX);
-            localStorage.setItem(KEY_MODE, 'bing');
+        currentMode = 'bing';
+        removeLocalGallery();
+        localStorage.removeItem(LS_KEY_BING_THUMB);
+        localStorage.removeItem(LS_KEY_IMG_THUMBS);
+        localStorage.removeItem(LS_KEY_IMG_ORDER);
+        localStorage.removeItem(LS_KEY_LOCAL_INDEX);
+        localStorage.setItem(LS_KEY_MODE, 'bing');
 
-            return idbDelete(KEY_LOCAL_IMAGES).then(function () {
-                return loadWallpaper();
-            }).then(function () {
-                wallpaperInfoEl.textContent = t('wpBing');
-                closeSettings();
-            });
+        var chain = Promise.resolve();
+        order.forEach(function (id) {
+            chain = chain.then(function () { return idbDelete(imgKey(id)); });
+        });
+        return chain.then(function () {
+            return loadWallpaper();
+        }).then(function () {
+            wallpaperInfoEl.textContent = t('wpBing');
+            closeSettings();
         }).catch(function () { closeSettings(); });
     }
 
@@ -718,8 +710,12 @@
 
     function refreshLocalGallery() {
         if (currentMode !== 'local') return;
-        idbGet(KEY_LOCAL_IMAGES).then(function (images) {
-            if (images && images.length) renderLocalGallery(images, loadThumbs());
+        var order = loadOrder();
+        if (!order.length) return;
+        // 并行读取所有图片元数据（用于名称 tooltip + blob URL 回退）
+        var reads = order.map(function (id) { return idbGet(imgKey(id)); });
+        Promise.all(reads).then(function (images) {
+            renderLocalGallery(order, images, loadThumbs());
         }).catch(function () { });
     }
 
@@ -739,18 +735,18 @@
     }
 
     /** 构建缩略图网格，每张卡片含删除按钮 */
-    function buildGalleryGrid(images, thumbs) {
+    function buildGalleryGrid(order, images, thumbs) {
         var grid = document.createElement('div');
         grid.className = 'local-gallery-grid';
 
-        images.forEach(function (img, i) {
+        order.forEach(function (id, i) {
             var card = document.createElement('div');
             card.className = 'local-thumb';
 
-            // WHY: 优先用预生成的 base64 缩略图（localStorage），速度远快于 blob URL。
-            // 仅在缩略图缺失时（遗留数据）回退到 blob URL。
-            var bg = thumbs[i];
-            if (!bg && img.blob && img.blob.size > 0) {
+            // 优先用预生成的 base64 缩略图（localStorage），缺失时回退到 blob URL
+            var bg = thumbs[id];
+            var img = images[i];
+            if (!bg && img && img.blob && img.blob.size > 0) {
                 var url = URL.createObjectURL(img.blob);
                 _galleryBlobUrls.push(url);
                 bg = 'url(' + url + ')';
@@ -759,8 +755,8 @@
 
             var delBtn = document.createElement('button');
             delBtn.className = 'local-thumb-del';
-            delBtn.title = t('deleteImage') + (img.name ? ': ' + img.name : '');
-            delBtn.setAttribute('data-id', img.id);
+            delBtn.title = t('deleteImage') + (img && img.name ? ': ' + img.name : '');
+            delBtn.setAttribute('data-id', id);
             delBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 deleteLocalImage(this.dataset.id);
@@ -772,24 +768,17 @@
         return grid;
     }
 
-    /**
-     * 渲染本地壁纸画廊。
-     *
-     * WHY 在面板打开时实时渲染而非缓存 DOM：
-     *   图片可能在上传/删除后改变，每次打开面板都是最新的。
-     *   缩略图数量 ≤ 12，DOM 构建成本可忽略。
-     */
-    function renderLocalGallery(images, thumbs) {
+    function renderLocalGallery(order, images, thumbs) {
         revokeGalleryUrls();
         var gallery = ensureGalleryContainer();
 
-        wallpaperInfoEl.textContent = t('wpLocal') + ' · ' + images.length + ' ' + t('imageCount');
+        wallpaperInfoEl.textContent = t('wpLocal') + ' · ' + order.length + ' ' + t('imageCount');
 
-        var grid = buildGalleryGrid(images, thumbs);
+        var grid = buildGalleryGrid(order, images, thumbs);
         gallery.appendChild(grid);
 
         // WHY: 上限 12 张 —— localStorage 缩略图占用空间，12 张已足够轮播多样性
-        if (images.length < 12) {
+        if (order.length < 12) {
             var addBtn = document.createElement('button');
             addBtn.className = 'panel-btn primary';
             addBtn.textContent = '+ ' + t('addImage');
@@ -910,15 +899,15 @@
     }
 
     function saveSettings() {
-        localStorage.setItem(KEY_SEARCH_MODE, searchMode);
-        localStorage.setItem(KEY_ICON_OPACITY, currentOpacity);
-        localStorage.setItem(KEY_SEARCH_ENGINE, currentEngine);
+        localStorage.setItem(LS_KEY_SEARCH_MODE, searchMode);
+        localStorage.setItem(LS_KEY_ICON_OPACITY, currentOpacity);
+        localStorage.setItem(LS_KEY_SEARCH_ENGINE, currentEngine);
     }
 
     function loadSettings() {
-        var mode = localStorage.getItem(KEY_SEARCH_MODE) || 'always';
-        var opacity = parseFloat(localStorage.getItem(KEY_ICON_OPACITY)) || 0.45;
-        var engine = localStorage.getItem(KEY_SEARCH_ENGINE) || 'google';
+        var mode = localStorage.getItem(LS_KEY_SEARCH_MODE) || 'always';
+        var opacity = parseFloat(localStorage.getItem(LS_KEY_ICON_OPACITY)) || 0.45;
+        var engine = localStorage.getItem(LS_KEY_SEARCH_ENGINE) || 'google';
         searchModeSelect.value = mode;
         applySearchMode(mode);
         applyOpacity(opacity);
@@ -1058,31 +1047,22 @@
 
             if (!files.length) return;
 
-            idbGet(KEY_LOCAL_IMAGES).then(function (images) {
-                images = images || [];
-                var slots = Math.max(0, 12 - images.length);
-                if (!slots) return;
+            var order = loadOrder();
+            var slots = Math.max(0, 12 - order.length);
+            if (!slots) return;
 
-                var saved = 0;
-                // WHY: 用 Promise 链串行处理所有文件 —— 每个 saveLocalImage
-                // 都会读写 IDB，并行执行会导致数据竞争。
-                var chain = Promise.resolve();
-                files.forEach(function (file) {
-                    chain = chain.then(function () {
-                        if (saved >= slots) return;
-                        // WHY: 只有第一张成功保存的图展示为壁纸，
-                        // 其余仅存入库中 —— 避免批量导入时反复切换壁纸造成闪烁
-                        var show = saved === 0;
-                        return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
-                    });
+            var saved = 0;
+            var chain = Promise.resolve();
+            files.forEach(function (file) {
+                chain = chain.then(function () {
+                    if (saved >= slots) return;
+                    var show = saved === 0;
+                    return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
                 });
-                return chain.then(function () {
-                    log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (slots: ' + slots + ')');
-                    if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
-                });
-            }).catch(function (e) {
-                warn('Local', 'batch save failed: ' + e.message);
-                if (!_keepGalleryOpen) closeSettings();
+            });
+            return chain.then(function () {
+                log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (slots: ' + slots + ')');
+                if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
             });
         });
 
@@ -1113,21 +1093,24 @@
 
        WHY 链式迁移：
          每次改键名只需在 MIGRATIONS 加一个版本号对应的函数即可。
-         新用户装上直接就是 LS_VERSION，不走任何迁移。
+         新用户（stored===0）直接写版本号，不走迁移。
          老用户从旧版本号依次执行到 LS_VERSION。
        ================================================================ */
 
     var MIGRATIONS = {
         1: migrate_1_to_2
-        // 2: migrate_2_to_3  ← 未来新增时改 LS_VERSION
     };
 
-    /** v1→v2: 统一 ptab_ 前缀，所有键加命名空间 */
+    /** v1→v2: 统一 ptab_ 前缀 + 数组存储拆为单条 IDB key */
     function migrate_1_to_2() {
-        // localStorage：有旧值就迁，没有就跳过
+        // WHY: v1 旧键名在迁移前缓存，重命名后仍可用
+        var oldThumbs = [];
+        try { oldThumbs = JSON.parse(localStorage.getItem('local_thumbs') || '[]'); } catch (e) { }
+
+        // localStorage 键名迁移（目标键名硬编码——迁移是固定时刻的快照，不随常量变化）
+        // WHY: 重命名是幂等的（旧键已删则跳过），放在最前面，无论后面几步失败多少次都能安全重试
         var lsRenames = [
             ['bing_thumb', 'ptab_bing_thumb'],
-            ['local_thumbs', 'ptab_local_thumbs'],
             ['ptab_wallpaper_source', 'ptab_mode'],
             ['ptab_search_visibility', 'ptab_search_mode']
         ];
@@ -1139,39 +1122,79 @@
             }
         });
 
-        // IDB：同事务内 get → put 新键 → delete 旧键
+        // 事务 1：非破坏性操作——put 新 key，不删旧 key
+        // WHY: 此时不删 local_images。若后续 LS 写入失败，重试时 local_images 还在，能重建 order。
         return openDB().then(function (db) {
-            var idbRenames = [
-                ['bing', 'ptab_bing_blob'],
-                ['local_images', 'ptab_local_images']
-            ];
-            var chain = Promise.resolve();
-            idbRenames.forEach(function (pair) {
-                (function (oldKey, newKey) {
-                    chain = chain.then(function () {
-                        return new Promise(function (resolve, reject) {
-                            var tx = db.transaction(DB_STORE_NAME, 'readwrite');
-                            var req = tx.objectStore(DB_STORE_NAME).get(oldKey);
-                            req.onsuccess = function () {
-                                if (req.result !== undefined) {
-                                    tx.objectStore(DB_STORE_NAME).put(req.result, newKey);
-                                    tx.objectStore(DB_STORE_NAME).delete(oldKey);
-                                }
-                            };
-                            req.onerror = function (e) { reject(e.target.error); };
-                            tx.oncomplete = resolve;
-                            tx.onerror = function (e) { reject(e.target.error); };
+            return new Promise(function (resolve, reject) {
+                var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                var store = tx.objectStore(DB_STORE_NAME);
+                var result = { order: [] };
+
+                var bingReq = store.get('bing');
+                bingReq.onsuccess = function () {
+                    if (bingReq.result !== undefined) {
+                        store.put(bingReq.result, 'ptab_bing_blob');
+                        store.delete('bing');
+                    }
+                };
+
+                var liReq = store.get('local_images');
+                liReq.onsuccess = function () {
+                    var images = liReq.result;
+                    if (images && images.length) {
+                        images.forEach(function (img) {
+                            var id = img.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+                            result.order.push(id);
+                            store.put(
+                                { blob: img.blob, mime: img.mime, name: img.name },
+                                'ptab_img_' + id
+                            );
                         });
-                    });
-                })(pair[0], pair[1]);
+                        // 不在这里 delete local_images
+                    }
+                };
+
+                tx.oncomplete = function () { resolve(result); };
+                tx.onerror = function (e) { reject(e.target.error); };
             });
-            return chain;
+        }).then(function (result) {
+            // 先写 LS，确保 order/thumbs 落地后再清理旧数据
+            if (result.order.length) {
+                localStorage.setItem('ptab_img_order', JSON.stringify(result.order));
+                var thumbs = {};
+                for (var i = 0; i < oldThumbs.length && i < result.order.length; i++) {
+                    thumbs[result.order[i]] = oldThumbs[i];
+                }
+                localStorage.setItem('ptab_img_thumbs', JSON.stringify(thumbs));
+            }
+
+            // 事务 2：LS 已落地，现在安全删除旧 IDB key
+            return openDB().then(function (db) {
+                return new Promise(function (resolve, reject) {
+                    var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                    var store = tx.objectStore(DB_STORE_NAME);
+                    var liReq = store.get('local_images');
+                    liReq.onsuccess = function () {
+                        if (liReq.result !== undefined) store.delete('local_images');
+                    };
+                    tx.oncomplete = resolve;
+                    tx.onerror = function (e) { reject(e.target.error); };
+                });
+            }).then(function () {
+                localStorage.removeItem('local_thumbs');
+            });
         });
     }
 
     function migrateStorage() {
-        var stored = parseInt(localStorage.getItem(KEY_VERSION)) || 0;
+        var stored = parseInt(localStorage.getItem(LS_KEY_VERSION)) || 0;
         if (stored >= LS_VERSION) return Promise.resolve();
+
+        // 新用户：直接写版本号，不跑迁移
+        if (stored === 0) {
+            localStorage.setItem(LS_KEY_VERSION, LS_VERSION);
+            return Promise.resolve();
+        }
 
         log('Migrate', 'v' + stored + ' → v' + LS_VERSION + ' ...');
         var chain = Promise.resolve();
@@ -1182,7 +1205,7 @@
             })(v);
         }
         return chain.then(function () {
-            localStorage.setItem(KEY_VERSION, LS_VERSION);
+            localStorage.setItem(LS_KEY_VERSION, LS_VERSION);
             log('Migrate', 'done, now at v' + LS_VERSION);
         }).catch(function (e) {
             warn('Migrate', 'failed: ' + e.message);
@@ -1198,16 +1221,16 @@
         migrateStorage().catch(function (e) {
             warn('Init', 'migration failed, continuing: ' + e.message);
         }).then(function () {
-        currentLang = localStorage.getItem(KEY_LANG) || detectLang();
-        if (!I18N[currentLang]) currentLang = 'en';
-        log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + currentLang);
-        loadSettings();
-        updateLangUI();
-        loadWallpaper();
-        if (IS_EXTENSION) setupExtensionMode();
-        bindEvents();
-    });
-}
+            currentLang = localStorage.getItem(LS_KEY_LANG) || detectLang();
+            if (!I18N[currentLang]) currentLang = 'en';
+            log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + currentLang);
+            loadSettings();
+            updateLangUI();
+            loadWallpaper();
+            if (IS_EXTENSION) setupExtensionMode();
+            bindEvents();
+        });
+    }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
