@@ -19,7 +19,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licenca">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Experimente%20online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Experimente%20online-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -187,7 +187,7 @@ Mesmo codigo, deteccao automatica de ambiente em tempo de execucao:
 | Deteccao de ambiente | `chrome.runtime.id` existe | Todos os outros casos |
 | Mecanismo de busca | Padrao do navegador (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo selecionavel |
 | Alternancia de mecanismo | Nao alternavel (lupa estatica) | Rotacao ao clicar no icone |
-| Implantacao | Chrome Web Store / carregamento pelo desenvolvedor | Netlify / GitHub Pages hospedagem direta |
+| Implantacao | Chrome Web Store / carregamento pelo desenvolvedor | Cloudflare Workers / GitHub Pages hospedagem direta |
 | CSP | Declarado no `manifest.json` | Sem CSP |
 
 ---
@@ -222,7 +222,7 @@ A traducao tem falhas ou quer adicionar um novo idioma? O arquivo de idiomas e a
 PlainTab/
 ├── manifest.json            # Manifesto da extensao Chrome/Edge (Manifest V3)
 ├── index.html               # Unica pagina HTML (nova guia da extensao / pagina inicial web)
-├── 404.html                 # Pagina de fallback SPA do Netlify
+├── 404.html                 # Pagina de fallback SPA
 ├── LICENSE                  # Licenca MIT
 │
 ├── css/

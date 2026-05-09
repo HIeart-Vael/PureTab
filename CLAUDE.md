@@ -28,7 +28,7 @@ This ensures at least one layer always holds a rendered image — no frame is ev
 `newtab.js` detects its environment at init via `typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id`:
 
 - **Extension mode** (`chrome.runtime.id` exists): uses `chrome.search.query()` for CWS single-purpose compliance. The engine selector UI row is hidden and the engine icon becomes a static magnifying glass. Search uses the browser's built-in default search engine.
-- **Web mode** (Netlify / GitHub Pages): full engine selector (Google → Bing → Baidu → DuckDuckGo). Search opens `window.open(url, '_self')`.
+- **Web mode** (Cloudflare Workers / GitHub Pages): full engine selector (Google → Bing → Baidu → DuckDuckGo). Search opens `window.open(url, '_self')`.
 
 ### Storage
 
@@ -104,7 +104,7 @@ Market codes are derived from the current UI language via `bingMkt()`. Both endp
 | `js/preload.js` | Synchronous thumbnail injection with rotation support (~14 lines) |
 | `js/languages.js` | 16-language string table (~37 lines) |
 | `js/newtab.js` | All application logic (~945 lines) |
-| `404.html` | Netlify SPA fallback (plain HTML, no JS needed) |
+| `404.html` | SPA fallback (plain HTML, no JS needed) |
 | `_locales/*/messages.json` | Chrome i18n for manifest metadata only |
 | `icon/` | Extension icons (16/48/128/2048) |
 | `imgs/` | Screenshots for README |
@@ -121,7 +121,7 @@ No build step. Load the extension unpacked:
 3. Click "Load unpacked" → select this directory
 4. Open a new tab to test
 
-For the web version, open `index.html` directly in a browser. The Netlify deployment uses `404.html` as a catch-all.
+For the web version, open `index.html` directly in a browser. The `404.html` deployment uses `404.html` as a catch-all.
 
 There are no tests, no linter config, no CI, no `package.json`.
 

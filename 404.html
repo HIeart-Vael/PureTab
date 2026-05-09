@@ -155,7 +155,7 @@
             if (path.indexOf('404.html') !== -1) {
                 basePath = path.substring(0, path.lastIndexOf('/') + 1);
             } else {
-                // 对于 Netlify：404.html 被 serve 在原始请求的路径上
+                // 对于 SPA 部署：404.html 被 serve 在原始请求的路径上
                 // 例如访问 /foo/bar 返回的是 404.html，但 pathname 仍是 /foo/bar
                 // 这种情况下，真正的首页在根 '/'
                 // 我们保持 basePath = '/' 即可

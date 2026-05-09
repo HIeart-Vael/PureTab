@@ -2,7 +2,7 @@
 
 ## 一、项目定位
 
-Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Netlify/GitHub Pages 独立网页部署。零依赖、无构建、纯 vanilla JS + CSS。
+Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Cloudflare Workers / GitHub Pages 独立网页部署。零依赖、无构建、纯 vanilla JS + CSS。
 
 **核心体验目标**：打开新标签页的瞬间永远不出现白屏或灰底，始终有壁纸占据全屏。
 

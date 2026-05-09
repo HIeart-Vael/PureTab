@@ -19,7 +19,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licencia">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Pruebalo en linea-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Pruebalo en linea-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -187,7 +187,7 @@ El mismo codigo, deteccion automatica del entorno en tiempo de ejecucion:
 | Deteccion de entorno | `chrome.runtime.id` existe | Cualquier otro caso |
 | Motor de busqueda | Predeterminado del navegador (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo seleccionable |
 | Cambio de motor | No se puede cambiar (lupa estatica) | Alternar con clic en el icono |
-| Despliegue | Chrome Web Store / carga como desarrollador | Netlify / GitHub Pages alojamiento directo |
+| Despliegue | Chrome Web Store / carga como desarrollador | Cloudflare Workers / GitHub Pages alojamiento directo |
 | CSP | Declarado en `manifest.json` | Sin CSP necesario |
 
 ---
@@ -222,7 +222,7 @@ Hay alguna imperfeccion en la traduccion o quieres anadir un nuevo idioma? El ar
 PlainTab/
 ├── manifest.json            # Manifiesto de extension Chrome/Edge (Manifest V3)
 ├── index.html               # Unica pagina HTML (nueva pestana de la extension / pagina web de inicio)
-├── 404.html                 # Pagina de respaldo SPA de Netlify
+├── 404.html                 # Pagina de respaldo SPA
 ├── LICENSE                  # Licencia MIT
 │
 ├── css/

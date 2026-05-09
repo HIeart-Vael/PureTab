@@ -19,7 +19,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licence">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Essayer_en_ligne-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Essayer_en_ligne-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -187,7 +187,7 @@ Le meme code, detection automatique de l'environnement a l'execution :
 | Detection d'environnement | `chrome.runtime.id` existe | Tous les autres cas |
 | Moteur de recherche | Defaut du navigateur (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo selectionnable |
 | Changement de moteur | Non modifiable (loupe statique) | Alternance par clic sur l'icone |
-| Deploiement | Chrome Web Store / chargement developpeur | Netlify / GitHub Pages hebergement direct |
+| Deploiement | Chrome Web Store / chargement developpeur | Cloudflare Workers / GitHub Pages hebergement direct |
 | CSP | Declare dans `manifest.json` | CSP non necessaire |
 
 ---
@@ -222,7 +222,7 @@ Une imperfection dans la traduction ou vous souhaitez ajouter une nouvelle langu
 PlainTab/
 ├── manifest.json            # Manifeste d'extension Chrome/Edge (Manifest V3)
 ├── index.html               # Page HTML unique (nouvel onglet de l'extension / page d'accueil web)
-├── 404.html                 # Page de repli SPA Netlify
+├── 404.html                 # Page de repli SPA
 ├── LICENSE                  # Licence MIT
 │
 ├── css/

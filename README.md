@@ -21,7 +21,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="License">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Live_Demo-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Live_Demo-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -190,7 +190,7 @@ Same codebase, environment auto-detected at runtime:
 | Environment detection | `chrome.runtime.id` exists | Everything else |
 | Search engine | Browser default (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo selectable |
 | Engine switching | Not switchable (static magnifying glass) | Cycle through icons on click |
-| Deployment | Chrome Web Store / Developer load | Netlify / GitHub Pages |
+| Deployment | Chrome Web Store / Developer load | Cloudflare Workers / GitHub Pages |
 | CSP | Declared in `manifest.json` | No CSP needed |
 
 ---
@@ -225,7 +225,7 @@ Found a translation issue or want to add a language? Everything lives in a singl
 PlainTab/
 ├── manifest.json            # Chrome/Edge extension manifest (Manifest V3)
 ├── index.html               # Single HTML page (extension new tab / web start page)
-├── 404.html                 # Netlify SPA fallback
+├── 404.html                 # SPA fallback
 ├── LICENSE                  # MIT License
 │
 ├── css/
