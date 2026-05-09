@@ -1195,7 +1195,9 @@
        ================================================================ */
 
     function init() {
-        migrateStorage().then(function () {
+        migrateStorage().catch(function (e) {
+            warn('Init', 'migration failed, continuing: ' + e.message);
+        }).then(function () {
         currentLang = localStorage.getItem(KEY_LANG) || detectLang();
         if (!I18N[currentLang]) currentLang = 'en';
         log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + currentLang);
