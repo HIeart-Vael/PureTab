@@ -24,11 +24,11 @@ Por que escolher o PlainTab?
 
 • 【Transparente e código aberto】
 • Código totalmente aberto: https://github.com/kaininx/PlainTab
-• Experimente online: https://plaintab.netlify.app
+• Experimente online: https://plaintab.kaininx.workers.dev
 
 ✨ Uso combinado (recomendado pelo desenvolvedor):
 • 📌 Nova aba: instale esta extensão, permite configurar até 12 papéis de parede diferentes, sem limite de tamanho.
-• 📌 Página inicial: configure o navegador para https://plaintab.netlify.app para manter o modo diário padrão.
+• 📌 Página inicial: configure o navegador para https://plaintab.kaininx.workers.dev para manter o modo diário padrão.
 • 📌 Botão inicial: configure para https://kaininx.github.io/PlainTab/, que é o GitHub Pages deste projeto, para definir papéis de parede adicionais de sua preferência.
 
 PlainTab é para você, se está cansado de:

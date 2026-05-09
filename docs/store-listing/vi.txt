@@ -24,11 +24,11 @@ Tại sao chọn PlainTab?
 
 • 【Mã Nguồn Mở, Minh Bạch】
 • Mã nguồn hoàn toàn mở: https://github.com/kaininx/PlainTab
-• Dùng thử trực tuyến: https://plaintab.netlify.app
+• Dùng thử trực tuyến: https://plaintab.kaininx.workers.dev
 
 ✨ Gợi Ý Sử Dụng Kết Hợp (Nhà Phát Triển Khuyên Dùng):
 • 📌 Tab Mới: Cài tiện ích này, cho phép bạn đặt tới 12 hình nền khác nhau, không giới hạn kích thước.
-• 📌 Trang Khởi Động: Đặt trình duyệt về https://plaintab.netlify.app , giữ chế độ hình nền Bing hàng ngày mặc định.
+• 📌 Trang Khởi Động: Đặt trình duyệt về https://plaintab.kaininx.workers.dev , giữ chế độ hình nền Bing hàng ngày mặc định.
 • 📌 Nút Trang Chủ: Đặt thành https://kaininx.github.io/PlainTab/ — đây là GitHub Pages của dự án, bạn có thể thêm hình nền yêu thích riêng.
 
 PlainTab phù hợp nếu bạn đã quá chán:

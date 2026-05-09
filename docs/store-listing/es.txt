@@ -24,11 +24,11 @@ PlainTab es una extensión de navegador que hace que cada nueva pestaña sea un 
 
 • 【Transparencia y código abierto】
 • Código completamente abierto: https://github.com/kaininx/PlainTab
-• Pruébalo en línea: https://plaintab.netlify.app
+• Pruébalo en línea: https://plaintab.kaininx.workers.dev
 
 ✨ Uso combinado (recomendado por el desarrollador):
 • 📌 Nueva pestaña: instala esta extensión, te permite configurar hasta 12 fondos de pantalla diferentes, sin límite de tamaño.
-• 📌 Página de inicio: configura el navegador en https://plaintab.netlify.app para mantener el modo diario predeterminado.
+• 📌 Página de inicio: configura el navegador en https://plaintab.kaininx.workers.dev para mantener el modo diario predeterminado.
 • 📌 Botón de inicio: configúralo en https://kaininx.github.io/PlainTab/ , que es la GitHub Pages de este proyecto, para establecer fondos adicionales a tu gusto.
 
 PlainTab es para ti, si estás harto de:

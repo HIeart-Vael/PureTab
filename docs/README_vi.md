@@ -17,7 +17,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Giấy phép">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Dung_thu_truc_tuyen-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -42,7 +42,7 @@
 ---
 Mở một tab mới là một hành động tức thì — nhấn `Ctrl+T` và bạn kỳ vọng hình nền đã ở đó rồi. Để làm tốt điều này, toàn bộ thiết kế của PlainTab xoay quanh một mục tiêu duy nhất: **hiển thị hình nền trên màn hình nhanh nhất có thể**, không có bất kỳ quá trình tải nào hiển thị. Kiến trúc hai lớp hình nền, tải trước đồng bộ, đường ống ảnh thu nhỏ Canvas, chiến lược lưu trữ kết hợp — tất cả các quyết định kỹ thuật đều hướng về cùng một đích: nhanh hơn, mượt hơn, vô hình hơn.
 
-PlainTab vừa là một tiện ích mở rộng trình duyệt Manifest V3 vừa là một trang Web độc lập. Không phụ thuộc bên ngoài, không bước xây dựng, vanilla JS + CSS thuần túy. Chế độ tiện ích mở rộng và chế độ Web dùng chung một mã nguồn, tự động phát hiện môi trường khi chạy. [Dùng thử trực tuyến](https://plaintab.netlify.app).
+PlainTab vừa là một tiện ích mở rộng trình duyệt Manifest V3 vừa là một trang Web độc lập. Không phụ thuộc bên ngoài, không bước xây dựng, vanilla JS + CSS thuần túy. Chế độ tiện ích mở rộng và chế độ Web dùng chung một mã nguồn, tự động phát hiện môi trường khi chạy. [Dùng thử trực tuyến](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -50,7 +50,7 @@ PlainTab vừa là một tiện ích mở rộng trình duyệt Manifest V3 vừ
 
 **Tiện ích mở rộng trình duyệt**: cài đặt từ [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Trang chủ trực tuyến**: truy cập [plaintab.netlify.app](https://plaintab.netlify.app) và đặt nó làm trang khởi động trong cài đặt trình duyệt.
+**Trang chủ trực tuyến**: truy cập [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) và đặt nó làm trang khởi động trong cài đặt trình duyệt.
 
 **Chạy tại địa phương**:
 

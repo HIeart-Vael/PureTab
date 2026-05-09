@@ -24,11 +24,11 @@ PlainTab을 선택해야 하는 이유:
 
 • 【오픈소스 & 투명성】
 • 코드 완전 공개: https://github.com/kaininx/PlainTab
-• 온라인 체험: https://plaintab.netlify.app
+• 온라인 체험: https://plaintab.kaininx.workers.dev
 
 ✨ 조합하여 사용하기 (개발자 추천):
 • 📌 새 탭: 본 확장 프로그램을 설치하여 최대 12장의 다양한 배경화면을 설정하세요. 크기 제한 없음.
-• 📌 시작 페이지: 브라우저 홈페이지를 https://plaintab.netlify.app 로 설정하고 기본 일일 Bing 배경화면 모드를 유지하세요.
+• 📌 시작 페이지: 브라우저 홈페이지를 https://plaintab.kaininx.workers.dev 로 설정하고 기본 일일 Bing 배경화면 모드를 유지하세요.
 • 📌 홈 버튼: https://kaininx.github.io/PlainTab/ 로 설정하세요. 이 프로젝트의 GitHub Pages로, 원하는 배경화면을 추가로 설정할 수 있습니다.
 
 PlainTab이 적합한 분들:

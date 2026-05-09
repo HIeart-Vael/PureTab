@@ -24,11 +24,11 @@ Why PlainTab?
 
 • 【Open Source & Transparent】
 • Fully open source: https://github.com/kaininx/PlainTab
-• Try it live: https://plaintab.netlify.app
+• Try it live: https://plaintab.kaininx.workers.dev
 
 ✨ Recommended Combo Setup (from the developer):
 • 📌 New Tab: Install this extension to set up to 12 different wallpapers with no size limit.
-• 📌 Startup Page: Set your browser homepage to https://plaintab.netlify.app and keep the default daily Bing wallpaper mode.
+• 📌 Startup Page: Set your browser homepage to https://plaintab.kaininx.workers.dev and keep the default daily Bing wallpaper mode.
 • 📌 Home Button: Set it to https://kaininx.github.io/PlainTab/ — this is the project's GitHub Pages site, where you can add extra wallpapers of your choice.
 
 PlainTab is for you if you're tired of:

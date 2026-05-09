@@ -24,11 +24,11 @@ Dlaczego PlainTab?
 
 • 【Otwarty Kod Źródłowy, Przejrzystość】
 • Kod w pełni open source: https://github.com/kaininx/PlainTab
-• Wersja online: https://plaintab.netlify.app
+• Wersja online: https://plaintab.kaininx.workers.dev
 
 ✨ Zalecane Zastosowanie (Rekomendacja Dewelopera):
 • 📌 Nowa karta: Zainstaluj to rozszerzenie, pozwala ustawić do 12 różnych tapet bez ograniczenia rozmiaru.
-• 📌 Strona startowa: Ustaw przeglądarkę na https://plaintab.netlify.app i zachowaj domyślny tryb codziennej tapety Bing.
+• 📌 Strona startowa: Ustaw przeglądarkę na https://plaintab.kaininx.workers.dev i zachowaj domyślny tryb codziennej tapety Bing.
 • 📌 Przycisk strony głównej: Ustaw na https://kaininx.github.io/PlainTab/ — to GitHub Pages tego projektu, gdzie możesz dodatkowo wybrać ulubione tapety.
 
 PlainTab jest dla Ciebie, jeśli masz dość:

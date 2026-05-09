@@ -17,7 +17,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licencja">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Wyprobuj_online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -42,7 +42,7 @@
 ---
 Otwarcie nowej karty to natychmiastowa czynność — wciskasz `Ctrl+T` i oczekujesz, że tapeta już tam jest. Aby to osiągnąć, cały design PlainTab koncentruje się na jednym celu: **jak najszybszym wyświetleniu tapety na ekranie**, bez żadnego widocznego procesu ładowania. Dwuwarstwowa architektura tapety, synchroniczne wczytywanie wstępne, potok miniatur Canvas, hybrydowa strategia przechowywania — wszystkie decyzje techniczne zmierzają do tego samego: szybciej, płynniej, bardziej niezauważalnie.
 
-PlainTab jest jednocześnie rozszerzeniem przeglądarki Manifest V3 i niezależną stroną internetową. Zero zewnętrznych zależności, bez procesu budowania, czysty vanilla JS + CSS. Tryb rozszerzenia i tryb Web używają tego samego kodu, automatycznie wykrywając środowisko w czasie wykonania. [Wypróbuj online](https://plaintab.netlify.app).
+PlainTab jest jednocześnie rozszerzeniem przeglądarki Manifest V3 i niezależną stroną internetową. Zero zewnętrznych zależności, bez procesu budowania, czysty vanilla JS + CSS. Tryb rozszerzenia i tryb Web używają tego samego kodu, automatycznie wykrywając środowisko w czasie wykonania. [Wypróbuj online](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -50,7 +50,7 @@ PlainTab jest jednocześnie rozszerzeniem przeglądarki Manifest V3 i niezależn
 
 **Rozszerzenie przeglądarki**: zainstaluj z [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Strona startowa online**: odwiedź [plaintab.netlify.app](https://plaintab.netlify.app) i ustaw ją jako stronę startową w ustawieniach przeglądarki.
+**Strona startowa online**: odwiedź [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) i ustaw ją jako stronę startową w ustawieniach przeglądarki.
 
 **Uruchomienie lokalne**:
 

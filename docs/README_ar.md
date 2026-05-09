@@ -18,7 +18,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="الترخيص">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/جرب_عبر_الإنترنت-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -43,7 +43,7 @@
 ---
 فتح علامة تبويب جديدة هو فعل فوري—تضغط `Ctrl+T` وتتوقع أن تكون خلفيتك موجودة بالفعل. لتحقيق ذلك، يدور تصميم PlainTab بالكامل حول هدف واحد: **عرض الخلفية على الشاشة في أسرع وقت ممكن**، دون أي عملية تحميل مرئية. بنية الخلفية ثنائية الطبقة، التحميل المسبق المتزامن، خط أنابيب الصور المصغرة عبر Canvas، استراتيجية التخزين المختلطة—جميع القرارات التقنية تصل إلى نفس النتيجة: أسرع، أكثر سلاسة، أقل شعورًا.
 
-مشروع PlainTab هو في نفس الوقت إضافة متصفح Manifest V3 وصفحة ويب مستقلة. لا تبعيات خارجية، لا خطوات بناء، vanilla JS + CSS نقي. وضع الإضافة ووضع الويب يشتركان في نفس قاعدة الشيفرة، ويكتشفان البيئة تلقائيًا أثناء التشغيل ويغيران السلوك. [جربه عبر الإنترنت](https://plaintab.netlify.app).
+مشروع PlainTab هو في نفس الوقت إضافة متصفح Manifest V3 وصفحة ويب مستقلة. لا تبعيات خارجية، لا خطوات بناء، vanilla JS + CSS نقي. وضع الإضافة ووضع الويب يشتركان في نفس قاعدة الشيفرة، ويكتشفان البيئة تلقائيًا أثناء التشغيل ويغيران السلوك. [جربه عبر الإنترنت](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -51,7 +51,7 @@
 
 **إضافة المتصفح**: ثبّتها من [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**صفحة البداية عبر الإنترنت**: زر [plaintab.netlify.app](https://plaintab.netlify.app) واجعله صفحة البداية في إعدادات المتصفح.
+**صفحة البداية عبر الإنترنت**: زر [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) واجعله صفحة البداية في إعدادات المتصفح.
 
 **التشغيل المحلي**:
 

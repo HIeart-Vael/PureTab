@@ -18,7 +18,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="许可证">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/在线体验-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -44,7 +44,7 @@
 打开新标签页是一个瞬间动作——`Ctrl+T` 按下去，你期望你的壁纸已经在那里了。为了做好这件事，PlainTab 的全部设计都围绕一个目标：**让壁纸尽可能快地出现在屏幕上**，没有任何可见的加载过程。双层壁纸架构、同步预加载、Canvas 缩略图管线、混合存储策略——所有技术决策的终点都是同一件事：更快、更丝滑、更无感。
 
 
-PlainTab 项目同时是一个 Manifest V3 浏览器扩展和一个独立的 Web 页面。零外部依赖，无构建步骤，纯 vanilla JS + CSS。扩展模式与 Web 模式共用同一套代码，运行时自动检测环境切换行为。 [在线即用](https://plaintab.netlify.app)。
+PlainTab 项目同时是一个 Manifest V3 浏览器扩展和一个独立的 Web 页面。零外部依赖，无构建步骤，纯 vanilla JS + CSS。扩展模式与 Web 模式共用同一套代码，运行时自动检测环境切换行为。 [在线即用](https://plaintab.kaininx.workers.dev)。
 
 ---
 
@@ -52,7 +52,7 @@ PlainTab 项目同时是一个 Manifest V3 浏览器扩展和一个独立的 Web
 
 **浏览器扩展**：[Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) 安装。
 
-**在线起始页**：访问 [plaintab.netlify.app](https://plaintab.netlify.app)，浏览器设置中将其设为启动页面。
+**在线起始页**：访问 [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev)，浏览器设置中将其设为启动页面。
 
 **本地运行**：
 

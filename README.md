@@ -20,7 +20,7 @@
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="License">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Live_Demo-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -46,7 +46,7 @@
 Opening a new tab is an instantaneous action — you press `Ctrl+T` and expect your wallpaper to already be there. To get this right, every decision in PlainTab revolves around one goal: putting the wallpaper on screen as fast as possible, with zero visible loading. Dual-layer wallpaper architecture, synchronous preloading, Canvas thumbnail pipeline, hybrid storage strategy — every technical choice converges on the same thing: faster, smoother, more seamless.
 
 
-PlainTab is both a Manifest V3 browser extension and a standalone web page. Zero external dependencies, no build step, pure vanilla JS + CSS. Extension and web modes share the same codebase, automatically detecting the environment at runtime. [Try it live](https://plaintab.netlify.app).
+PlainTab is both a Manifest V3 browser extension and a standalone web page. Zero external dependencies, no build step, pure vanilla JS + CSS. Extension and web modes share the same codebase, automatically detecting the environment at runtime. [Try it live](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -54,7 +54,7 @@ PlainTab is both a Manifest V3 browser extension and a standalone web page. Zero
 
 **Browser extension**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Online start page**: Visit [plaintab.netlify.app](https://plaintab.netlify.app) and set it as your startup page in your browser settings.
+**Online start page**: Visit [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) and set it as your startup page in your browser settings.
 
 **Run locally**:
 

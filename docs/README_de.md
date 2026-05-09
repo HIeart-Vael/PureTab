@@ -18,7 +18,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Lizenz">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Online%20testen-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -43,7 +43,7 @@
 ---
 Einen neuen Tab zu offnen ist eine Augenblickshandlung — du druckst `Ctrl+T` und erwartest, dass dein Hintergrundbild bereits da ist. Um das richtig zu machen, ist das gesamte Design von PlainTab auf ein Ziel ausgerichtet: **das Hintergrundbild so schnell wie moglich auf dem Bildschirm erscheinen zu lassen**, ohne sichtbaren Ladevorgang. Zweischichtarchitektur, synchrones Vorladen, Canvas-Miniaturbild-Pipeline, hybride Speicherstrategie — jede technische Entscheidung fuhrt zum selben Ziel: schneller, flussiger, unbemerkter.
 
-PlainTab ist sowohl eine Manifest-V3-Browsererweiterung als auch eine eigenstandige Webseite. Null externe Abhangigkeiten, kein Build-Schritt, reines Vanilla-JS + CSS. Der Erweiterungsmodus und der Webmodus teilen sich denselben Code mit automatischer Umgebungserkennung zur Laufzeit. [Online testen](https://plaintab.netlify.app).
+PlainTab ist sowohl eine Manifest-V3-Browsererweiterung als auch eine eigenstandige Webseite. Null externe Abhangigkeiten, kein Build-Schritt, reines Vanilla-JS + CSS. Der Erweiterungsmodus und der Webmodus teilen sich denselben Code mit automatischer Umgebungserkennung zur Laufzeit. [Online testen](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -51,7 +51,7 @@ PlainTab ist sowohl eine Manifest-V3-Browsererweiterung als auch eine eigenstand
 
 **Browser-Erweiterung**: installieren aus dem [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Online-Startseite**: besuche [plaintab.netlify.app](https://plaintab.netlify.app) und lege sie in den Browsereinstellungen als Startseite fest.
+**Online-Startseite**: besuche [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) und lege sie in den Browsereinstellungen als Startseite fest.
 
 **Lokale Ausfuhrung**:
 
