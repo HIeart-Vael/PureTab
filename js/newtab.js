@@ -1051,18 +1051,41 @@
             var slots = Math.max(0, 12 - order.length);
             if (!slots) return;
 
-            var saved = 0;
-            var chain = Promise.resolve();
-            files.forEach(function (file) {
-                chain = chain.then(function () {
-                    if (saved >= slots) return;
-                    var show = saved === 0;
-                    return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
+            // 加载现有图片名称，用于跨批次去重
+            var reads = order.map(function (id) { return idbGet(imgKey(id)); });
+            return Promise.all(reads).then(function (existingImages) {
+                var known = {};
+                existingImages.forEach(function (img) { if (img && img.name) known[img.name] = true; });
+
+                // 同批次内去重 + 去掉已在库中的
+                var seen = {};
+                var deduped = files.filter(function (f) {
+                    if (seen[f.name] || known[f.name]) return false;
+                    seen[f.name] = true;
+                    return true;
                 });
-            });
-            return chain.then(function () {
-                log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (slots: ' + slots + ')');
-                if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
+
+                // 截断超出 12 张的部分
+                deduped = deduped.slice(0, slots);
+
+                if (!deduped.length) {
+                    log('Local', 'all ' + files.length + ' file(s) were duplicates, nothing to add');
+                    if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
+                    return;
+                }
+
+                var saved = 0;
+                var chain = Promise.resolve();
+                deduped.forEach(function (file) {
+                    chain = chain.then(function () {
+                        var show = saved === 0;
+                        return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
+                    });
+                });
+                return chain.then(function () {
+                    log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (' + (files.length - deduped.length) + ' duplicates skipped)');
+                    if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
+                });
             });
         });
 
