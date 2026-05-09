@@ -1104,11 +1104,93 @@
     }
 
     /* ================================================================
-       18. 启动引导
+       18. 存储迁移
+
+       WHY 链式迁移：
+         每次改键名只需在 MIGRATIONS 加一个版本号对应的函数即可。
+         新用户装上直接就是 LS_VERSION，不走任何迁移。
+         老用户从旧版本号依次执行到 LS_VERSION。
+       ================================================================ */
+
+    var MIGRATIONS = {
+        1: migrate_1_to_2
+        // 2: migrate_2_to_3  ← 未来新增时改 LS_VERSION
+    };
+
+    /** v1→v2: 统一 ptab_ 前缀，所有键加命名空间 */
+    function migrate_1_to_2() {
+        // localStorage：有旧值就迁，没有就跳过
+        var lsRenames = [
+            ['bing_thumb', 'ptab_bing_thumb'],
+            ['local_thumbs', 'ptab_local_thumbs'],
+            ['ptab_wallpaper_source', 'ptab_mode'],
+            ['ptab_search_visibility', 'ptab_search_mode']
+        ];
+        lsRenames.forEach(function (pair) {
+            var val = localStorage.getItem(pair[0]);
+            if (val !== null) {
+                localStorage.setItem(pair[1], val);
+                localStorage.removeItem(pair[0]);
+            }
+        });
+
+        // IDB：同事务内 get → put 新键 → delete 旧键
+        return openDB().then(function (db) {
+            var idbRenames = [
+                ['bing', 'ptab_bing_blob'],
+                ['local_images', 'ptab_local_images']
+            ];
+            var chain = Promise.resolve();
+            idbRenames.forEach(function (pair) {
+                (function (oldKey, newKey) {
+                    chain = chain.then(function () {
+                        return new Promise(function (resolve, reject) {
+                            var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                            var req = tx.objectStore(DB_STORE_NAME).get(oldKey);
+                            req.onsuccess = function () {
+                                if (req.result !== undefined) {
+                                    tx.objectStore(DB_STORE_NAME).put(req.result, newKey);
+                                    tx.objectStore(DB_STORE_NAME).delete(oldKey);
+                                }
+                            };
+                            req.onerror = function (e) { reject(e.target.error); };
+                            tx.oncomplete = resolve;
+                            tx.onerror = function (e) { reject(e.target.error); };
+                        });
+                    });
+                })(pair[0], pair[1]);
+            });
+            return chain;
+        });
+    }
+
+    function migrateStorage() {
+        var stored = parseInt(localStorage.getItem(KEY_VERSION)) || 0;
+        if (stored >= LS_VERSION) return Promise.resolve();
+
+        log('Migrate', 'v' + stored + ' → v' + LS_VERSION + ' ...');
+        var chain = Promise.resolve();
+        for (var v = stored; v < LS_VERSION; v++) {
+            if (!MIGRATIONS[v]) continue;
+            (function (ver) {
+                chain = chain.then(function () { return MIGRATIONS[ver](); });
+            })(v);
+        }
+        return chain.then(function () {
+            localStorage.setItem(KEY_VERSION, LS_VERSION);
+            log('Migrate', 'done, now at v' + LS_VERSION);
+        }).catch(function (e) {
+            warn('Migrate', 'failed: ' + e.message);
+            throw e;
+        });
+    }
+
+    /* ================================================================
+       19. 启动引导
        ================================================================ */
 
     function init() {
-        localStorage.setItem(KEY_VERSION, LS_VERSION);
+        migrateStorage().then(function () {
         currentLang = localStorage.getItem(KEY_LANG) || detectLang();
         if (!I18N[currentLang]) currentLang = 'en';
         log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + currentLang);
@@ -1117,7 +1199,8 @@
         loadWallpaper();
         if (IS_EXTENSION) setupExtensionMode();
         bindEvents();
-    }
+    });
+}
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
