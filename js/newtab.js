@@ -320,18 +320,36 @@
     }
 
     // 下载 Blob 并存入 IDB，同时更新 meta（src 即去重 key）
+    // URL 没变时先查 IDB：blob 还在就跳过下载，丢了才回退下载
     function cacheBingBlob(url, provider, today) {
-        return downloadBingBlob(url).then(function (blob) {
-            var meta = loadBingMeta();
-            var isNew = meta.src !== url;
-            meta.src = url;
-            meta.date = today;
-            meta.provider = provider;
-            saveBingMeta(meta);
-            var kb = (blob.size / 1024).toFixed(0);
-            log('Bing', isNew ? 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB' : 'wallpaper unchanged, skipped  ·  ' + provider + '  ·  ' + kb + ' KB');
-            return idbPut(BING_KEY, blob).then(function () { return blob; });
-        }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
+        var meta = loadBingMeta();
+        var isNew = meta.src !== url;
+
+        if (!isNew) {
+            return idbGet(BING_KEY).then(function (blob) {
+                if (blob) {
+                    var kb = (blob.size / 1024).toFixed(0);
+                    log('Bing', 'wallpaper unchanged, skipped  ·  ' + provider + '  ·  ' + kb + ' KB');
+                    return blob;
+                }
+                log('Bing', 'blob missing, re-downloading...');
+                return downloadAndStore();
+            });
+        }
+
+        return downloadAndStore();
+
+        function downloadAndStore() {
+            return downloadBingBlob(url).then(function (blob) {
+                meta.src = url;
+                meta.date = today;
+                meta.provider = provider;
+                saveBingMeta(meta);
+                var kb = (blob.size / 1024).toFixed(0);
+                log('Bing', 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB');
+                return idbPut(BING_KEY, blob).then(function () { return blob; });
+            }).catch(function (e) { warn('Bing', 'got the URL but failed to download image, kept last image'); });
+        }
     }
 
     // 后台静默获取最新 Bing 壁纸并缓存（本地壁纸模式下使用）
