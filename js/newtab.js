@@ -26,6 +26,7 @@
     var LS_KEY_IMG_ORDER = 'ptab_img_order';
     var LS_KEY_IMG_THUMBS = 'ptab_img_thumbs';
     var LS_KEY_LOCAL_INDEX = 'ptab_local_index';
+    var LS_KEY_PREVIEW_THUMB = 'ptab_preview_thumb';
 
     var DB_NAME = 'PlainTab';
     var DB_STORE_NAME = 'wallpaper';
@@ -276,8 +277,13 @@
             currentMode = mode;
             wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
             return generateThumbnail(url).then(function (thumb) {
-                if (mode === 'bing' && thumb) {
-                    try { localStorage.setItem(LS_KEY_BING_THUMB, thumb); } catch (e) { /* quota */ }
+                if (thumb) {
+                    // WHY: bing 模式写入预计算缓存，让 preload.js 一次 getItem 即可命中
+                    //      local 模式由 tryLoadLocalWallpaper 同步写入，不在此处异步覆盖（避免竞态错位）
+                    if (mode === 'bing') {
+                        try { localStorage.setItem(LS_KEY_PREVIEW_THUMB, thumb); } catch (e) { /* quota */ }
+                        try { localStorage.setItem(LS_KEY_BING_THUMB, thumb); } catch (e) { /* quota */ }
+                    }
                 }
                 return thumb;
             });
@@ -466,6 +472,20 @@
             }
 
             localStorage.setItem(LS_KEY_LOCAL_INDEX, (idx + 1) % order.length);
+
+            // ★ 同步写入下一张壁纸的预计算缩略图（在 applyWallpaper 异步操作之前）
+            // WHY 必须同步：快速开新标签时，index 已递增但 applyWallpaper 尚未完成，
+            // 若 preview_thumb 仍是旧值 → 预览错位。同步写入确保 index 与 preview_thumb 原子一致。
+            var nextIdx = (idx + 1) % order.length;
+            var nextId = order[nextIdx];
+            var previewThumbs = loadThumbs();
+            if (previewThumbs[nextId]) {
+                try { localStorage.setItem(LS_KEY_PREVIEW_THUMB, previewThumbs[nextId]); } catch (e) { /* quota */ }
+            } else {
+                // 下一张缩略图尚未生成，移除 preview_thumb 强制走 fallback 路径，避免展示错误图片
+                try { localStorage.removeItem(LS_KEY_PREVIEW_THUMB); } catch (e) {}
+            }
+
             log('Local', 'image ' + (idx + 1) + '/' + order.length + (img.name ? '  ·  ' + img.name : ''));
 
             return applyWallpaper(URL.createObjectURL(blob), 'local').then(function (thumb) {
@@ -476,6 +496,9 @@
                         saveThumbs(thumbs);
                     }
                 }
+
+                // preview_thumb 已在 index 递增后同步写入，此处无需再写
+
                 cacheBingInBackground();
                 return true;
             });
@@ -592,6 +615,16 @@
                 thumbs[id] = thumb;
                 saveOrder(order);
                 saveThumbs(thumbs);
+
+                // ★ 更新 preview_thumb：下一个新标签页将展示 order[currentIndex]
+                if (show && order.length) {
+                    var curIdx = (parseInt(localStorage.getItem(LS_KEY_LOCAL_INDEX)) || 0) % order.length;
+                    var nextId = order[curIdx];
+                    if (thumbs[nextId]) {
+                        try { localStorage.setItem(LS_KEY_PREVIEW_THUMB, thumbs[nextId]); } catch (e) { /* quota */ }
+                    }
+                }
+
                 return true;
             });
         }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
@@ -611,6 +644,7 @@
 
         if (newOrder.length === 0) {
             localStorage.removeItem(LS_KEY_LOCAL_INDEX);
+            localStorage.removeItem(LS_KEY_PREVIEW_THUMB);
             localStorage.setItem(LS_KEY_MODE, 'bing');
             currentMode = 'bing';
             wallpaperInfoEl.textContent = t('wpBing');
@@ -632,6 +666,7 @@
         currentMode = 'bing';
         removeLocalGallery();
         localStorage.removeItem(LS_KEY_BING_THUMB);
+        localStorage.removeItem(LS_KEY_PREVIEW_THUMB);
         localStorage.removeItem(LS_KEY_IMG_THUMBS);
         localStorage.removeItem(LS_KEY_IMG_ORDER);
         localStorage.removeItem(LS_KEY_LOCAL_INDEX);
