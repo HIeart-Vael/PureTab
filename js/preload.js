@@ -2,7 +2,13 @@
 (function () {
     var b = document.getElementById('wallpaperBack');
     if (b) {
-        var t = localStorage.getItem('ptab_thumb');
+        var t = localStorage.getItem('bing_thumb');
+        // 多图轮播：按当前索引取对应缩略图，没有则回退到 bing_thumb
+        try {
+            var idx = parseInt(localStorage.getItem('ptab_local_index')) || 0;
+            var thumbs = JSON.parse(localStorage.getItem('local_thumbs') || '[]');
+            if (thumbs.length) t = thumbs[idx % thumbs.length] || t;
+        } catch (e) {}
         if (t) b.style.backgroundImage = t;
     }
 })();
