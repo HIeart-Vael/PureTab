@@ -228,7 +228,9 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px) scale(0.94);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
 }
 
@@ -267,7 +269,7 @@ body {
     text-align: center;
     font-family: inherit;
     letter-spacing: 0.3px;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease;
     outline: none;
     -webkit-tap-highlight-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -314,7 +316,7 @@ body {
     text-align: center;
     font-family: inherit;
     letter-spacing: 0.3px;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
     outline: none;
     -webkit-tap-highlight-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -334,7 +336,7 @@ body {
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease;
     flex-shrink: 0;
     color: inherit;
     text-decoration: none;
@@ -394,7 +396,7 @@ body {
     padding: 6px 10px;
     font-size: 12px;
     outline: none;
-    transition: all 0.2s;
+    transition: border-color 0.2s, background 0.2s;
 }
 
 .setting-row select:hover,
@@ -470,7 +472,9 @@ input[type="file"] {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px) scale(0.94);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
 }
 
