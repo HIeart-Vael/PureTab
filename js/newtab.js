@@ -35,6 +35,11 @@
     var TRANSITION_MS = 500; // 壁纸淡入过渡时长（ms），必须与 CSS 中的 transition-duration 保持一致
     var THUMB_MAX_W = 640;   // 生成缩略图的最大宽度（px）
 
+    // 搜索设置默认值，需与 index.html 中控件的 value 保持一致
+    var DEFAULT_SEARCH_MODE = 'always';
+    var DEFAULT_OPACITY = 0.45;
+    var DEFAULT_ENGINE = 'google';
+
     var log = function (tag, msg) { console.log('[' + tag + '] ' + msg); };
     var warn = function (tag, msg) { console.warn('[' + tag + '] ' + msg); };
 
@@ -94,9 +99,9 @@
     var searchHideTimer = null;
 
     // 搜索设置（持久化到 localStorage）
-    var searchMode = 'always';            // 'hover' | 'always' | 'never'
-    var currentOpacity = 0.45;
-    var currentEngine = 'google';
+    var searchMode = DEFAULT_SEARCH_MODE;  // 'hover' | 'always' | 'never'
+    var currentOpacity = DEFAULT_OPACITY;
+    var currentEngine = DEFAULT_ENGINE;
     var engineIndex = 0;
 
     /* ================================================================
@@ -1598,13 +1603,13 @@
      * WHY 启动时调用一次：
      *   设置值在会话期间不会被外部修改（单标签页独占），
      *   启动时恢复一次即可，后续通过 apply* 函数实时更新。
-     *   缺失值使用默认值（always / 0.45 / google），确保首次使用体验一致。
+     *   缺失值使用 DEFAULT_* 常量，确保首次使用体验一致。
      */
     function loadSettings() {
-        var mode = localStorage.getItem(LS_KEY_SEARCH_MODE) || 'always';
+        var mode = localStorage.getItem(LS_KEY_SEARCH_MODE) || DEFAULT_SEARCH_MODE;
         var storedOpacity = localStorage.getItem(LS_KEY_ICON_OPACITY);
-        var opacity = storedOpacity !== null ? parseFloat(storedOpacity) : 0.45;
-        var engine = localStorage.getItem(LS_KEY_SEARCH_ENGINE) || 'google';
+        var opacity = storedOpacity !== null ? parseFloat(storedOpacity) : DEFAULT_OPACITY;
+        var engine = localStorage.getItem(LS_KEY_SEARCH_ENGINE) || DEFAULT_ENGINE;
         searchModeSelect.value = mode;
         applySearchMode(mode);
         applyOpacity(opacity);
@@ -1671,7 +1676,7 @@
         };
         // 扩展模式下搜索引擎图标变为静态放大镜，不可点击切换
         engineIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><g clip-path="url(#a)"><path d="M14 12.94 10.16 9.1c1.25-1.76 1.1-4.2-.48-5.78a4.49 4.49 0 0 0-6.36 0 4.49 4.49 0 0 0 0 6.36 4.486 4.486 0 0 0 5.78.48L12.94 14 14 12.94ZM4.38 8.62a3 3 0 0 1 0-4.24 3 3 0 0 1 4.24 0 3 3 0 0 1 0 4.24 3 3 0 0 1-4.24 0Z"/></g><defs><clipPath id="a"><path d="M0 0h16v16H0z"/></clipPath></defs></svg>';
-        engineIcon.style.opacity = '0.45';
+        engineIcon.style.opacity = String(DEFAULT_OPACITY);
         engineIcon.style.pointerEvents = 'none';
         // 隐藏搜索引擎选择行 —— 扩展模式下不适用
         engineSelect.closest('.setting-row').style.display = 'none';
@@ -1826,13 +1831,13 @@
         opacityRange.addEventListener('input', function () { applyOpacity(opacityRange.value); saveSettings(); });
         opacityNumInput.addEventListener('change', function () {
             var val = parseFloat(opacityNumInput.value);
-            if (isNaN(val)) val = 0.45;
+            if (isNaN(val)) val = DEFAULT_OPACITY;
             val = Math.min(1, Math.max(0, val));
             applyOpacity(val);
             saveSettings();
         });
         engineSelect.addEventListener('change', function () { applyEngine(engineSelect.value); });
-        resetAdvancedBtn.addEventListener('click', function () { applySearchMode('always'); searchModeSelect.value = 'always'; applyEngine('google'); applyOpacity(0.45); saveSettings(); });
+        resetAdvancedBtn.addEventListener('click', function () { applySearchMode(DEFAULT_SEARCH_MODE); searchModeSelect.value = DEFAULT_SEARCH_MODE; applyEngine(DEFAULT_ENGINE); applyOpacity(DEFAULT_OPACITY); saveSettings(); });
 
         /**
          * WHY 点击搜索引擎图标会轮换引擎：
