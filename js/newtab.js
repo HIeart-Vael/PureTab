@@ -103,6 +103,7 @@
     var currentOpacity = DEFAULT_OPACITY;
     var currentEngine = DEFAULT_ENGINE;
     var engineIndex = 0;
+    var langBtns = null; // 缓存语言面板按钮引用，避免每次切换重建 DOM
 
     /* ================================================================
        5. 国际化 (i18n)
@@ -175,26 +176,32 @@
     /**
      * 渲染语言选择面板的按钮列表。
      *
-     * WHY 每次都重建 DOM：
-     *   语言切换后旧按钮的文本需要全部更新，重建比逐个修改更可靠，
-     *   且语言列表只有 16 项，DOM 操作开销可忽略。
+     * WHY 首次创建后缓存按钮引用：
+     *   按钮结构和事件逻辑不变，语言切换时只需更新文本和高亮状态，
+     *   避免每次切换都销毁重建 16 个按钮并重新绑定事件。
      */
     function renderLangPanel() {
         document.querySelector('.lang-title').textContent = t('langPanelTitle');
-        langOptions.innerHTML = '';
-        LanguageList.forEach(function (lang) {
-            var btn = document.createElement('button');
-            btn.className = 'lang-option' + (lang.code === currentLang ? ' current' : '');
-            btn.textContent = lang.name;
-            btn.addEventListener('click', function () {
-                if (lang.code !== currentLang) {
-                    localStorage.setItem(LS_KEY_LANG, lang.code);
-                    currentLang = lang.code;
-                    updateLangUI();
-                }
-                closeLangPanel();
+        if (!langBtns) {
+            langBtns = {};
+            LanguageList.forEach(function (lang) {
+                var btn = document.createElement('button');
+                btn.className = 'lang-option';
+                btn.addEventListener('click', function () {
+                    if (lang.code !== currentLang) {
+                        localStorage.setItem(LS_KEY_LANG, lang.code);
+                        currentLang = lang.code;
+                        updateLangUI();
+                    }
+                    closeLangPanel();
+                });
+                langOptions.appendChild(btn);
+                langBtns[lang.code] = btn;
             });
-            langOptions.appendChild(btn);
+        }
+        LanguageList.forEach(function (lang) {
+            langBtns[lang.code].textContent = lang.name;
+            langBtns[lang.code].classList.toggle('current', lang.code === currentLang);
         });
     }
 
