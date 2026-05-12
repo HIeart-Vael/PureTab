@@ -1602,7 +1602,8 @@
      */
     function loadSettings() {
         var mode = localStorage.getItem(LS_KEY_SEARCH_MODE) || 'always';
-        var opacity = parseFloat(localStorage.getItem(LS_KEY_ICON_OPACITY)) || 0.45;
+        var storedOpacity = localStorage.getItem(LS_KEY_ICON_OPACITY);
+        var opacity = storedOpacity !== null ? parseFloat(storedOpacity) : 0.45;
         var engine = localStorage.getItem(LS_KEY_SEARCH_ENGINE) || 'google';
         searchModeSelect.value = mode;
         applySearchMode(mode);
