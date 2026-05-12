@@ -1145,6 +1145,8 @@
         order.forEach(function (id, i) {
             var card = document.createElement('div');
             card.className = 'local-thumb';
+            card.setAttribute('data-id', id);
+            card.setAttribute('draggable', 'false');
 
             // 优先用预生成的 base64 缩略图（localStorage），缺失时回退到 blob URL
             var bg = thumbs[id];
@@ -1172,6 +1174,230 @@
     }
 
     /**
+     * 为画廊网格绑定长按拖拽排序。
+     *
+     * WHY 长按而非立即拖拽：
+     *   画廊卡片上有删除按钮，短点击需要留给删除。
+     *   300ms 长按与 iOS/Android 原生交互一致，用户有直觉。
+     *   移动超 8px 阈值取消长按，避免滑动误触发。
+     *
+     * WHY pointer events 而非 HTML5 drag API：
+     *   HTML5 drag API 在触屏设备上支持不一致（Safari 尤其差）。
+     *   pointer events 统一鼠标和触屏，行为完全可控。
+     *   拖拽卡片设 pointer-events:none 防止自身拦截事件。
+     *
+     * WHY DOM insertBefore 而非 CSS transform：
+     *   CSS Grid 布局中 transform 不改变文档流，其他卡片不会让位。
+     *   移动占位符 DOM 节点让 grid 自动重排，代码简单且可靠。
+     */
+    function setupGalleryDrag(grid) {
+        var pressTimer = null;
+        grid.style.touchAction = 'none'; // 防止触屏设备拖拽时触发滚动
+
+        function getCard(e) {
+            var el = e.target;
+            while (el && el !== grid) {
+                if (el.classList && el.classList.contains('local-thumb')) return el;
+                el = el.parentNode;
+            }
+            return null;
+        }
+
+        function onPointerDown(e) {
+            if (e.button !== 0) return; // 只响应左键/单指
+            var card = getCard(e);
+            if (!card || e.target.classList.contains('local-thumb-del')) return;
+
+            var startX = e.clientX, startY = e.clientY;
+
+            pressTimer = setTimeout(function () {
+                pressTimer = null;
+
+                // 锁定指针捕获，防止触屏滚动
+                try { card.setPointerCapture(e.pointerId); } catch (ex) { }
+
+                // 创建占位符保持 grid 布局
+                var placeholder = document.createElement('div');
+                placeholder.className = 'local-thumb drag-placeholder';
+                placeholder.style.height = card.offsetHeight + 'px';
+                card.parentNode.insertBefore(placeholder, card);
+
+                // 拖拽卡片浮起
+                var rect = card.getBoundingClientRect();
+                card.classList.add('dragging');
+                document.body.appendChild(card);
+                card.style.position = 'fixed';
+                card.style.width = rect.width + 'px';
+                card.style.height = rect.height + 'px';
+                card.style.left = rect.left + 'px';
+                card.style.top = rect.top + 'px';
+                card.style.margin = '0';
+
+                var dragState = {
+                    card: card,
+                    placeholder: placeholder,
+                    lastX: startX,
+                    lastTime: Date.now(),
+                    animating: false // FLIP 动画进行中时跳过新的占位符移动
+                };
+
+                function onMove(ev) {
+                    ev.preventDefault();
+                    // 速度追踪（用于倾斜效果）
+                    var now = Date.now();
+                    var dt = Math.max(now - dragState.lastTime, 1);
+                    var vx = (ev.clientX - dragState.lastX) / dt; // px/ms
+                    dragState.lastX = ev.clientX;
+                    dragState.lastTime = now;
+
+                    // 卡片跟随指针
+                    dragState.card.style.left = (ev.clientX - rect.width / 2) + 'px';
+                    dragState.card.style.top = (ev.clientY - rect.height / 2) + 'px';
+
+                    // 倾斜效果：速度越快倾斜越大，上限 ±3°（缓动平滑）
+                    var targetTilt = Math.max(-3, Math.min(3, vx * 8));
+                    var prevTilt = parseFloat(dragState.card.dataset.tilt) || 0;
+                    var tilt = prevTilt + (targetTilt - prevTilt) * 0.3; // 低通滤波，减少抖动
+                    dragState.card.dataset.tilt = tilt;
+                    var scale = 1.08;
+                    dragState.card.style.transform = 'scale(' + scale + ') rotate(' + tilt + 'deg)';
+
+                    // 检测目标位置：遍历 grid 子元素，找到指针下方的卡片
+                    var children = Array.prototype.slice.call(grid.children);
+                    var phIdx = children.indexOf(dragState.placeholder);
+                    for (var i = 0; i < children.length; i++) {
+                        if (children[i] === dragState.placeholder) continue;
+                        var r = children[i].getBoundingClientRect();
+                        if (ev.clientX >= r.left && ev.clientX <= r.right &&
+                            ev.clientY >= r.top && ev.clientY <= r.bottom) {
+                            var targetIdx = i;
+                            // FLIP 动画进行中时跳过，避免快速滑动导致连续触发抖动
+                            if (dragState.animating) break;
+                            dragState.animating = true;
+                            // FLIP：记录所有卡片旧位置
+                            var cards = Array.prototype.filter.call(grid.children, function (c) {
+                                return c !== dragState.placeholder && c !== dragState.card;
+                            });
+                            var oldPos = {};
+                            for (var ci = 0; ci < cards.length; ci++) {
+                                var cr = cards[ci].getBoundingClientRect();
+                                oldPos[cards[ci].dataset.id] = { left: cr.left, top: cr.top };
+                            }
+                            // DOM 移动占位符
+                            if (targetIdx < phIdx) {
+                                grid.insertBefore(dragState.placeholder, children[targetIdx]);
+                            } else {
+                                grid.insertBefore(dragState.placeholder, children[targetIdx + 1] || null);
+                            }
+                            // FLIP：计算位移并施加反向 transform
+                            for (var ci = 0; ci < cards.length; ci++) {
+                                var c = cards[ci];
+                                var old = oldPos[c.dataset.id];
+                                if (!old) continue;
+                                var nr = c.getBoundingClientRect();
+                                var dx = old.left - nr.left;
+                                var dy = old.top - nr.top;
+                                if (dx === 0 && dy === 0) continue;
+                                c.style.transition = 'none';
+                                c.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+                            }
+                            // 强制 reflow 后播放动画
+                            void grid.offsetHeight;
+                            for (var ci = 0; ci < cards.length; ci++) {
+                                cards[ci].style.transition = 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)';
+                                cards[ci].style.transform = '';
+                            }
+                            // 动画结束后解锁
+                            setTimeout(function () { dragState.animating = false; }, 260);
+                            break;
+                        }
+                    }
+                }
+
+                function onUp() {
+                    // 归位动画：spring easing 产生可见回弹
+                    var phRect = dragState.placeholder.getBoundingClientRect();
+                    // cubic-bezier(0.34, 1.3, 0.64, 1) 过冲 30%，回弹可见但不夸张
+                    var spring = 'left 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
+                                 'top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
+                                 'opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
+                                 'box-shadow 0.25s';
+                    dragState.card.style.transition = spring;
+                    dragState.card.style.left = phRect.left + 'px';
+                    dragState.card.style.top = phRect.top + 'px';
+                    dragState.card.style.opacity = '1';
+                    dragState.card.style.transform = '';
+                    dragState.card.style.boxShadow = '';
+
+                    setTimeout(function () {
+                        // 恢复卡片到 grid 中（保留 background-image，只清除拖拽样式）
+                        dragState.card.classList.remove('dragging');
+                        var s = dragState.card.style;
+                        s.position = ''; s.width = ''; s.height = '';
+                        s.left = ''; s.top = ''; s.margin = '';
+                        s.transition = ''; s.opacity = ''; s.transform = '';
+                        s.zIndex = ''; s.pointerEvents = ''; s.boxShadow = '';
+                        grid.insertBefore(dragState.card, dragState.placeholder);
+                        grid.removeChild(dragState.placeholder);
+
+                        // 清除 FLIP 残留的 transition/transform
+                        var allCards = grid.querySelectorAll('.local-thumb');
+                        for (var ci = 0; ci < allCards.length; ci++) {
+                            allCards[ci].style.transition = '';
+                            allCards[ci].style.transform = '';
+                        }
+
+                        // 从 DOM 顺序提取新 order 并持久化
+                        var newOrder = [];
+                        Array.prototype.forEach.call(grid.querySelectorAll('.local-thumb[data-id]'), function (c) {
+                            newOrder.push(c.dataset.id);
+                        });
+                        var oldOrder = loadOrder();
+                        if (newOrder.length === oldOrder.length &&
+                            newOrder.some(function (id, i) { return id !== oldOrder[i]; })) {
+                            saveOrder(newOrder);
+                            // 同步更新 preview_thumb，确保下个新标签页展示正确的下一张
+                            var idx = parseInt(localStorage.getItem(LS_KEY_LOCAL_INDEX)) || 0;
+                            var thumbs = loadThumbs();
+                            var nextId = newOrder[idx % newOrder.length];
+                            if (thumbs[nextId]) {
+                                try { localStorage.setItem(LS_KEY_PREVIEW_THUMB, thumbs[nextId]); } catch (ex) { }
+                            }
+                        }
+                    }, 300);
+
+                    document.removeEventListener('pointermove', onMove);
+                    document.removeEventListener('pointerup', onUp);
+                }
+
+                document.addEventListener('pointermove', onMove);
+                document.addEventListener('pointerup', onUp);
+            }, 300);
+
+            // 移动超阈值取消长按
+            function onCancelMove(ev) {
+                if (pressTimer && (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8)) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                    document.removeEventListener('pointermove', onCancelMove);
+                }
+            }
+
+            function onCancelUp() {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+                document.removeEventListener('pointermove', onCancelMove);
+                document.removeEventListener('pointerup', onCancelUp);
+            }
+
+            document.addEventListener('pointermove', onCancelMove);
+            document.addEventListener('pointerup', onCancelUp);
+        }
+
+        grid.addEventListener('pointerdown', onPointerDown);
+    }
+
+    /**
      * 渲染本地壁纸画廊：缩略图网格 + 添加按钮。
      *
      * WHY 上限 12 张：
@@ -1187,6 +1413,7 @@
 
         var grid = buildGalleryGrid(order, images, thumbs);
         gallery.appendChild(grid);
+        setupGalleryDrag(grid);
 
         // WHY: 上限 12 张 —— localStorage 缩略图占用空间，12 张已足够轮播多样性
         if (order.length < 12) {
