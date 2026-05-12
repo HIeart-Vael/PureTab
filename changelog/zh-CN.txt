@@ -1,5 +1,8 @@
 更新日志
 
+• v3.1.1
+  • 将 Bing API 切换为 Promise.any 竞速模式并添加 8 秒 AbortController 超时；更新全部 16 语言 README 以反映新的获取策略并补充 Promise.any/AbortController 延迟优化技术说明。
+
 • v3.1.0
   • 本地壁纸画廊：支持上传/删除/轮播多张本地壁纸，批量选择文件；代码重构（语义化命名、拆分长函数、设计注释）；优化设置与语言面板标题样式；完善多语言本地化；修复 CSP 移除 JSON API 域名。
 

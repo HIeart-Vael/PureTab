@@ -1,5 +1,9 @@
 # Changelog · 更新日志
 
+## v3.1.1
+并发 Bing API 请求：通过 `Promise.any` 同时发起两个端点请求，最快响应胜出；添加 8 秒 `AbortController` 超时机制，确保连接安全关闭；更新全部 16 语言 README，反映并发竞速模式并新增 `Promise.any` / `AbortController` 延迟优化技术说明。
+Concurrent Bing API requests: both endpoints fired simultaneously via `Promise.any`, fastest response wins; added 8-second `AbortController` timeout for clean connection teardown; updated all 16 READMEs to reflect concurrent race pattern and add `Promise.any`/`AbortController` latency techniques.
+
 ## v3.1.0
 本地壁纸画廊：支持上传/删除/轮播多张本地壁纸，批量选择文件；代码重构（语义化命名、拆分长函数、设计注释）；优化设置与语言面板标题样式；完善多语言本地化文本；修复 CSP 移除 JSON API 域名。
 Local wallpaper gallery: upload, delete, rotate multiple wallpapers with batch file selection; code refactoring (semantic naming, split functions, design comments); improved panel title styling; enhanced multi-language localization; fixed CSP to remove JSON API domains.

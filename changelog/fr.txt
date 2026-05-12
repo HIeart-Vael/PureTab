@@ -1,5 +1,8 @@
 Journal des modifications
 
+• v3.1.1
+  • Passage de l'API Bing en mode compétition avec Promise.any et timeout de 8s avec AbortController ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération et ajouter les techniques de latence Promise.any/AbortController.
+
 • v3.1.0
   • Galerie de fonds d'écran locaux : télécharger, supprimer, faire pivoter plusieurs fonds avec sélection par lot ; refactorisation du code (nommage sémantique, division des fonctions, commentaires de conception) ; amélioration des styles de titre des panneaux ; localisation multilingue enrichie ; CSP corrigé pour supprimer les domaines d'API JSON.
 

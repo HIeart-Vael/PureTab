@@ -1,5 +1,8 @@
 更新日誌
 
+• v3.1.1
+  • 將 Bing API 切換為 Promise.any 競速模式並添加 8 秒 AbortController 超時；更新全部 16 語言 README 以反映新的擷取策略並補充 Promise.any/AbortController 延遲優化技術說明。
+
 • v3.1.0
   • 本機桌布畫廊：支援上傳/刪除/輪播多張本機桌布，批次選擇檔案；程式碼重構（語義化命名、拆分長函式、設計註釋）；最佳化設定與語言面板標題樣式；完善多語言在地化文字；修復 CSP 移除 JSON API 域名。
 
