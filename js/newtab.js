@@ -97,8 +97,11 @@
        ================================================================ */
 
     /**
-     * 查找翻译文本的优先级链：
-     *   chrome.i18n（扩展模式）→ I18N 表当前语言 → I18N 表英语 → 原始 key
+     * 查找翻译文本。
+     *
+     * WHY 优先级链：
+     *   扩展模式下 chrome.i18n.getMessage 由浏览器原生提供，覆盖最全；
+     *   Web 模式走 I18N 表自维护翻译；英语兜底确保不会显示原始 key。
      */
     function t(key) {
         if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage) {
@@ -108,7 +111,13 @@
         return (I18N[currentLang] && I18N[currentLang][key]) || (I18N['en'] && I18N['en'][key]) || key;
     }
 
-    /** 探测浏览器语言，找 I18N 表中最佳匹配 */
+    /**
+     * 探测浏览器 UI 语言，返回 I18N 表中的最佳匹配。
+     *
+     * WHY 两级匹配：
+     *   精确匹配（如 zh-CN）优先，因为部分语言有地区变体（zh-TW vs zh-CN）；
+     *   主语言前缀兜底（zh-CN → zh），确保繁体浏览器也能命中简体翻译。
+     */
     function detectLang() {
         var browserLang = 'en';
         if (typeof chrome !== 'undefined' && chrome.i18n) browserLang = chrome.i18n.getUILanguage();
@@ -120,7 +129,13 @@
         return found || 'en';
     }
 
-    /** 用当前语言刷新页面上所有可见文本 */
+    /**
+     * 用当前语言刷新页面上所有可见文本。
+     *
+     * WHY 遍历所有 DOM 文本：
+     *   语言切换时整个 UI 必须即时刷新，不能有残留的旧语言文本。
+     *   包括 title、placeholder、按钮文字、设置标签等所有用户可见字符串。
+     */
     function updateLangUI() {
         document.title = t('extName');
         searchInput.placeholder = t('searchPlaceholder');
@@ -145,7 +160,13 @@
         renderLangPanel();
     }
 
-    /** 渲染语言选择面板的按钮列表 */
+    /**
+     * 渲染语言选择面板的按钮列表。
+     *
+     * WHY 每次都重建 DOM：
+     *   语言切换后旧按钮的文本需要全部更新，重建比逐个修改更可靠，
+     *   且语言列表只有 16 项，DOM 操作开销可忽略。
+     */
     function renderLangPanel() {
         document.querySelector('.lang-title').textContent = t('langPanelTitle');
         langOptions.innerHTML = '';
@@ -171,7 +192,14 @@
 
     var _dbConnection;
 
-    /** 获取（或创建并缓存）数据库连接 */
+    /**
+     * 获取（或创建并缓存）数据库连接。
+     *
+     * WHY 缓存连接：
+     *   IndexedDB.open 是异步操作，每次调用都有开销。
+     *   缓存连接后后续调用直接返回 Promise.resolve，零延迟。
+     *   onclose 回调清除缓存，确保意外断开后下次能重新建立连接。
+     */
     function openDB() {
         if (_dbConnection) return Promise.resolve(_dbConnection);
         return new Promise(function (resolve, reject) {
@@ -189,6 +217,13 @@
         });
     }
 
+    /**
+     * 向 IndexedDB 写入键值对。
+     *
+     * WHY 单 key 操作：
+     *   每张本地图片独立存储为 ptab_img_<id>，写入一张不影响其他图片。
+     *   写 blob 到 IDB 是保存流程的第一步——先落盘再更新 order，崩溃安全。
+     */
     function idbPut(key, value) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -200,6 +235,13 @@
         });
     }
 
+    /**
+     * 从 IndexedDB 读取键值对。
+     *
+     * WHY 返回 undefined 而非 null：
+     *   IDB 中不存在的 key 返回 undefined，调用方用 `!result` 判断即可，
+     *   与 localStorage 的 null 行为保持一致的真值检查逻辑。
+     */
     function idbGet(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -211,6 +253,13 @@
         });
     }
 
+    /**
+     * 从 IndexedDB 删除指定键。
+     *
+     * WHY 删除是保存流程的最后一步：
+     *   先从 order 中移除引用（不可达），再删 thumb，最后删 IDB blob。
+     *   任何一步崩溃都不会导致数据不一致——最多留下无害的孤儿 blob。
+     */
     function idbDelete(key) {
         return openDB().then(function (db) {
             return new Promise(function (resolve, reject) {
@@ -344,19 +393,48 @@
     // 本地图片 order 与缩略图（id 做钥匙）
     function imgKey(id) { return DB_KEY_IMG_PREFIX + id; }
 
+    /**
+     * 从 localStorage 读取本地图片 ID 顺序数组。
+     *
+     * WHY 返回空数组而非 null：
+     *   调用方直接访问 order.length，返回 null 会导致 TypeError。
+     *   JSON.parse 异常时也回退空数组，确保后续逻辑安全执行。
+     */
     function loadOrder() {
         try { return JSON.parse(localStorage.getItem(LS_KEY_IMG_ORDER) || '[]'); }
         catch (e) { return []; }
     }
+    /**
+     * 将本地图片 ID 顺序数组写入 localStorage。
+     *
+     * WHY 用 JSON.stringify：
+     *   localStorage 只能存字符串，数组必须序列化。
+     *   try-catch 兜底 quota 超限（缩略图 base64 可能撑满 5MB）。
+     */
     function saveOrder(order) {
         try { localStorage.setItem(LS_KEY_IMG_ORDER, JSON.stringify(order)); }
         catch (e) { /* quota */ }
     }
 
+    /**
+     * 从 localStorage 读取本地图片缩略图映射表。
+     *
+     * WHY 返回空对象而非 null：
+     *   调用方用 thumbs[id] 访问，null 会导致 TypeError。
+     *   空对象安全返回 undefined，与"无缩略图"语义一致。
+     */
     function loadThumbs() {
         try { return JSON.parse(localStorage.getItem(LS_KEY_IMG_THUMBS) || '{}'); }
         catch (e) { return {}; }
     }
+    /**
+     * 将本地图片缩略图映射表写入 localStorage。
+     *
+     * WHY 每次写整个对象：
+     *   缩略图映射是 `{id: "url(data:...)"}` 结构，
+     *   更新单个 key 需要先读再写，直接写整个对象更简单且原子。
+     *   try-catch 兜底 quota 超限。
+     */
     function saveThumbs(thumbs) {
         try { localStorage.setItem(LS_KEY_IMG_THUMBS, JSON.stringify(thumbs)); }
         catch (e) { /* quota */ }
@@ -366,13 +444,26 @@
        8. 壁纸 — Bing 每日壁纸获取与缓存
        ================================================================ */
 
-    /** 语言代码 → Bing 市场代码（部分语言无 Bing 直营市场，回退 en-US） */
+    /**
+     * 语言代码 → Bing 市场代码。
+     *
+     * WHY 回退 en-US：
+     *   部分语言（如 vi、pl）无 Bing 直营市场，用 en-US 确保 API 始终返回有效结果。
+     *   比返回空或报错更友好——用户至少能看到一张壁纸。
+     */
     function bingMkt(lang) {
         var map = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'en': 'en-US', 'ja': 'ja-JP', 'ko': 'ko-KR', 'fr': 'fr-FR', 'de': 'de-DE', 'es': 'es-ES', 'it': 'it-IT', 'pt': 'pt-BR', 'ru': 'ru-RU', 'ar': 'ar-SA', 'hi': 'hi-IN', 'tr': 'tr-TR', 'pl': 'pl-PL', 'vi': 'vi-VN' };
         return map[lang] || 'en-US';
     }
 
-    /** 获取 Bing JSON API → 返回图像直链。双端点并发竞速，取先响应的结果。返回 {url, api} */
+    /**
+     * 获取 Bing 每日壁纸的图像直链。双端点并发竞速，取先响应的结果。
+     *
+     * WHY 双端点竞速：
+     *   kaininx（Cloudflare Workers）海外更快，biturl 国内可直连。
+     *   不论用户在哪，Promise.any 总是取最先响应的结果，兼顾国内外网络环境。
+     *   8 秒 AbortController 超时确保慢端点不会拖累整体体验。
+     */
     function fetchBingUrl() {
         var mkt = bingMkt(currentLang);
         function tryFetch(url, api, timeout) {
@@ -396,7 +487,13 @@
         ]);
     }
 
-    /** CORS 方式下载图片 Blob（用于存入 IDB） */
+    /**
+     * CORS 方式下载图片 Blob（用于存入 IDB）。
+     *
+     * WHY 用 mode: 'cors'：
+     *   Bing 图片 CDN 支持 CORS 头，fetch 拿到的 Blob 可安全存入 IDB。
+     *   不设置 mode 时浏览器默认 same-origin，跨域请求会被拦截。
+     */
     function downloadBingBlob(url) {
         return fetch(url, { mode: 'cors' }).then(function (r) {
             if (!r.ok) throw new Error('fetch failed');
@@ -404,11 +501,25 @@
         });
     }
 
+    /**
+     * 从 localStorage 读取 Bing 壁纸元数据。
+     *
+     * WHY 返回空对象而非 null：
+     *   调用方直接访问 meta.src、meta.date 等属性，
+     *   返回 null 会导致 TypeError，空对象则安全返回 undefined。
+     */
     function loadBingMeta() {
         try { var raw = localStorage.getItem(LS_KEY_BING_META); return raw ? JSON.parse(raw) : {}; }
         catch (e) { return {}; }
     }
 
+    /**
+     * 将 Bing 壁纸元数据写入 localStorage。
+     *
+     * WHY 记录 src + date + provider：
+     *   src 用于去重（同 URL 跳过下载），date 用于新鲜度判断（非今天则重新获取），
+     *   provider 记录来源端点，便于调试哪个代理更快。
+     */
     function saveBingMeta(meta) {
         try { localStorage.setItem(LS_KEY_BING_META, JSON.stringify(meta)); }
         catch (e) { /* quota 满了 */ }
@@ -480,7 +591,14 @@
        优先级：本地壁纸轮播 > 今日 Bing 缓存 > Bing 网络获取
        ================================================================ */
 
-    /** 尝试加载本地壁纸（轮播）。成功返回 true，否则返回 false */
+    /**
+     * 尝试加载本地壁纸（轮播）。
+     *
+     * WHY 同步写入 preview_thumb：
+     *   快速开新标签时，index 已递增但 applyWallpaper 尚未完成，
+     *   若 preview_thumb 仍是旧值 → 预览错位。同步写入确保 index 与 preview_thumb 原子一致。
+     *   下一张缩略图缺失时主动移除 preview_thumb，强制走 fallback 路径，避免展示错误图片。
+     */
     function tryLoadLocalWallpaper(order) {
         if (!order || !order.length) return Promise.resolve(false);
 
@@ -529,7 +647,13 @@
         });
     }
 
-    /** 尝试用已缓存的 Bing blob 展示。成功返回 true，否则返回 false */
+    /**
+     * 尝试用已缓存的 Bing blob 展示壁纸。
+     *
+     * WHY 检查 meta.date：
+     *   Bing 每天换一次图，meta.date 非今天说明缓存已过期，
+     *   返回 false 让调用方走网络路径获取新图。
+     */
     function tryLoadCachedBing(bingBlob, meta, today) {
         if (!bingBlob || meta.date !== today) return Promise.resolve(false);
 
@@ -537,7 +661,14 @@
         return applyWallpaper(URL.createObjectURL(bingBlob), 'bing').then(function () { return true; });
     }
 
-    /** 从网络获取 Bing 壁纸（无可用缓存时的最终回退） */
+    /**
+     * 从网络获取 Bing 壁纸（无可用缓存时的最终回退）。
+     *
+     * WHY 用旧 URL 垫 back 层：
+     *   等待网络请求时，如果 back 层没有背景图，先把旧 URL 垫上去防止白屏。
+     *   preload.js 可能已经写入了缩略图，所以仅在 back 层为空时才写。
+     *   网络全挂时也回退到旧 URL，确保用户至少能看到一张图。
+     */
     function loadBingFromNetwork(meta, today) {
         currentMode = 'bing';
         wallpaperInfoEl.textContent = t('wpBing');
@@ -571,7 +702,11 @@
 
     /**
      * 主加载流程 —— 按优先级尝试三个来源。
-     * 并行读取 IDB（本地图片 + Bing blob），根据模式和历史决定用哪个。
+     *
+     * WHY 并行读 IDB：
+     *   本地图片和 Bing blob 都存在 IDB 中，并行读取比串行更快。
+     *   根据上次模式（ptab_mode）和缓存新鲜度决定走哪条路径，
+     *   所有路径最终都经过 applyWallpaper 的双图层过渡管线。
      */
     function loadWallpaper() {
         var lastMode = localStorage.getItem(LS_KEY_MODE) || 'bing';
@@ -603,20 +738,25 @@
        10. 壁纸 — 本地上传、删除与画廊
        ================================================================ */
 
+    /**
+     * 生成唯一 ID 字符串。
+     *
+     * WHY 时间戳 + 随机数：
+     *   时间戳（base-36）保证不同批次上传不冲突，
+     *   随机后缀防止同一毫秒内多次调用重复。
+     *   无外部依赖，比 UUID 库更轻量。
+     */
     function generateId() {
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
 
     /**
-     * 保存单张本地壁纸。
-     *
-     * @param {File} file - 用户选择的图片文件
-     * @param {boolean} show - true: 同时展示为当前壁纸并切到本地模式；false: 只存库
-     * @returns {Promise<boolean>} 是否保存成功
-     */
-    /**
      * 保存单张本地壁纸。先落 blob（IDB），再关联 order + thumb。
-     * 任何一步崩溃：blob 是孤儿，不参与轮播，下次会被忽略。
+     *
+     * WHY 先写 IDB 再写 localStorage：
+     *   blob 体积大，写 IDB 是耗时操作；order + thumb 体积小，写 localStorage 是同步的。
+     *   先落重数据再落轻数据——任何一步崩溃：blob 是孤儿，不参与轮播，安全忽略。
+     *   show=true 时同步设置 ptab_mode='local'，确保后续 applyWallpaper 正确识别模式。
      */
     function saveLocalImage(file, show) {
         var id = generateId();
@@ -654,7 +794,15 @@
         }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
     }
 
-    /** 删除单张本地壁纸。先切 order 引用，再删 thumb，最后删 IDB blob。 */
+    /**
+     * 删除单张本地壁纸。先切 order 引用，再删 thumb，最后删 IDB blob。
+     *
+     * WHY 三步删除顺序：
+     *   1. 从 order 移除 → 图片立即不可达（轮播跳过它）
+     *   2. 删 thumb → localStorage 释放空间
+     *   3. 删 IDB blob → 最后删重数据，即使崩溃也只是留下无害的孤儿 blob
+     *   最后一张删除时自动切回 Bing 模式，清理 index 和 preview_thumb。
+     */
     function deleteLocalImage(id) {
         var order = loadOrder();
         if (!order.length) return;
@@ -681,7 +829,14 @@
         }).catch(function (e) { warn('Local', 'delete blob failed: ' + (e && e.message)); });
     }
 
-    /** 重置为 Bing 模式。逐条删 IDB blob，再清 localStorage。 */
+    /**
+     * 重置为 Bing 模式。逐条删 IDB blob，再清 localStorage。
+     *
+     * WHY 逐条删除而非清空整个 store：
+     *   只删除 pab_img_* 前缀的 key，保留 ptab_bing_blob 不受影响。
+     *   Promise 链串行执行，避免并发写同一 store 导致事务冲突。
+     *   多张图片时弹确认框，防止误操作。
+     */
     function resetToBing() {
         var order = loadOrder();
         var count = order.length;
@@ -712,6 +867,14 @@
        11. UI — 设置面板与语言面板
        ================================================================ */
 
+    /**
+     * 打开设置面板。
+     *
+     * WHY 本地模式自动刷新画廊：
+     *   用户可能在面板关闭期间通过其他标签页修改了图片，
+     *   重新打开时刷新画廊确保显示最新状态。
+     *   Bing 模式则恢复显示上传/重置按钮。
+     */
     function openSettings() {
         if (isLangPanelOpen) closeLangPanel();
         if (isSettingsPanelOpen) return;
@@ -723,6 +886,13 @@
         else { uploadBtn.style.display = ''; resetBtn.style.display = ''; }
     }
 
+    /**
+     * 关闭设置面板。
+     *
+     * WHY 关闭时清理 blob URL：
+     *   画廊中的图片通过 blob URL 预览，关闭面板后不再需要。
+     *   及时 revoke 释放内存，防止长时间打开新标签页累积泄漏。
+     */
     function closeSettings() {
         if (!isSettingsPanelOpen) return;
         isSettingsPanelOpen = false;
@@ -731,6 +901,13 @@
         revokeGalleryUrls();
     }
 
+    /**
+     * 打开语言选择面板。
+     *
+     * WHY 与设置面板互斥：
+     *   两个面板都占据右上角区域，同时打开会重叠。
+     *   打开语言面板前先关闭设置面板，反之亦然。
+     */
     function openLangPanel() {
         if (isSettingsPanelOpen) closeSettings();
         if (isLangPanelOpen) return;
@@ -739,12 +916,26 @@
         clearTimeout(cornerHideTimer);
     }
 
+    /**
+     * 关闭语言选择面板。
+     *
+     * WHY 幂等设计：
+     *   多处调用（Escape、全局点击、打开设置面板）可能重复触发关闭，
+     *   幂等检查避免无意义的 DOM 操作和状态重置。
+     */
     function closeLangPanel() {
         if (!isLangPanelOpen) return;
         isLangPanelOpen = false;
         langPanel.classList.remove('active');
     }
 
+    /**
+     * 关闭所有面板。
+     *
+     * WHY 同时关闭两个：
+     *   Escape 键和全局点击场景下，用户意图是"回到干净的壁纸视图"，
+     *   不关心当前哪个面板是开的，全部关掉最符合直觉。
+     */
     function closeAll() { closeSettings(); closeLangPanel(); }
 
     /* ================================================================
@@ -754,11 +945,25 @@
     // 追踪画廊中创建的 blob URL，关闭画廊时必须清理，防止内存泄漏
     var _galleryBlobUrls = [];
 
+    /**
+     * 撤销所有画廊 blob URL，释放内存。
+     *
+     * WHY 必须在关闭画廊时调用：
+     *   blob URL 持有对 Blob 的引用，不 revoke 会导致 Blob 无法被 GC 回收。
+     *   用户可能反复开关设置面板，每次都要清理上次的 URL 再创建新的。
+     */
     function revokeGalleryUrls() {
         _galleryBlobUrls.forEach(function (url) { URL.revokeObjectURL(url); });
         _galleryBlobUrls = [];
     }
 
+    /**
+     * 隐藏本地壁纸画廊，恢复上传/重置按钮。
+     *
+     * WHY 恢复按钮显示：
+     *   画廊模式下上传/重置按钮被隐藏（由 renderLocalGallery 控制），
+     *   删除最后一张图片或重置为 Bing 时需要恢复这些按钮。
+     */
     function removeLocalGallery() {
         revokeGalleryUrls();
         var gallery = document.getElementById('localGallery');
@@ -767,6 +972,13 @@
         resetBtn.style.display = '';
     }
 
+    /**
+     * 从 IDB 并行加载所有本地图片，重新渲染画廊。
+     *
+     * WHY 并行读取：
+     *   最多 12 张图片，Promise.all 并行读 IDB 比串行快一个数量级。
+     *   渲染委托给 renderLocalGallery，此处只负责数据加载。
+     */
     function refreshLocalGallery() {
         if (currentMode !== 'local') return;
         var order = loadOrder();
@@ -778,7 +990,14 @@
         }).catch(function () { });
     }
 
-    /** 获取或创建画廊容器 DOM 元素 */
+    /**
+     * 获取或创建画廊容器 DOM 元素。
+     *
+     * WHY 复用而非重建：
+     *   画廊容器在整个会话中可能被多次打开/关闭，
+     *   复用已有 DOM 节点避免重复创建和插入，减少 GC 压力。
+     *   每次调用清空子元素，确保内容与当前数据同步。
+     */
     function ensureGalleryContainer() {
         var gallery = document.getElementById('localGallery');
         if (!gallery) {
@@ -793,7 +1012,14 @@
         return gallery;
     }
 
-    /** 构建缩略图网格，每张卡片含删除按钮 */
+    /**
+     * 构建缩略图网格，每张卡片含删除按钮。
+     *
+     * WHY 优先用 base64 缩略图：
+     *   ptab_img_thumbs 中的 base64 是预生成的，直接用无需解码，
+     *   比 blob URL 快且不占 IDB 事务。仅在缩略图缺失时回退到 blob URL。
+     *   回退创建的 blob URL 记入 _galleryUrls，关闭画廊时统一 revoke。
+     */
     function buildGalleryGrid(order, images, thumbs) {
         var grid = document.createElement('div');
         grid.className = 'local-gallery-grid';
@@ -827,6 +1053,14 @@
         return grid;
     }
 
+    /**
+     * 渲染本地壁纸画廊：缩略图网格 + 添加按钮。
+     *
+     * WHY 上限 12 张：
+     *   localStorage 缩略图占用空间（每张 ~20KB base64），12 张已足够轮播多样性。
+     *   超过上限时隐藏添加按钮，防止用户无感知地超出 quota。
+     *   添加按钮复用 fileInput 的 change 事件，通过 _keepGalleryOpen 标记保持面板打开。
+     */
     function renderLocalGallery(order, images, thumbs) {
         revokeGalleryUrls();
         var gallery = ensureGalleryContainer();
@@ -860,6 +1094,13 @@
          面板打开时始终保持可见，避免用户找不到关闭按钮。
        ================================================================ */
 
+    /**
+     * 淡入角落按钮。
+     *
+     * WHY 用 CSS class 而非直接操作 style：
+     *   .visible class 触发 CSS transition，动画由 GPU 合成层处理，
+     *   比 JS 逐帧修改 opacity 更流畅。class 切换也让状态可从 DOM 上读取。
+     */
     function showCorners() {
         settingsBtn.classList.add('visible');
         langBtn.classList.add('visible');
@@ -883,7 +1124,13 @@
         }, 400);
     }
 
-    /** 鼠标是否在右上角触发区域（宽 180px × 高 130px） */
+    /**
+     * 鼠标是否在右上角触发区域（宽 180px × 高 130px）。
+     *
+     * WHY 硬编码像素值：
+     *   角落按钮和面板的尺寸是固定的，像素值比百分比更精确，
+     *   避免在不同分辨率下触发区域过大或过小。
+     */
     function isNearTopRight(x, y) { return x > window.innerWidth - 180 && y < 130; }
 
     /**
@@ -898,6 +1145,13 @@
         return x > w * 0.3 && x < w * 0.7 && y > h * 0.42 && y < h * 0.58;
     }
 
+    /**
+     * 显示搜索栏。
+     *
+     * WHY 三种模式分别处理：
+     *   'never' 直接返回（不显示），'always' 立即显示（无需隐藏计时器），
+     *   'hover' 清除隐藏计时器后显示，确保鼠标快速移入时不会闪烁。
+     */
     function showSearch() {
         if (searchMode === 'never') return;
         if (searchMode === 'always') { searchBar.classList.add('visible'); return; }
@@ -925,6 +1179,13 @@
        14. UI — 搜索设置控件
        ================================================================ */
 
+    /**
+     * 设置搜索栏显示模式。
+     *
+     * WHY 'always' 模式用 class toggle：
+     *   always 模式下搜索栏常驻显示，toggle class 确保状态与模式一致。
+     *   hover/never 模式的显隐由鼠标事件和 showSearch/hideSearch 控制。
+     */
     function applySearchMode(mode) {
         searchMode = mode;
         searchBar.classList.toggle('visible', mode === 'always');
@@ -944,6 +1205,13 @@
         opacityNumInput.value = currentOpacity;
     }
 
+    /**
+     * 切换搜索引擎并更新图标和下拉框。
+     *
+     * WHY 同时更新三处：
+     *   engineIcon（页面可见图标）、engineSelect（设置面板下拉框）、
+     *   saveSettings（持久化），确保 UI 状态与存储状态一致。
+     */
     function applyEngine(engine) {
         currentEngine = engine;
         engineIndex = ENGINES.indexOf(engine);
@@ -952,17 +1220,39 @@
         saveSettings();
     }
 
+    /**
+     * 轮换到下一个搜索引擎。
+     *
+     * WHY 用取模循环：
+     *   ENGINES 数组长度固定（4），取模确保到达末尾后自动回到第一个，
+     *   用户点击图标即可无限循环切换，无需打开设置面板。
+     */
     function nextEngine() {
         engineIndex = (engineIndex + 1) % ENGINES.length;
         applyEngine(ENGINES[engineIndex]);
     }
 
+    /**
+     * 持久化搜索相关设置到 localStorage。
+     *
+     * WHY 三个设置一次写入：
+     *   searchMode、opacity、engine 三个值总是一起保存，
+     *   批量写入减少 localStorage 的同步 I/O 次数。
+     */
     function saveSettings() {
         localStorage.setItem(LS_KEY_SEARCH_MODE, searchMode);
         localStorage.setItem(LS_KEY_ICON_OPACITY, currentOpacity);
         localStorage.setItem(LS_KEY_SEARCH_ENGINE, currentEngine);
     }
 
+    /**
+     * 从 localStorage 恢复所有搜索相关设置。
+     *
+     * WHY 启动时调用一次：
+     *   设置值在会话期间不会被外部修改（单标签页独占），
+     *   启动时恢复一次即可，后续通过 apply* 函数实时更新。
+     *   缺失值使用默认值（always / 0.45 / google），确保首次使用体验一致。
+     */
     function loadSettings() {
         var mode = localStorage.getItem(LS_KEY_SEARCH_MODE) || 'always';
         var opacity = parseFloat(localStorage.getItem(LS_KEY_ICON_OPACITY)) || 0.45;
@@ -990,7 +1280,14 @@
         baidu: '<svg height="1em" viewBox="0 0 24 24" width="1em"><path d="M8.859 11.735c1.017-1.71 4.059-3.083 6.202.286 1.579 2.284 4.284 4.397 4.284 4.397s2.027 1.601.73 4.684c-1.24 2.956-5.64 1.607-6.005 1.49l-.024-.009s-1.746-.568-3.776-.112c-2.026.458-3.773.286-3.773.286l-.045-.001c-.328-.01-2.38-.187-3.001-2.968-.675-3.028 2.365-4.687 2.592-4.968.226-.288 1.802-1.37 2.816-3.085zm.986 1.738v2.032h-1.64s-1.64.138-2.213 2.014c-.2 1.252.177 1.99.242 2.148.067.157.596 1.073 1.927 1.342h3.078v-7.514l-1.394-.022zm3.588 2.191l-1.44.024v3.956s.064.985 1.44 1.344h3.541v-5.3h-1.528v3.979h-1.46s-.466-.068-.553-.447v-3.556zM9.82 16.715v3.06H8.58s-.863-.045-1.126-1.049c-.136-.445.02-.959.088-1.16.063-.203.353-.671.951-.85H9.82zm9.525-9.036c2.086 0 2.646 2.06 2.646 2.742 0 .688.284 3.597-2.309 3.655-2.595.057-2.704-1.77-2.704-3.08 0-1.374.277-3.317 2.367-3.317zM4.24 6.08c1.523-.135 2.645 1.55 2.762 2.513.07.625.393 3.486-1.975 4-2.364.515-3.244-2.249-2.984-3.544 0 0 .28-2.797 2.197-2.969zm8.847-1.483c.14-1.31 1.69-3.316 2.931-3.028 1.236.285 2.367 1.944 2.137 3.37-.224 1.428-1.345 3.313-3.095 3.082-1.748-.226-2.143-1.823-1.973-3.424zM9.425 1c1.307 0 2.364 1.519 2.364 3.398 0 1.879-1.057 3.4-2.364 3.4s-2.367-1.521-2.367-3.4C7.058 2.518 8.118 1 9.425 1z" fill="#2932E1"/></svg>'
     };
 
-    /** Web 模式的搜索行为 —— 在新标签页打开对应引擎的搜索结果 */
+    /**
+     * Web 模式的搜索行为 —— 在新标签页打开对应引擎的搜索结果。
+     *
+     * WHY 用 _self 而非 _blank：
+     *   新标签页本身就是搜索结果页，用 _self 直接替换当前页面，
+     *   避免用户需要手动关闭空的新标签页。
+     *   扩展模式下此函数会被 setupExtensionMode 覆盖为 chrome.search.query。
+     */
     var doSearch = function (query) {
         if (!query.trim()) return;
         var urls = { google: 'https://www.google.com/search?q=', bing: 'https://www.bing.com/search?q=', baidu: 'https://www.baidu.com/s?wd=', duckduckgo: 'https://duckduckgo.com/?q=' };
@@ -1007,6 +1304,14 @@
          permission manifest 中的 "search" 权限也是为此 API 必需的。
        ================================================================ */
 
+    /**
+     * 配置扩展模式：覆盖搜索行为，隐藏引擎选择器。
+     *
+     * WHY 覆盖 doSearch 而非条件分支：
+     *   启动时一次性覆盖函数引用，后续调用无需每次检查 IS_EXTENSION，
+     *   消除运行时的条件判断开销。引擎图标改为静态放大镜，
+     *   pointer-events: none 防止用户点击，比隐藏更直观。
+     */
     function setupExtensionMode() {
         doSearch = function (query) {
             if (!query.trim()) return;
@@ -1035,6 +1340,14 @@
     // 标记画廊 "+" 按钮触发的上传（保持面板打开）
     var _keepGalleryOpen = false;
 
+    /**
+     * 绑定所有事件监听器。
+     *
+     * WHY 集中管理：
+     *   方便一目了然地看到整个页面的交互逻辑，
+     *   避免绑定代码散落在各功能函数中难以追踪。
+     *   包括角落按钮、搜索栏、键盘快捷键、全局点击、面板交互、设置控件。
+     */
     function bindEvents() {
         // --- 角落按钮：点击与悬停 ---
 
@@ -1183,7 +1496,14 @@
         1: migrate_1_to_2
     };
 
-    /** v1→v2: 统一 ptab_ 前缀 + 数组存储拆为单条 IDB key */
+    /**
+     * v1→v2 迁移：统一 ptab_ 前缀 + 数组存储拆为单条 IDB key。
+     *
+     * WHY 两阶段事务：
+     *   事务 1 只做非破坏性操作（put 新 key），不删旧 key。
+     *   事务 2 在 localStorage 已落地后才删除旧 IDB key。
+     *   任何一步崩溃都能安全重试——重命名是幂等的，旧 key 存在才删。
+     */
     function migrate_1_to_2() {
         // WHY: v1 旧键名在迁移前缓存，重命名后仍可用
         var oldThumbs = [];
@@ -1268,6 +1588,14 @@
         });
     }
 
+    /**
+     * 执行 localStorage/IDB 存储迁移。
+     *
+     * WHY 链式迁移：
+     *   每次改键名只需在 MIGRATIONS 加一个版本号对应的函数即可。
+     *   新用户（stored===0）直接写版本号，不走迁移，零开销。
+     *   老用户从旧版本号依次执行到 LS_VERSION，确保每一步都可安全重试。
+     */
     function migrateStorage() {
         var stored = parseInt(localStorage.getItem(LS_KEY_VERSION)) || 0;
         if (stored >= LS_VERSION) return Promise.resolve();
@@ -1299,6 +1627,14 @@
        19. 启动引导
        ================================================================ */
 
+    /**
+     * 启动引导。
+     *
+     * WHY 先迁移再加载壁纸：
+     *   迁移可能改变 localStorage 键名（如 bing_thumb → ptab_bing_thumb），
+     *   必须在 loadWallpaper 读取之前完成，否则读到空值导致白屏。
+     *   扩展模式检测放在最后，确保所有基础功能已就绪再覆盖搜索行为。
+     */
     function init() {
         migrateStorage().catch(function (e) {
             warn('Init', 'migration failed, continuing: ' + e.message);
