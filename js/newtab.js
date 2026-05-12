@@ -5,8 +5,8 @@
        1. 常量
        ================================================================ */
 
-    var BING_PRIMARY = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
-    var BING_FALLBACK = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
+    var BING_PRIMARY = function (mkt) { return 'https://bing.kaininx.workers.dev/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
+    var BING_FALLBACK = function (mkt) { return 'https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt=' + mkt; };
 
     // *** localStorage / IndexedDB 的 key 名 —— 任何改动都会破坏已部署版本 ***
     var DB_NAME = 'PlainTab';
@@ -320,11 +320,14 @@
         return map[lang] || 'en-US';
     }
 
-    /** 获取 Bing JSON API → 返回图像直链。先试主 API，失败再试备用。返回 {url, api} */
+    /** 获取 Bing JSON API → 返回图像直链。双端点并发竞速，取先响应的结果。返回 {url, api} */
     function fetchBingUrl() {
         var mkt = bingMkt(currentLang);
-        function tryFetch(url, api) {
-            return fetch(url).then(function (r) {
+        function tryFetch(url, api, timeout) {
+            var ctrl = new AbortController();
+            var timer = setTimeout(function () { ctrl.abort(); }, timeout);
+            return fetch(url, { signal: ctrl.signal }).then(function (r) {
+                clearTimeout(timer);
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             }).then(function (data) {
@@ -332,12 +335,13 @@
                 throw new Error('no url in response');
             });
         }
-        // WHY: Date.now() 作为 cache-buster，防止浏览器/CDN 缓存过期响应
-        var primary = BING_PRIMARY(mkt) + '&t=' + Date.now();
-        return tryFetch(primary, 'primary').catch(function () {
-            var fallback = BING_FALLBACK(mkt) + '&t=' + Date.now();
-            return tryFetch(fallback, 'fallback');
-        });
+        // WHY: 同时并发请求两个端点，Promise.any 取最先响应的结果。
+        // kaininx（Cloudflare Workers）海外更快，biturl 国内可直连——不论在哪，总是先到先用。
+        var t = '&t=' + Date.now();
+        return Promise.any([
+            tryFetch(BING_PRIMARY(mkt) + t, 'primary', 8000),
+            tryFetch(BING_FALLBACK(mkt) + t, 'fallback', 8000)
+        ]);
     }
 
     /** CORS 方式下载图片 Blob（用于存入 IDB） */
