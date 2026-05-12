@@ -1130,7 +1130,7 @@
             wallpaperInfoEl.parentNode.insertBefore(gallery, uploadBtn);
         }
         // 清空旧内容
-        while (gallery.firstChild) gallery.removeChild(gallery.firstChild);
+        gallery.replaceChildren();
         gallery.style.display = 'block';
         return gallery;
     }
