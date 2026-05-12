@@ -40,6 +40,9 @@
     // 追踪当前壁纸的 blob URL，用于在切换壁纸时 revoke 旧 URL 释放内存
     var _currentWallpaperBlobUrl = null;
 
+    // ptab_img_thumbs 的内存缓存，避免每次 loadThumbs() 重新解析 300-420 KB 的 JSON
+    var _thumbsCache = null;
+
     /* ================================================================
        2. 运行环境
        ================================================================ */
@@ -458,8 +461,10 @@
      *   空对象安全返回 undefined，与"无缩略图"语义一致。
      */
     function loadThumbs() {
-        try { return JSON.parse(localStorage.getItem(LS_KEY_IMG_THUMBS) || '{}'); }
-        catch (e) { return {}; }
+        if (_thumbsCache !== null) return _thumbsCache;
+        try { _thumbsCache = JSON.parse(localStorage.getItem(LS_KEY_IMG_THUMBS) || '{}'); }
+        catch (e) { _thumbsCache = {}; }
+        return _thumbsCache;
     }
     /**
      * 将本地图片缩略图映射表写入 localStorage。
@@ -472,6 +477,7 @@
     function saveThumbs(thumbs) {
         try { localStorage.setItem(LS_KEY_IMG_THUMBS, JSON.stringify(thumbs)); }
         catch (e) { /* quota */ }
+        _thumbsCache = thumbs;
     }
 
     /* ================================================================
@@ -881,6 +887,7 @@
         localStorage.removeItem(LS_KEY_BING_THUMB);
         localStorage.removeItem(LS_KEY_PREVIEW_THUMB);
         localStorage.removeItem(LS_KEY_IMG_THUMBS);
+        _thumbsCache = null;
         localStorage.removeItem(LS_KEY_IMG_ORDER);
         localStorage.removeItem(LS_KEY_LOCAL_INDEX);
         localStorage.setItem(LS_KEY_MODE, 'bing');
