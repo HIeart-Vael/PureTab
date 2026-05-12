@@ -1837,7 +1837,13 @@
             saveSettings();
         });
         engineSelect.addEventListener('change', function () { applyEngine(engineSelect.value); });
-        resetAdvancedBtn.addEventListener('click', function () { applySearchMode(DEFAULT_SEARCH_MODE); searchModeSelect.value = DEFAULT_SEARCH_MODE; applyEngine(DEFAULT_ENGINE); applyOpacity(DEFAULT_OPACITY); saveSettings(); });
+        resetAdvancedBtn.addEventListener('click', function () {
+            applySearchMode(DEFAULT_SEARCH_MODE);
+            searchModeSelect.value = DEFAULT_SEARCH_MODE;
+            applyOpacity(DEFAULT_OPACITY);
+            if (!IS_EXTENSION) applyEngine(DEFAULT_ENGINE);
+            else saveSettings(); // 扩展模式下只需保存 searchMode 和 opacity
+        });
 
         /**
          * WHY 点击搜索引擎图标会轮换引擎：
