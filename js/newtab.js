@@ -37,6 +37,9 @@
     var log = function (tag, msg) { console.log('[' + tag + '] ' + msg); };
     var warn = function (tag, msg) { console.warn('[' + tag + '] ' + msg); };
 
+    // 追踪当前壁纸的 blob URL，用于在切换壁纸时 revoke 旧 URL 释放内存
+    var _currentWallpaperBlobUrl = null;
+
     /* ================================================================
        2. 运行环境
        ================================================================ */
@@ -307,15 +310,29 @@
     }
 
     /**
-     * 完整展示管线：预加载 → front 层淡入 → 稳定到 back 层 → 生成缩略图
+     * 应用壁纸并执行双层交叉淡入淡出过渡。
      *
-     * WHY 使用两次 requestAnimationFrame：
-     *   第一次 rAF 确保 DOM 在设置 backgroundImage 后才开始计算样式；
-     *   第二次 rAF 确保浏览器已应用 backgroundImage，再添加 CSS transition 类
-     *   才能触发淡入动画。跳过其中任意一步都会导致过渡不生效。
+     * WHY 使用 front/back 双层结构：
+     *   浏览器对 background-image 的切换没有原生过渡动画，
+     *   所以用两层 div 叠放：front 层淡入新壁纸，过渡完成后
+     *   将新壁纸同步到 back 层，再清空 front——视觉上形成平滑切换。
+     *
+     * WHY Blob URL 在过渡完成后才 revoke：
+     *   过渡期间 back 层可能仍在显示旧 URL 对应的图片。
+     *   过渡完成后，back 层已持有新 URL，front 层已清空，
+     *   旧 URL 不再被任何 DOM 元素引用，此时释放才是安全的。
+     *   此外，preloadImage 已将图片解码为位图，Image 对象
+     *   的内部数据不依赖 blob URL 字符串，revoke 不影响
+     *   后续 generateThumbnail 对同一 Image 的复用。
+     *
+     * @param {string} url  - 壁纸图片 URL（可以是 https:// 或 blob:）
+     * @param {string} mode - 壁纸来源模式：'bing' | 'local'
+     * @returns {Promise<string|null>} 缩略图 data URL 或 null
      */
     function applyWallpaper(url, mode) {
         var preloadedImg = null;
+        var isBlobUrl = url.indexOf('blob:') === 0;
+
         return preloadImage(url).then(function (img) {
             preloadedImg = img;
             wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
@@ -333,8 +350,26 @@
                 });
             });
         }).then(function () {
+            // ── Blob URL 生命周期管理 ──
+            // 过渡完成：back 层已持有新 URL，front 层已清空，
+            // 旧 URL 不再被 DOM 引用，可以安全释放。
+            if (isBlobUrl) {
+                var oldUrl = _currentWallpaperBlobUrl;
+                _currentWallpaperBlobUrl = url;
+                if (oldUrl && oldUrl !== url) {
+                    try { URL.revokeObjectURL(oldUrl); } catch (e) { /* already revoked */ }
+                }
+            } else {
+                // 非 Blob URL 切入时，若之前持有 Blob URL 也需释放
+                if (_currentWallpaperBlobUrl) {
+                    try { URL.revokeObjectURL(_currentWallpaperBlobUrl); } catch (e) { /* already revoked */ }
+                    _currentWallpaperBlobUrl = null;
+                }
+            }
+
             currentMode = mode;
             wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
+
             // ★ 复用 preloadImage 已加载的 Image 对象，避免二次加载 + 二次解码
             return generateThumbnail(preloadedImg).then(function (thumb) {
                 if (thumb) {
@@ -349,7 +384,6 @@
             });
         });
     }
-
     /**
      * 生成缩略图（纯计算，不写 localStorage）。
      * 调用方根据 mode 决定是否持久化到 ptab_bing_thumb。
@@ -625,7 +659,7 @@
                 try { localStorage.setItem(LS_KEY_PREVIEW_THUMB, previewThumbs[nextId]); } catch (e) { /* quota */ }
             } else {
                 // 下一张缩略图尚未生成，移除 preview_thumb 强制走 fallback 路径，避免展示错误图片
-                try { localStorage.removeItem(LS_KEY_PREVIEW_THUMB); } catch (e) {}
+                try { localStorage.removeItem(LS_KEY_PREVIEW_THUMB); } catch (e) { }
             }
 
             log('Local', 'image ' + (idx + 1) + '/' + order.length + (img.name ? '  ·  ' + img.name : ''));
