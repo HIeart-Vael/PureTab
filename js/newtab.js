@@ -1143,6 +1143,7 @@
      *   比 JS 逐帧修改 opacity 更流畅。class 切换也让状态可从 DOM 上读取。
      */
     function showCorners() {
+        if (settingsBtn.classList.contains('visible')) return;
         settingsBtn.classList.add('visible');
         langBtn.classList.add('visible');
     }
@@ -1195,6 +1196,7 @@
      */
     function showSearch() {
         if (searchMode === 'never') return;
+        if (searchBar.classList.contains('visible')) return;
         if (searchMode === 'always') { searchBar.classList.add('visible'); return; }
         clearTimeout(searchHideTimer);
         searchBar.classList.add('visible');
@@ -1408,11 +1410,22 @@
 
         // --- 全局鼠标跟踪 ---
 
+        // WHY rAF 节流：mousemove 可达 120+ Hz，rAF 限制到帧率（60 Hz），
+        // 避免每像素移动都执行位置检查和 DOM 操作。
+        // 用模块变量缓存最新坐标，因为 rAF 回调时事件对象已被复用。
+        var _lastMouseX = 0, _lastMouseY = 0, _mouseRafPending = false;
         document.addEventListener('mousemove', function (e) {
-            if (isNearTopRight(e.clientX, e.clientY)) showCorners();
-            else if (!isMouseInCornerZone && !isSettingsPanelOpen && !isLangPanelOpen) hideCorners();
-            if (isInCenter(e.clientX, e.clientY)) showSearch();
-            else hideSearch();
+            _lastMouseX = e.clientX;
+            _lastMouseY = e.clientY;
+            if (_mouseRafPending) return;
+            _mouseRafPending = true;
+            requestAnimationFrame(function () {
+                _mouseRafPending = false;
+                if (isNearTopRight(_lastMouseX, _lastMouseY)) showCorners();
+                else if (!isMouseInCornerZone && !isSettingsPanelOpen && !isLangPanelOpen) hideCorners();
+                if (isInCenter(_lastMouseX, _lastMouseY)) showSearch();
+                else hideSearch();
+            });
         });
 
         // --- 搜索栏 ---
