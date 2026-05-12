@@ -563,15 +563,15 @@
      * WHY 双端点竞速：
      *   kaininx（Cloudflare Workers）海外更快，biturl 国内可直连。
      *   不论用户在哪，Promise.any 总是取最先响应的结果，兼顾国内外网络环境。
-     *   8 秒 AbortController 超时确保慢端点不会拖累整体体验。
+     *   8 秒超时确保慢端点不会拖累整体体验。
+     *   AbortSignal.any 合并超时信号与竞速信号，快端点返回后立即 abort 慢端点。
      */
     function fetchBingUrl() {
         var mkt = bingMkt(currentLang);
+        var shared = new AbortController();
         function tryFetch(url, api, timeout) {
-            var ctrl = new AbortController();
-            var timer = setTimeout(function () { ctrl.abort(); }, timeout);
-            return fetch(url, { signal: ctrl.signal }).then(function (r) {
-                clearTimeout(timer);
+            var signal = AbortSignal.any([shared.signal, AbortSignal.timeout(timeout)]);
+            return fetch(url, { signal: signal }).then(function (r) {
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.json();
             }).then(function (data) {
@@ -585,7 +585,7 @@
         return Promise.any([
             tryFetch(BING_PRIMARY(mkt) + t, 'primary', 8000),
             tryFetch(BING_FALLBACK(mkt) + t, 'fallback', 8000)
-        ]);
+        ]).finally(function () { shared.abort(); });
     }
 
     /**
