@@ -442,7 +442,10 @@
             canvas.height = Math.floor(img.height * scale);
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            return 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
+            var thumb = 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
+            canvas.width = 0;
+            canvas.height = 0;
+            return thumb;
         }
 
         // ★ 传入已加载的 Image 对象 → 零额外 IO，同步生成缩略图
@@ -454,7 +457,7 @@
         return new Promise(function (resolve) {
             var img = new Image();
             img.crossOrigin = 'anonymous';
-            img.onload = function () { resolve(processImage(img)); };
+            img.onload = function () { var r = processImage(img); img.src = ''; resolve(r); };
             img.onerror = function () { resolve(null); };
             img.src = source;
         });
