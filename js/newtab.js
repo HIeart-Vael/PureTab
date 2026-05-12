@@ -27,6 +27,7 @@
     var LS_KEY_IMG_THUMBS = 'ptab_img_thumbs';
     var LS_KEY_LOCAL_INDEX = 'ptab_local_index';
     var LS_KEY_PREVIEW_THUMB = 'ptab_preview_thumb';
+    var LS_KEY_IMG_META = 'ptab_img_meta';
 
     var DB_NAME = 'PlainTab';
     var DB_STORE_NAME = 'wallpaper';
@@ -480,6 +481,34 @@
         _thumbsCache = thumbs;
     }
 
+    // ptab_img_meta 的内存缓存，与 _thumbsCache 相同模式
+    var _metaCache = null;
+
+    /**
+     * 读取本地图片元数据映射表（name, size）。
+     *
+     * WHY 内存缓存：
+     *   与 loadThumbs 同理，meta JSON 体积小（~1KB）但读取频繁，
+     *   首次解析后缓存，后续调用直接返回引用。
+     */
+    function loadMeta() {
+        if (_metaCache !== null) return _metaCache;
+        try { _metaCache = JSON.parse(localStorage.getItem(LS_KEY_IMG_META) || '{}'); }
+        catch (e) { _metaCache = {}; }
+        return _metaCache;
+    }
+
+    /**
+     * 将本地图片元数据映射表写入 localStorage。
+     *
+     * WHY 每次写整个对象：
+     *   与 saveThumbs 同理，直接写整个对象更简单且原子。
+     */
+    function saveMeta(meta) {
+        try { localStorage.setItem(LS_KEY_IMG_META, JSON.stringify(meta)); } catch (e) { }
+        _metaCache = meta;
+    }
+
     /* ================================================================
        8. 壁纸 — Bing 每日壁纸获取与缓存
        ================================================================ */
@@ -820,6 +849,10 @@
                 saveOrder(order);
                 saveThumbs(thumbs);
 
+                var meta = loadMeta();
+                meta[id] = { name: file.name || '', size: file.size || 0 };
+                saveMeta(meta);
+
                 // ★ 更新 preview_thumb：下一个新标签页将展示 order[currentIndex]
                 if (show && order.length) {
                     var curIdx = (parseInt(localStorage.getItem(LS_KEY_LOCAL_INDEX)) || 0) % order.length;
@@ -853,6 +886,10 @@
         var thumbs = loadThumbs();
         delete thumbs[id];
         saveThumbs(thumbs);
+
+        var meta = loadMeta();
+        delete meta[id];
+        saveMeta(meta);
 
         if (newOrder.length === 0) {
             localStorage.removeItem(LS_KEY_LOCAL_INDEX);
@@ -888,6 +925,8 @@
         localStorage.removeItem(LS_KEY_PREVIEW_THUMB);
         localStorage.removeItem(LS_KEY_IMG_THUMBS);
         _thumbsCache = null;
+        localStorage.removeItem(LS_KEY_IMG_META);
+        _metaCache = null;
         localStorage.removeItem(LS_KEY_IMG_ORDER);
         localStorage.removeItem(LS_KEY_LOCAL_INDEX);
         localStorage.setItem(LS_KEY_MODE, 'bing');
@@ -1014,20 +1053,42 @@
     }
 
     /**
-     * 从 IDB 并行加载所有本地图片，重新渲染画廊。
+     * 从缓存或 IDB 加载本地图片元数据，重新渲染画廊。
      *
-     * WHY 并行读取：
-     *   最多 12 张图片，Promise.all 并行读 IDB 比串行快一个数量级。
-     *   渲染委托给 renderLocalGallery，此处只负责数据加载。
+     * WHY 优先读 localStorage 元数据缓存：
+     *   画廊只需要 .name（tooltip）和 .blob（缩略图缺失时的 fallback），
+     *   而 IDB 中存储的是完整 blob（12 张 1920×1080 可达 50MB+）。
+     *   ptab_img_meta 缓存只存 {name, size}（~1KB），常见路径零 IDB 读取。
+     *   首次打开或缓存缺失时 fallback 到 IDB 全量读取，并回填缓存。
      */
     function refreshLocalGallery() {
         if (currentMode !== 'local') return;
         var order = loadOrder();
         if (!order.length) return;
-        // 并行读取所有图片元数据（用于名称 tooltip + blob URL 回退）
+        var thumbs = loadThumbs();
+        var meta = loadMeta();
+
+        // 快速路径：所有图片都有缓存的元数据和缩略图 → 零 IDB 读取
+        var allCached = order.every(function (id) { return meta[id] && thumbs[id]; });
+        if (allCached) {
+            renderLocalGallery(order, order.map(function (id) { return meta[id]; }), thumbs);
+            return;
+        }
+
+        // 慢速路径：有缺失时 fallback 到 IDB 全量读取
         var reads = order.map(function (id) { return idbGet(imgKey(id)); });
         Promise.all(reads).then(function (images) {
-            renderLocalGallery(order, images, loadThumbs());
+            // 顺便回填缓存，下次就走快速路径
+            var m = loadMeta();
+            var changed = false;
+            images.forEach(function (img, i) {
+                if (img && !m[order[i]]) {
+                    m[order[i]] = { name: img.name || '', size: img.size || 0 };
+                    changed = true;
+                }
+            });
+            if (changed) saveMeta(m);
+            renderLocalGallery(order, images, thumbs);
         }).catch(function () { });
     }
 
@@ -1071,9 +1132,9 @@
 
             // 优先用预生成的 base64 缩略图（localStorage），缺失时回退到 blob URL
             var bg = thumbs[id];
-            var img = images[i];
-            if (!bg && img && img.blob && img.blob.size > 0) {
-                var url = URL.createObjectURL(img.blob);
+            var imgMeta = images[i];
+            if (!bg && imgMeta && imgMeta.blob && imgMeta.blob.size > 0) {
+                var url = URL.createObjectURL(imgMeta.blob);
                 _galleryBlobUrls.push(url);
                 bg = 'url(' + url + ')';
             }
@@ -1081,7 +1142,7 @@
 
             var delBtn = document.createElement('button');
             delBtn.className = 'local-thumb-del';
-            delBtn.title = t('deleteImage') + (img && img.name ? ': ' + img.name : '');
+            delBtn.title = t('deleteImage') + (imgMeta && imgMeta.name ? ': ' + imgMeta.name : '');
             delBtn.setAttribute('data-id', id);
             delBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
