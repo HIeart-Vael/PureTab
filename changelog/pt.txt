@@ -1,5 +1,11 @@
 Registro de alterações
 
+• v3.1.0
+  • Galeria de papéis de parede locais: enviar, excluir, rotacionar vários papéis de parede com seleção em lote; refatoração de código (nomes semânticos, divisão de funções, comentários de design); melhoria nos estilos de títulos dos painéis; localização multilíngue aprimorada; CSP corrigido para remover domínios de API JSON.
+
+• v3.0.5
+  • Proxy da API Bing atualizado (suporte regional + deduplicação de imagens); cache de papel de parede otimizado (verificar IDB antes de baixar); chaves localStorage unificadas; arquivos changelog em 16 idiomas adicionados; registros e semântica de código aprimorados.
+
 • v3.0.4
   • Corrigido o carregamento do papel de parede: a lista de permissões CSP `img-src` não incluía as origens do CDN do Bing (`www.bing.com`, `cn.bing.com`), então as imagens redirecionadas das APIs proxy eram bloqueadas pelo navegador.
 

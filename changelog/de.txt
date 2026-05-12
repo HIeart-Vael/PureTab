@@ -1,5 +1,11 @@
 Änderungsprotokoll
 
+• v3.1.0
+  • Lokale Hintergrundbild-Galerie: Hochladen, Löschen, Rotieren mehrerer Hintergründe mit Stapelauswahl; Code-Refactoring (semantische Benennung, Aufteilung langer Funktionen, Designkommentare); verbesserte Panel-Titelstile; erweiterte mehrsprachige Lokalisierung; CSP korrigiert, um JSON-API-Domänen zu entfernen.
+
+• v3.0.5
+  • Bing-API-Proxy aktualisiert (Regionsunterstützung + Bilddeduplizierung); Hintergrund-Caching optimiert (IDB vor Download prüfen); localStorage-Schlüssel vereinheitlicht; 16-sprachige Changelog-Dateien hinzugefügt; Protokollierung und Code-Semantik verbessert.
+
 • v3.0.4
   • Hintergrundbild-Ladefehler behoben: CSP `img-src`-Whitelist enthielt keine Bing-CDN-Ursprünge (`www.bing.com`, `cn.bing.com`), sodass von Proxy-APIs umgeleitete Bilder vom Browser blockiert wurden.
 

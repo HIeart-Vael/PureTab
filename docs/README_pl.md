@@ -1,181 +1,276 @@
 <p align="center">
-  <img src="../icon/icon2048.png" alt="Logo PlainTab" width="80">
+  <img src="../icon/icon2048.png" alt="PlainTab Logo" width="80">
 </p>
 
-<h1 align="center">PlainTab V3 · Minimalistyczna Strona Startowa</h1>
+<h1 align="center">PlainTab · Minimalistyczna strona startowa</h1>
 
-> **Nowa karta powinna robić tylko jedną rzecz:**
-> Otwierać się → pokazywać tapetę, która ci się podoba → przenosić cię do strony, której potrzebujesz.
-> Czy naprawdę potrzebujesz zegara, powitania lub ekranu pełnego skrótów?
-> **Odpowiedź PlainTab: radykalne odejmowanie. Całkowity przepisany od podstaw z dwuwarstwową architekturą tapety. Zero migotania — pozwól, aby twoja nowa karta wróciła do czystego «PLAIN».**
+ > Nowa karta powinna robić dobrze tylko jedną rzecz: otworzyć się, pokazać piękną tapetę i wysłać cię do następnej strony. Czy naprawdę potrzebujesz zegara, powitania albo ekranu pełnego skrótów? Odpowiedź PlainTab: maksymalna redukcja, maksymalna prędkość — przywróć swojej nowej karcie jej prawdziwy wygląd: piękny i czysty.
 
 <p align="center">
-  <a href="../README.md">简体中文</a> · <a href="README_en.md">English</a> · <a href="README_ja.md">日本語</a> · <a href="README_ru.md">Русский</a> · <a href="README_ko.md">한국어</a> · <a href="README_es.md">Español</a> · <a href="README_hi.md">हिन्दी</a> · <a href="README_ar.md">العربية</a> · <a href="README_pt.md">Português</a> · <a href="README_de.md">Deutsch</a> · <a href="README_fr.md">Français</a> · <a href="README_it.md">Italiano</a> · <a href="README_tr.md">Türkçe</a> · <a href="README_pl.md">Polski</a> · <a href="README_vi.md">Tiếng Việt</a> · <a href="README_zh-TW.md">繁體中文</a>
+  <a href="../README.md">English</a> · <a href="README_zh-CN.md">中文 (简体)</a> · <a href="README_zh-TW.md">中文 (繁體)</a> · <a href="README_hi.md">हिन्दी</a> · <a href="README_es.md">Español</a> · <a href="README_ar.md">العربية</a> · <a href="README_fr.md">Français</a> · <a href="README_pt.md">Português</a> · <a href="README_ru.md">Русский</a> · <a href="README_de.md">Deutsch</a> · <a href="README_ja.md">日本語</a> · <a href="README_it.md">Italiano</a> · <a href="README_tr.md">Türkçe</a> · <a href="README_vi.md">Tiếng Việt</a> · <a href="README_ko.md">한국어</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.4-blue?style=flat-square" alt="Wersja">
+  <img src="https://img.shields.io/badge/version-3.1.0-blue?style=flat-square" alt="Wersja">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licencja">
   </a>
   <a href="https://plaintab.netlify.app">
-    <img src="https://img.shields.io/badge/Live%20Demo-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Demo na żywo">
+    <img src="https://img.shields.io/badge/Wyprobuj_online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
-</p>
-
-<p align="center">
-  <strong>Czysta, szybka i nienachalna strona startowa i rozwiazanie dla nowych kart.</strong><br>
-  Dostępne na <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zero migotania · bez ograniczenia rozmiaru pliku<br>
-  Codzienna tapeta Bing · Obrazy lokalne · 16 języków · Elastyczny pasek wyszukiwania · <strong>Prywatność przede wszystkim</strong>
 </p>
 
 <div align="center">
   <img src="../imgs/chrome_01.jpg" width="45%" />
-  <img src="../imgs/chrome_02.jpg" width="45%" /> 
-  <img src="../imgs/chrome_03.jpg" width="45%" />
-  <img src="../imgs/chrome_04.jpg" width="45%" /> 
-  <img src="../imgs/chrome_05.jpg" width="45%" />
-  <img src="../imgs/chrome_06.jpg" width="45%" /> 
-  <img src="../imgs/chrome_07.jpg" width="45%" />
-  <img src="../imgs/chrome_08.jpg" width="45%" /> 
+  <img src="../imgs/chrome_02.jpg" width="45%" />
 </div>
+
+<details>
+<summary><b>📸 Zobacz więcej zrzutów ekranu</b></summary>
+<div align="center">
+  <img src="../imgs/chrome_03.jpg" width="45%" />
+  <img src="../imgs/chrome_04.jpg" width="45%" />
+  <img src="../imgs/chrome_05.jpg" width="45%" />
+  <img src="../imgs/chrome_06.jpg" width="45%" />
+  <img src="../imgs/chrome_07.jpg" width="45%" />
+  <img src="../imgs/chrome_08.jpg" width="45%" />
+</div>
+</details>
+
+---
+Otwarcie nowej karty to natychmiastowa czynność — wciskasz `Ctrl+T` i oczekujesz, że tapeta już tam jest. Aby to osiągnąć, cały design PlainTab koncentruje się na jednym celu: **jak najszybszym wyświetleniu tapety na ekranie**, bez żadnego widocznego procesu ładowania. Dwuwarstwowa architektura tapety, synchroniczne wczytywanie wstępne, potok miniatur Canvas, hybrydowa strategia przechowywania — wszystkie decyzje techniczne zmierzają do tego samego: szybciej, płynniej, bardziej niezauważalnie.
+
+PlainTab jest jednocześnie rozszerzeniem przeglądarki Manifest V3 i niezależną stroną internetową. Zero zewnętrznych zależności, bez procesu budowania, czysty vanilla JS + CSS. Tryb rozszerzenia i tryb Web używają tego samego kodu, automatycznie wykrywając środowisko w czasie wykonania. [Wypróbuj online](https://plaintab.netlify.app).
 
 ---
 
-## 🆕 Nowości w v3
+## Szybki start
 
-v3 to **całkowity przepisany od podstaw** z przełomem: **system dwuwarstwowej tapety z zerowym migotaniem**.
+**Rozszerzenie przeglądarki**: zainstaluj z [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
+
+**Strona startowa online**: odwiedź [plaintab.netlify.app](https://plaintab.netlify.app) i ustaw ją jako stronę startową w ustawieniach przeglądarki.
+
+**Uruchomienie lokalne**:
+
+```bash
+git clone https://github.com/kaininx/PlainTab.git
+```
+
+Załaduj katalog w `chrome://extensions` przez "Załaduj rozpakowane". Bez procesu budowania, bez `npm install`.
 
 <details>
-<summary><b>💡 Dlaczego v2 migotało?</b></summary>
+<summary><b>🔧 Jak usunąć szary pasek na dole nowej karty?</b></summary>
 
-Stara wersja używała pojedynczego `<div>` z przełączaniem `background-image` w CSS. Przejście z miniatury (reguła arkusza stylów) do pełnego obrazu (styl wbudowany) wymagało zmiany kaskadowej — podczas której przeglądarka usuwala wyrenderowane tło na co najmniej jedną klatkę, odsłaniając szare tło.
+Po zainstalowaniu rozszerzenia Chrome / Edge wyświetla stopkę w prawym dolnym rogu nowej karty (z nazwą bieżącego rozszerzenia). To zachowanie przeglądarki, PlainTab nie ma nad tym kontroli w swoim kodzie.
+
+Jak wyłączyć: nowa karta → prawy dolny róg "Dostosuj Chrome" ✏️ → Stopka → wyłącz "Pokaż stopkę na stronie nowej karty". Zobacz [oficjalną pomoc Chrome](https://support.google.com/chrome/answer/11032183?hl=pl).
 
 </details>
 
-**Rozwiazanie v3 — Kompozycja dwuwarstwowa:**
-1. `#wallpaperBack` — zawsze zawiera widoczny obraz. `preload.js` synchronicznie zapisuje miniature 640px przed pierwszym malowaniem przeglądarki
-2. `#wallpaperFront` — zaczyna przezroczysty. Po zdekodowaniu pełnego obrazu, pojawia się stopniowo na wierzchu
-3. Co najmniej jedna warstwa zawsze ma widoczny obraz → **brak szarego błysku**
+---
 
-Pełne szczegóły techniczne znajdziesz w [V3_NOTE.md](./V3_NOTE.md).
+## Jak szybki jest wallpaper?
+
+PlainTab nie tylko "ładuje obraz" — działa **w trzech skalach czasowych**, z których każda ulepsza doświadczenie w stosunku do poprzedniej:
+
+| Moment | Co się dzieje | Co widzi użytkownik |
+|------|-----------|-------------|
+| **0ms** (przed pierwszą klatką) | `preload.js` synchronicznie odczytuje miniaturę base64 z localStorage i zapisuje bezpośrednio do `#wallpaperBack.style.backgroundImage` | Tapeta, która już tam jest — nie w HD, ale **absolutnie żaden biały ekran ani szare tło** |
+| **~300ms** | `loadWallpaper()` odczytuje zbuforowany Blob z IndexedDB i wyświetla przez Blob URL | Tapeta HD pojawia się, płynnie zastępując miniaturę przez CSS opacity transition |
+| **Tylko gdy pamięć podręczna jest nieaktualna** | Żądanie sieciowe do API Bing → pobranie Bloba → wyświetlenie → asynchroniczne buforowanie w IDB | Użytkownik nie zauważa — poprzednia tapeta pozostaje w warstwie back jako zabezpieczenie |
+
+Każda technologia opisana poniżej służy tym trzem momentom — albo skracając czas, albo eliminując widoczne ślady przejść.
 
 ---
 
-## ✨ Dlaczego PlainTab?
+## Najważniejsze cechy techniczne
 
-- 🔒 **Absolutnie czysta prywatność** — Żadne dane osobowe nie są zbierane. Wszystkie tapety przechowywane lokalnie.
-- 🚀 **Zjednoczony start przeglądania w minutę** — Ustaw jako stronę główną + zainstaluj rozszerzenie. Rozszerzenie nigdy nie wymusza zmiany strony głównej.
-- 🧩 **Tak lekki, że ledwo go czujesz** — Zero zależności, czysty vanilla JavaScript, natychmiastowy start.
-- 🌍 **Działa od razu po wyjęciu z pudełka** — Automatycznie wykrywa język przeglądarki (16), obsługuje Google / Bing / Baidu / DuckDuckGo.
+### Zero białego ekranu przy pierwszej klatce: podwójna warstwa + synchroniczne wczytywanie wstępne
 
----
+To najważniejszy element projektu PlainTab. Zanim obraz zostanie załadowany, nowa karta ujawniłaby domyślny kolor tła przeglądarki — zwykle biały ekran lub szare tło. Dwie warstwy `<div>` całkowicie rozwiązują ten problem:
 
-## 🚀 Dwa sposoby na wypróbowanie
+- **[`#wallpaperBack`](../index.html#L14)** (z-index: 0) — zawsze zawiera widoczny obraz. [`preload.js`](../js/preload.js) znajduje się w `<head>` i wykonuje się synchronicznie, zapisując `data:` URL miniatury, zanim przeglądarka wykona pierwsze renderowanie. Ten krok jest synchroniczny — nie przechodzi przez żadne asynchroniczne API, nie czeka na sieć. W trybie rotacji wielu obrazów wie nawet, którego indeksu miniatury użyć w danym momencie.
+- **[`#wallpaperFront`](../index.html#L16)** (z-index: 1, `opacity: 0`) — używany do płynnych przejść. Nowy obraz jest wstępnie dekodowany w pamięci przez [`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode) → ustawiany jako tło warstwy przedniej → płynne przejście CSS [`opacity` transition](https://developer.mozilla.org/docs/Web/CSS/transition) → po zakończeniu przejścia stabilizowany do warstwy back → front wraca do przezroczystości.
 
-| Metoda | Opis | Najlepsze dla |
-|--------|-------------|---------------|
-| 🌐 **Strona startowa online** | Odwiedź [plaintab.netlify.app](https://plaintab.netlify.app), ustaw jako stronę główną przeglądarki | Czysta strona główna bez instalowania czegokolwiek |
-| 🧩 **Rozszerzenie przeglądarki** | Zainstaluj ze sklepu Chrome lub Edge | Minimalistyczne doświadczenie na każdej nowej karcie |
+Podstawowa zasada: **w każdej chwili co najmniej jedna warstwa zawiera wyrenderowany obraz**. Warstwa back zawsze ma coś do pokazania; warstwa front pojawia się tylko na krótko podczas przejścia. Nawet jeśli użytkownik ogląda klatka po klatce, nie zobaczy pustej chwili.
 
-### Rozszerzenie przeglądarki · Instalacja ze sklepu
-- **Chrome Web Store**: [Wkrótce]()
-- **Edge Add-ons**: [Wkrótce]()
+### Od wejścia do piksela: dlaczego miniatura zamiast oryginalnego obrazu?
 
-> 💡 Jeszcze nie opublikowane? Załaduj ręcznie w trybie programisty: przejdź do `chrome://extensions` → włącz **Tryb programisty** → **Załaduj rozpakowane** → wybierz folder projektu
+`preload.js` nie może czekać na asynchroniczne ładowanie — straciłby pierwszą klatkę. Ale oryginalny obraz w IndexedDB jest asynchroniczny, a ciąg base64 o wielkości kilku MB nie zmieści się w localStorage (ograniczony limit). Dlatego PlainTab, po wyświetleniu poprzedniej tapety, **robi krok dalej**: używa Canvas do zmniejszenia obrazu do JPEG o szerokości 640px, jakości 0,55, kompresji zwykle 30–60 KB, bezpiecznie zapisując go w localStorage. Przy następnym otwarciu nowej karty `preload.js` pobiera go i używa bezpośrednio.
 
----
+640px jest wystarczająco ostre na ekranie 2K, aby nie wyglądać jak miniatura — a za te kilkanaście KB stoi precyzyjne skalowanie [Canvas API](https://developer.mozilla.org/docs/Web/API/Canvas_API) w połączeniu z regulacją jakości [`toDataURL('image/jpeg', 0.55)`](https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement/toDataURL). Ta miniatura jest również źródłem danych do renderowania siatki 3×4 w galerii — wygenerowana raz, wykorzystana w dwóch miejscach.
 
-## 💡 Wybór dewelopera: trzy tapety, trzy wejścia
+### Podwójny `requestAnimationFrame` sterujący przejściami CSS
 
-Zainstalowałeś rozszerzenie — twoja nowa karta już wygląda świetnie. Ale oto coś, czego możesz nie wiedzieć: PlainTab jest również wdrożony w dwóch innych miejscach:
+Przejście z miniatury do obrazu HD musi wywołać transition CSS. Ale obliczanie stylów i renderowanie przeglądarki są asynchroniczne — jeśli dodasz klasę zaraz po ustawieniu `backgroundImage`, przeglądarka może przetworzyć oba stany w tym samym renderowaniu klatki, a animacja przejścia nie zostanie uruchomiona.
 
-| Wejście | Ustawienie | URL |
-|---------|-----------|------|
-| 🧩 **Nowa karta** | Rozszerzenie przeglądarki | Załaduj to rozszerzenie |
-| 🌐 **Strona startowa** | Uruchamianie przeglądarki | `plaintab.netlify.app` |
-| 🏠 **Strona główna** | Przycisk strony głównej | `kaininx.github.io/PlainTab` |
+```javascript
+requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+        front.classList.add('active');
+    });
+});
+```
 
-Ustaw `plaintab.netlify.app` jako stronę startową swojej przeglądarki, pozwól jej śledzić codzienną aktualizację Bing. Za każdym razem, gdy uruchomisz przeglądarkę, to twoja **druga tapeta**.
+Pierwszy [`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) zapewnia, że `backgroundImage` został obliczony; drugi gwarantuje, że style zostały przesłane do potoku renderowania. Dopiero wtedy dodanie klasy powoduje, że przeglądarka widzi zmianę "stary styl → nowy styl" i uruchamia prawidłowe przejście. Przy jednym pominiętym przejście jest pomijane — użytkownik widzi twardą zmianę zamiast płynnego zanikania.
 
-Tak, to nie wszystko. Znajdź "Przycisk strony głównej" w ustawieniach wyglądu przeglądarki, wpisz `kaininx.github.io/PlainTab`, wybierz inną tapetę, która ci się podoba. Teraz masz **trzecią tapetę**.
+### Dlaczego IndexedDB i localStorage współistnieją?
 
-Trzy wejścia są całkowicie odizolowane. Daj każdej inną lokalną tapetę lub pozwól każdej śledzić codzienne odświeżanie Bing. Uruchom przeglądarkę: jedna tapeta. Kliknij przycisk strony głównej: druga. Otwórz nową kartę: trzecia. Rotacja gwarantowana.
+Te dwa sposoby przechowywania nie są alternatywą, ale podziałem obowiązków:
 
-**Konfiguracja:**
-1. Zainstaluj rozszerzenie → Nowa karta ✓
-2. Ustawienia przeglądarki → Przy uruchamianiu → Otwórz konkretną stronę → `https://plaintab.netlify.app`
-3. Ustawienia przeglądarki → Wygląd → Pokaż przycisk strony głównej → `https://kaininx.github.io/PlainTab`
+| Przechowywanie | Co zawiera | Dlaczego tutaj |
+|------|--------|---------------|
+| **[IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API)** | Oryginalne Bloby (codzienna tapeta Bing, lokalne obrazy przesłane przez użytkownika) | Duże pliki wymagają dużego limitu; asynchroniczny odczyt/zapis jest w pełni akceptowalny poza ścieżką pierwszej klatki |
+| **[localStorage](https://developer.mozilla.org/docs/Web/API/Window/localStorage)** | `data:` URL miniatur, preferencje UI, metadane, indeks rotacji | **Synchroniczny odczyt** — to jest kluczowe. `preload.js` działa przed pierwszą klatką i nie może czekać na żadne asynchroniczne wywołanie zwrotne |
 
----
+Połączenie IDB jest buforowane jako singleton, z automatycznym odtworzeniem przy `onclose`. Bloby pobrane z IDB mogą stracić typ MIME — pole `mime` jest zawsze zapisywane podczas przechowywania, a przy pobieraniu odtwarzane za pomocą `new Blob([blob], {type: img.mime})`, aby zapewnić poprawne renderowanie Blob URL.
 
-## 🛠️ Użycie
+### Samonaprawa miniatur
 
-| Akcja | Efekt |
-|-------|-------|
-| Przesuń mysz w prawy górny róg | Pokaż ikony języka / ustawień |
-| Przesuń mysz blisko środka | Pasek wyszukiwania pojawia się (tryb najechania) |
-| Kliknij ikonę koła zębatego | Otwórz panel tapety i zaawansowanych opcji |
-| Kliknij ikonę globusa | Zmień język interfejsu |
-| Kliknij ikonę wyszukiwarki | Przełącz Google → Bing → Baidu → DuckDuckGo |
-| Naciśnij `Enter` w pasku wyszukiwania | Szukaj za pomocą bieżącej wyszukiwarki |
-| Naciśnij `Esc` | Zamknij wszystkie panele |
+`saveLocalImage()` zapisuje najpierw do IDB (blob), potem do localStorage (miniatura). Te dwa kroki nie są atomową transakcją — jeśli strona ulegnie awarii dokładnie między nimi, tablica miniatur będzie o jeden element krótsza niż tablica obrazów. PlainTab nie przeprowadza globalnego samosprawdzenia przy starcie (co maskowałoby poważniejsze niespójności danych), ale **regeneruje miniaturę na bieżąco, gdy rotacja trafi na obraz z brakującą miniaturą**. Naprawa następuje tylko wtedy, gdy obie tablice mają tę samą długość — niezgodność długości oznacza nieznany wyjątek zapisu, a pominięcie jest bezpieczniejszym wyborem.
 
-### Tapeta
-- **Bing Codziennie**: Pobierana automatycznie raz dziennie. Tylko dzisiejszy obraz jest przechowywany lokalnie w pamięci podręcznej.
-- **Tapeta lokalna**: Przesyłaj obrazy o dowolnym rozmiarze (IndexedDB, **bez ograniczenia rozmiaru pliku**). Przechowywany jest tylko ostatnio przesłany obraz. Reset jednym kliknięciem do Bing codziennie.
+### Cykl życia Blob URL
 
-### Opcje zaawansowane
-| Opcja | Opis |
-|-------|------|
-| Tryb paska wyszukiwania | Najechanie / Zawsze / Ukryty |
-| Nieprzezroczystość ikon | 0 – 1 (domyślnie 0.45) |
-| Wyszukiwarka | Google / Bing / Baidu / DuckDuckGo |
+Wszystkie Blob URL utworzone przez [`URL.createObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) w galerii są śledzone w tablicy i zbiorczo odwoływane przy zamknięciu galerii przez [`URL.revokeObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/revokeObjectURL). Jednak ta ścieżka jest fallbackiem — **preferowane jest używanie wstępnie wygenerowanych miniatur base64**, ponieważ base64 nie wymaga tworzenia/odwoływania Blob URL, a renderowanie jest szybsze.
 
-> **Rozszerzenie Chrome vs. Wersja webowa — Różnica w wyszukiwaniu:** Aby zachować zgodność z polityką "Jednego celu" Chrome Web Store, rozszerzenie używa Chrome Search API, które szanuje domyślną wyszukiwarkę ustawioną w przeglądarce użytkownika. Funkcja zmiany wyszukiwarki nie jest dostępna w trybie rozszerzenia. Wersja webowa (Netlify / GitHub Pages) nie podlega temu ograniczeniu i zachowuje pełny selektor wyszukiwarki. Poza implementacją wyszukiwania, obie wersje są funkcjonalnie identyczne.
+### Właściwości niestandardowe CSS dla tematu runtime
 
-> Wszystkie ustawienia zapisywane w `localStorage`. Bez konta, bez synchronizacji w chmurze.
+Przezroczystość ikon (`--icon-opacity`) jest kontrolowana przez zmianę [niestandardowej właściwości CSS](https://developer.mozilla.org/docs/Web/CSS/--*) za pomocą JS, jednolicie sterując wszystkimi przyciskami narożnymi i panelami — jedno `setProperty`, a przeglądarka automatycznie aktualizuje wszystkie elementy odwołujące się do tej zmiennej. Tokeny projektowe (`--glass-bg`, `--glass-border`, `--text-primary` itd.) są zdefiniowane na [`:root`](https://developer.mozilla.org/docs/Web/CSS/:root), a motyw ciemny/jasny jest przełączany przez media query [`prefers-color-scheme`](https://developer.mozilla.org/docs/Web/CSS/@media/prefers-color-scheme).
+
+### Panele z efektem szkła
+
+Panele ustawień i języka używają [`backdrop-filter: blur()`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) do rozmycia treści tapety **za** panelem — a nie taniego rozwiązania z półprzezroczystą maską. W połączeniu z `--glass-bg: rgba(18, 18, 22, 0.82)` tworzy prawdziwe wrażenie głębi.
+
+### Interfejs wrażliwy na pozycję myszy
+
+Przyciski narożne i pasek wyszukiwania pojawiają się tylko wtedy, gdy są potrzebne — `isNearTopRight()` i `isInCenter()` to dwie funkcje matematyczne określające pozycję myszy, bez potrzeby wiązania `mouseenter`/`mouseleave` na pełnoekranowej warstwie tła. Ukrywanie jest opóźnione (przyciski 400ms, pasek wyszukiwania 150ms) i pomijane, gdy panel jest otwarty lub pole wprowadzania jest aktywne. Każda ścieżka interakcji jest jak najkrótsza: **pojawienie się szybkie, zniknięcie stabilne**, bez przerywania użytkownikowi fałszywymi wyzwoleniami.
+
+### Szeregowy łańcuch Promise dla wsadowego przesyłania
+
+Użytkownicy mogą wybrać wiele lokalnych tapet jednocześnie. Każde `saveLocalImage()` odczytuje i zapisuje IDB — równoległe wykonanie spowodowałoby wyścigi danych. Przesyłanie wsadowe używa łańcucha Promise do serializacji wszystkich operacji zapisu, zapisując jeden obraz na raz. Pierwszy pomyślnie zapisany obraz jest wyświetlany jako tapeta, pozostałe są tylko archiwizowane. Dzięki temu użytkownik nie widzi migotania spowodowanego ciągłym przełączaniem obrazów.
+
+### `chrome.search.query()` dla zgodności z CWS
+
+W trybie rozszerzenia [`chrome.search.query()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/search/query) deleguje wyszukiwanie do domyślnej wyszukiwarki przeglądarki — wymóg zgodności z polityką single-purpose Chrome Web Store. Selektor wyszukiwarki jest ukryty w DOM, a ikona staje się statyczną lupą.
 
 ---
 
-## 🔧 Pasek stopki nowej karty
+## Technologie użyte do eliminacji opóźnień
 
-Po zainstalowaniu rozszerzenia Chrome / Edge wyświetla stopkę w prawym dolnym rogu strony nowej karty (pokazującą nazwę rozszerzenia). Jest to zachowanie przeglądarki, a nie coś, co dodaje PlainTab.
+PlainTab nie używa żadnych frameworków ani bibliotek. Każde z poniższych API zostało wybrane, aby **zaoszczędzić jedno asynchroniczne oczekiwanie, wyeliminować jedno widoczne migotanie, zredukować jedno opóźnienie klatki**:
 
-**Jak go ukryć (z [Pomocy Chrome](https://support.google.com/chrome/answer/11032183?hl=pl)):**
+- **[`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode)** — asynchroniczne dekodowanie przed ustawieniem `backgroundImage`, oszczędzające pauzę dekodowania podczas renderowania pierwszej klatki. Załadowanie `<img>` nie oznacza zakończenia dekodowania; bez wywołania `decode()` przy pierwszym rysowaniu może pojawić się krótka pusta klatka
+- **[`backdrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter)** — używa rozmycia komponowanego przez GPU zamiast dodatkowych warstw DOM i obrazów maskujących, zero dodatkowego narzutu na układ
+- **[`<meta name="darkreader-lock">`](https://github.com/darkreader/darkreader/blob/main/tips/website-lock-meta-tag.md)** — blokuje Dark Readera, zapobiegając odwracaniu kolorów tapety przez jego filtry — tapeta sama w sobie jest treścią wizualną, a filtrowanie zniweczyłoby wysiłki wierności potoku miniatur Canvas
+- **[`color-scheme: dark light`](https://developer.mozilla.org/docs/Web/CSS/color-scheme)** — jedna deklaracja sprawia, że przeglądarka automatycznie dostosowuje kolory formularzy, pasków przewijania i elementów systemowych, bez potrzeby pisania dwóch zestawów stylów nadpisujących
+- **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — ujednolicona krzywa easing dla wszystkich animacji pojawiania się i zanikania. To nie `ease` ani `ease-in-out` — ta krzywa szybciej osiąga cel na początku i ma łagodniejsze wygaszanie na końcu. Dla odpowiedzi UI rzędu milisekund różnica percepcyjna jest wyraźna
+- **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — w trybie rozszerzenia pobiera język interfejsu przeglądarki, dokładniej odzwierciedlając rzeczywiste preferencje użytkownika niż `navigator.language`
+- **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — nie opiera się na `setTimeout` w odgadywaniu momentu renderowania, ale precyzyjnie dostosowuje się do rytmu klatek przeglądarki. Dwukrotne użycie zapewnia wyraźną granicę klatki między obliczaniem stylów a ich wysyłką
 
-Otwórz nową kartę → kliknij ikonę "Dostosuj Chrome" ✏️ w prawym dolnym rogu → Stopka → wyłącz "Pokaż stopkę na stronie nowej karty".
+**Równie ważne są technologie, których nie użyto**: zero zewnętrznych zależności. Żadnego Reacta, Tailwinda ani narzędzi do budowania. CSP w `manifest.json` ogranicza `script-src 'self'` — przeglądarka wymusza czysty vanilla JS. Każda niewprowadzona biblioteka oznacza mniej czasu na parsowanie, mniejszy narzut sieciowy i wcześniejszą pierwszą klatkę.
 
----
-
-## 🌐 Wsparcie wielojęzyczne
-
-16 wbudowanych języków, automatycznie wykrywanych z przeglądarki, ręcznie wybieralnych w dowolnym momencie:
-`English` `简体中文` `繁體中文` `Español` `हिन्दी` `العربية` `Português` `Русский` `日本語` `Deutsch` `한국어` `Français` `Italiano` `Türkçe` `Polski` `Tiếng Việt`
-
----
-
-## 🤝 Wkład
-
-Issue i Pull Requesty są mile widziane. Utrzymuj PlainTab minimalistycznym — czysty JavaScript, bez etapów budowania, bez zależności.
+**Stack czcionek**: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif` — natywne czcionki systemu operacyjnego, zero żądań sieciowych, zero przesunięć układu. Pliki czcionek są zwykle jednym z największych blokujących zasobów strony; PlainTab omija cały ten problem.
 
 ---
 
-## 📄 Licencja
+## Dwa tryby działania
 
-MIT © [Kaelri](https://github.com/kaininx)
+Ten sam kod, automatyczne wykrywanie środowiska w czasie wykonania:
+
+| Cecha | Tryb rozszerzenia | Tryb Web |
+|------|----------|----------|
+| Wykrywanie środowiska | `chrome.runtime.id` istnieje | Wszystkie inne przypadki |
+| Wyszukiwarka | Domyślna przeglądarki (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo do wyboru |
+| Przełączanie wyszukiwarki | Niemożliwe (statyczna lupa) | Kliknięcie ikony zmienia cyklicznie |
+| Wdrożenie | Chrome Web Store / ładowanie deweloperskie | Netlify / GitHub Pages bezpośrednie hostowanie |
+| CSP | Zadeklarowane w `manifest.json` | CSP nie jest potrzebne |
 
 ---
 
-## 🙏 Podziękowania
+## Priorytet ładowania tapety
 
-- API tapet Bing: [bing.img.run](https://bing.img.run) i [bing.biturl.top](https://bing.biturl.top)
-- Niektóre tapety na zrzutach ekranu pochodzą z sieci — dzięki każdemu utalentowanemu twórcy.
+Przy każdym otwarciu nowej karty wyszukiwane jest najszybsze dostępne źródło tapety w następującej kolejności:
+
+1. **Rotacja lokalnych tapet** — własne obrazy użytkownika (maks. 12), Blob już w IDB, pobranie bezpośrednie. Miniatura już wstępnie wygenerowana. Zero narzutu sieciowego.
+2. **Dzisiejsza pamięć podręczna Bing** — tapeta Bing już pobrana dzisiaj, Blob w IDB, bezpośrednio konwertowany do Blob URL i wyświetlany. Zero narzutu sieciowego.
+3. **Pobranie Bing z sieci** — tylko gdy dwa poprzednie poziomy są niedostępne, następuje połączenie sieciowe. Po uzyskaniu URL obraz jest natychmiast wyświetlany, a Blob jest asynchronicznie pobierany i zapisywany w IDB, aby przy następnym razie uniknąć oczekiwania sieciowego.
+
+W trybie lokalnych tapet tapeta Bing jest wciąż po cichu aktualizowana w tle — użytkownik może w każdej chwili przełączyć się na tryb Bing bez czekania na sieć.
+
+API Bing ma dwa punkty końcowe do przełączania awaryjnego. Kody językowe (np. `zh-CN`) są mapowane na kody rynkowe Bing, a niektóre języki wracają do `en-US`.
 
 ---
 
-<p align="center">
-  <sub>Czysty · Szybki · Bez reklam · Tylko twój</sub>
-</p>
+## Internacjonalizacja
+
+Obsługa 16 języków: 简体中文、繁體中文、English、日本語、한국어、Español、Русский、Deutsch、Français、Italiano、Português、हिन्दी、العربية、Türkçe、Polski、Tiếng Việt.
+
+Dwa równoległe systemy i18n: Chrome `_locales/` odpowiada za metadane manifestu rozszerzenia (tylko dwa klucze: `extName`, `extDesc`), a [`languages.js`](../js/languages.js) za wszystkie ciągi UI. Priorytet wykrywania języka: język interfejsu Chrome (tryb rozszerzenia) → `navigator.language` (tryb Web) → dopasowanie głównego języka → fallback do angielskiego.
+
+Niedoskonałe tłumaczenie lub chcesz dodać nowy język? Plik językowy to jeden plik [`js/languages.js`](../js/languages.js), czysta mapa klucz-wartość. Po edycji wyślij PR.
+
+---
+
+## Struktura projektu
+
+```
+PlainTab/
+├── manifest.json            # Manifest rozszerzenia Chrome/Edge (Manifest V3)
+├── index.html               # Jedyna strona HTML (nowa karta rozszerzenia / strona główna Web)
+├── 404.html                 # Strona zapasowa SPA dla Netlify
+├── LICENSE                  # Licencja MIT
+│
+├── css/
+│   └── newtab.css           # Wszystkie style: dwuwarstwowa tapeta, panele szklane, pasek wyszukiwania, responsywność
+│
+├── js/
+│   ├── preload.js           # Synchroniczne IIFE: wstrzykuje miniaturę do warstwy back przed pierwszą klatką
+│   ├── languages.js         # Tabela ciągów UI dla 16 języków + lista języków
+│   └── newtab.js            # Główny program: zarządzanie tapetą, i18n, przechowywanie, UI, wyszukiwarka
+│
+├── _locales/                # i18n Chrome (16 katalogów językowych, tylko do manifestu rozszerzenia)
+│   ├── en/messages.json
+│   ├── zh_CN/messages.json
+│   └── ...
+│
+├── icon/                    # Ikony rozszerzenia (16/48/128/2048 px)
+│
+├── imgs/                    # Zrzuty ekranu i obrazy promocyjne
+│   ├── chrome_01.jpg ~ chrome_08.jpg  # Zrzuty ekranu funkcji
+│   └── small_promo.png      # Mały obraz promocyjny Chrome Web Store
+│
+├── docs/                    # Wielojęzyczne README (16 języków) + CHANGELOG
+│
+└── changelog/               # Dzienniki zmian dla każdego języka
+```
+
+- **[`css/`](../css/)** — pojedynczy plik ~617 linii, motyw ciemny/jasny, tokeny projektu szkła, responsywny breakpoint 480px
+- **[`js/`](../js/)** — trzy pliki ładowane w kolejności: `preload.js` → `languages.js` → `newtab.js` (kolejność nie może być zmieniona)
+- **[`_locales/`](../_locales/)** — zawiera tylko `extName` i `extDesc` dla manifestu rozszerzenia; wszystkie ciągi UI są zarządzane przez [`languages.js`](../js/languages.js)
+- **[`imgs/`](../imgs/)** — zrzuty ekranu i obrazy promocyjne wymagane przez Chrome Web Store
+- **[`docs/`](../docs/)** i **[`changelog/`](../changelog/)** — wielojęzyczna dokumentacja, osobne pliki dla każdego z 16 języków
+
+---
+
+## Współpraca i licencja
+
+Open source na licencji MIT. Znalazłeś błąd lub masz pomysł? → [Zgłoś Issue](https://github.com/kaininx/PlainTab/issues). Chcesz zmienić kod? → Fork + PR.
+
+Kilka zasad:
+- **Zachowaj zero zależności** — nie dodawaj paczek npm, skryptów CDN ani frameworków
+- **Nie dodawaj etapów budowania** — `index.html` musi działać bezpośrednio w przeglądarce
+- **Nie rozszerzaj uprawnień** — `manifest.json` zachowuje tylko uprawnienie `search`
+
+📋 [Dziennik zmian](CHANGELOG.md)
+
+---
+
+## Podziękowania
+
+- Obrazy codziennej tapety Bing pochodzą z [Bing](https://www.bing.com), podziękowania dla zespołu Microsoft Bing za wieloletnie dostarczanie wysokiej jakości zdjęć każdego dnia
+- Proxy API: [bing.biturl.top](https://bing.biturl.top) (publiczne proxy) i [bing.kaininx.workers.dev](https://bing.kaininx.workers.dev) (zapasowy Cloudflare Worker)
+- Tapety widoczne na zrzutach ekranu pochodzą od różnych twórców w sieci
+
+MIT · [Kaelri](https://github.com/kaininx)

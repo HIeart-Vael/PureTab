@@ -1,5 +1,11 @@
 Registro delle modifiche
 
+• v3.1.0
+  • Galleria sfondi locali: carica, elimina, ruota più sfondi con selezione multipla; refactoring del codice (nomi semantici, divisione funzioni, commenti di design); migliorati gli stili dei titoli dei pannelli; localizzazione multilingue potenziata; CSP corretto per rimuovere i domini API JSON.
+
+• v3.0.5
+  • Proxy API Bing aggiornato (supporto regionale + deduplicazione immagini); cache sfondi ottimizzata (controlla IDB prima del download); chiavi localStorage unificate; file changelog in 16 lingue aggiunti; logging e semantica del codice migliorati.
+
 • v3.0.4
   • Risolto il caricamento dello sfondo: la whitelist CSP `img-src` non includeva le origini CDN di Bing (`www.bing.com`, `cn.bing.com`), quindi le immagini reindirizzate dalle API proxy venivano bloccate dal browser.
 

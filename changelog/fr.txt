@@ -1,5 +1,11 @@
 Journal des modifications
 
+• v3.1.0
+  • Galerie de fonds d'écran locaux : télécharger, supprimer, faire pivoter plusieurs fonds avec sélection par lot ; refactorisation du code (nommage sémantique, division des fonctions, commentaires de conception) ; amélioration des styles de titre des panneaux ; localisation multilingue enrichie ; CSP corrigé pour supprimer les domaines d'API JSON.
+
+• v3.0.5
+  • Proxy API Bing mis à niveau (support régional + déduplication d'images) ; cache de fonds d'écran optimisé (vérifier IDB avant téléchargement) ; clés localStorage unifiées ; fichiers changelog en 16 langues ajoutés ; journalisation et sémantique du code améliorées.
+
 • v3.0.4
   • Correction du chargement du fond d'écran : la liste blanche CSP `img-src` ne contenait pas les origines du CDN Bing (`www.bing.com`, `cn.bing.com`), donc les images redirigées depuis les API proxy étaient bloquées par le navigateur.
 

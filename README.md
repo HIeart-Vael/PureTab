@@ -2,189 +2,279 @@
   <img src="icon/icon2048.png" alt="PlainTab Logo" width="80">
 </p>
 
-<h1 align="center">PlainTab V3 · 极简起始页</h1>
+<h1 align="center">PlainTab · Minimal New Tab</h1>
 
-> **新标签页只该做好一件事：**
-> 被打开 → 展示一张令你赏心悦目的壁纸 → 送你前往它该去的网页。
-> 你真的需要看时间、问候语，或是满屏的快捷链接吗？
-> **PlainTab 的答案：极致的减法，从零重写的双层壁纸架构，零闪烁——让你的新标签页回归「PLAIN」。**
+
+ > A new tab should do exactly one thing — open, show you a beautiful wallpaper, and send you on to the next page. Do you really need a clock, a greeting, or a screen full of shortcuts?
+ >
+ > `Ctrl+T` is an instantaneous action — you press it and expect your wallpaper to already be there. Not "loaded fast", but **there from the start**. Dual-layer wallpaper, synchronous preloading, Canvas thumbnail pipeline, hybrid storage — every technical decision converges on the same thing: faster, smoother, more seamless.
 
 <p align="center">
-  <a href="docs/README_en.md">English</a> · <a href="docs/README_ja.md">日本語</a> · <a href="docs/README_ru.md">Русский</a> · <a href="docs/README_ko.md">한국어</a> · <a href="docs/README_es.md">Español</a> · <a href="docs/README_hi.md">हिन्दी</a> · <a href="docs/README_ar.md">العربية</a> · <a href="docs/README_pt.md">Português</a> · <a href="docs/README_de.md">Deutsch</a> · <a href="docs/README_fr.md">Français</a> · <a href="docs/README_it.md">Italiano</a> · <a href="docs/README_tr.md">Türkçe</a> · <a href="docs/README_pl.md">Polski</a> · <a href="docs/README_vi.md">Tiếng Việt</a> · <a href="docs/README_zh-TW.md">繁體中文</a>
+  <a href="docs/README_zh-CN.md">中文 (简体)</a> · <a href="docs/README_zh-TW.md">中文 (繁體)</a> · <a href="docs/README_hi.md">हिन्दी</a> · <a href="docs/README_es.md">Español</a> · <a href="docs/README_ar.md">العربية</a> · <a href="docs/README_fr.md">Français</a> · <a href="docs/README_pt.md">Português</a> · <a href="docs/README_ru.md">Русский</a> · <a href="docs/README_de.md">Deutsch</a> · <a href="docs/README_ja.md">日本語</a> · <a href="docs/README_it.md">Italiano</a> · <a href="docs/README_tr.md">Türkçe</a> · <a href="docs/README_vi.md">Tiếng Việt</a> · <a href="docs/README_ko.md">한국어</a> · <a href="docs/README_pl.md">Polski</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.4-blue?style=flat-square" alt="版本">
+  <img src="https://img.shields.io/badge/version-3.1.0-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="许可证">
+    <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="License">
   </a>
   <a href="https://plaintab.netlify.app">
-    <img src="https://img.shields.io/badge/在线体验-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Live_Demo-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
-</p>
-
-<p align="center">
-  <strong>纯净、极速、无侵入的起始页与新标签页方案。</strong><br>
-  在线即用 <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · 零闪烁 · 无文件大小限制<br>
-  Bing 每日壁纸 · 本地图片 · 16 种语言 · 灵活搜索栏 · <strong>不涉及隐私</strong>
 </p>
 
 <div align="center">
   <img src="imgs/chrome_01.jpg" width="45%" />
-  <img src="imgs/chrome_02.jpg" width="45%" /> 
-  <img src="imgs/chrome_03.jpg" width="45%" />
-  <img src="imgs/chrome_04.jpg" width="45%" /> 
-  <img src="imgs/chrome_05.jpg" width="45%" />
-  <img src="imgs/chrome_06.jpg" width="45%" /> 
-  <img src="imgs/chrome_07.jpg" width="45%" />
-  <img src="imgs/chrome_08.jpg" width="45%" /> 
+  <img src="imgs/chrome_02.jpg" width="45%" />
 </div>
+
+<details>
+<summary><b>📸 View more screenshots</b></summary>
+<div align="center">
+  <img src="imgs/chrome_03.jpg" width="45%" />
+  <img src="imgs/chrome_04.jpg" width="45%" />
+  <img src="imgs/chrome_05.jpg" width="45%" />
+  <img src="imgs/chrome_06.jpg" width="45%" />
+  <img src="imgs/chrome_07.jpg" width="45%" />
+  <img src="imgs/chrome_08.jpg" width="45%" />
+</div>
+</details>
+
+---
+Opening a new tab is an instantaneous action — you press `Ctrl+T` and expect your wallpaper to already be there. To get this right, every decision in PlainTab revolves around one goal: putting the wallpaper on screen as fast as possible, with zero visible loading. Dual-layer wallpaper architecture, synchronous preloading, Canvas thumbnail pipeline, hybrid storage strategy — every technical choice converges on the same thing: faster, smoother, more seamless.
+
+
+PlainTab is both a Manifest V3 browser extension and a standalone web page. Zero external dependencies, no build step, pure vanilla JS + CSS. Extension and web modes share the same codebase, automatically detecting the environment at runtime. [Try it live](https://plaintab.netlify.app).
 
 ---
 
-## 🆕 v3 全新特性
+## Quick Start
 
-v3 是一次**从零开始的架构重写**，核心突破：**零闪烁双层壁纸系统**。
+**Browser extension**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
+
+**Online start page**: Visit [plaintab.netlify.app](https://plaintab.netlify.app) and set it as your startup page in your browser settings.
+
+**Run locally**:
+
+```bash
+git clone https://github.com/kaininx/PlainTab.git
+```
+
+Load the directory as an unpacked extension in `chrome://extensions`. No build step, no `npm install`.
 
 <details>
-<summary><b>💡 为什么 v2 会闪烁？</b></summary>
+<summary><b>🔧 How to remove the gray bar at the bottom of a new tab?</b></summary>
 
-旧版使用单层 `<div>` 切换 CSS `background-image`。从缩略图（stylesheet 规则）切换到高清图（inline style）时，浏览器需要做级联源切换——过程中至少有一帧没有任何背景渲染，露出灰底。
+After installing the extension, Chrome / Edge displays a footer at the bottom-right of new tab pages (showing the current extension name). This is browser behavior — PlainTab cannot control it in code.
+
+To disable it: Open a new tab → click the "Customize Chrome" ✏️ button at the bottom-right → Footer → turn off "Show footer on New Tab page." See [Chrome Help](https://support.google.com/chrome/answer/11032183) for details.
 
 </details>
 
-**v3 的解决方案 — 双层合成：**
-1. `#wallpaperBack` — 始终持有可见图片，`preload.js` 在浏览器首帧绘制前同步写入缩略图
-2. `#wallpaperFront` — 初始透明，新图解码完成后淡入覆盖背层
-3. 任何时刻至少有一层持有可见图片 → **绝无灰色闪烁**
+---
 
-详见 [V3_NOTE.md](./docs/V3_NOTE.md)
+## How fast is the wallpaper?
+
+PlainTab's wallpaper display is not "loading an image" — it's **a progression across three time scales**, each building on the previous to make the experience more complete:
+
+| Time | What happens | What the user sees |
+|------|-------------|-------------------|
+| **0ms** (before first paint) | `preload.js` synchronously reads the base64 thumbnail from localStorage and writes it directly to `#wallpaperBack.style.backgroundImage` | A wallpaper that's already there — not full resolution, but **no white screen or gray background** |
+| **~300ms** | `loadWallpaper()` reads the cached Blob from IndexedDB and displays it via a Blob URL | The high-resolution wallpaper appears, smoothly replacing the thumbnail via CSS opacity transition |
+| **Only when cache expires** | Network request to Bing API → download Blob → display → asynchronously cache to IDB | The user doesn't notice — the previous wallpaper remains on the back layer as a fallback |
+
+Every technique described below serves these three moments — either reducing time or eliminating visible transition artifacts.
 
 ---
 
-## ✨ 为什么选择 PlainTab？
+## Technical Highlights
 
-- 🔒 **绝对干净的隐私**
-  不收集任何个人信息，不申请任何敏感权限。所有壁纸只保存在您的本地，浏览习惯完全属于您自己。
+### Zero white screen on first paint: dual-layer wallpaper + synchronous preloading
 
-- 🚀 **一分钟拥有统一的浏览起点**
-  将 `plaintab.netlify.app` 设为浏览器起始页，再安装扩展接管新标签页。扩展**不会强制修改您的主页设置**。
+This is PlainTab's most fundamental design. Before an image finishes loading, a new tab would otherwise expose the browser's default background color — typically white or gray. Two stacked `<div>` layers solve this completely:
 
-- 🧩 **轻得几乎感觉不到**
-  零外部依赖，纯原生 JavaScript，启动瞬间完成。
+- **[`#wallpaperBack`](index.html#L14)** (z-index: 0) — always holds a visible image. [`preload.js`](js/preload.js) is placed in `<head>` and executes synchronously, writing the thumbnail `data:` URL before the browser's first paint. This step is synchronous — no async APIs, no network waits. In multi-image rotation mode, it even knows which thumbnail index to use.
+- **[`#wallpaperFront`](index.html#L16)** (z-index: 1, `opacity: 0`) — handles the fade-in transition. New image is pre-decoded in memory via [`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode) → set as front layer background → CSS [`opacity` transition](https://developer.mozilla.org/docs/Web/CSS/transition) fades in → after transition completes, stabilizes to the back layer → front resets to transparent.
 
-- 🌍 **开箱即用，足够懂你**
-  自动检测浏览器语言（16 种），支持 Google / Bing / 百度 / DuckDuckGo 四种搜索引擎。
+Core principle: **at least one layer always holds a rendered image**. The back layer always has something to display; the front layer only appears briefly during transitions. Even if you watch frame by frame, you will never see a blank moment.
 
----
+### From keystroke to pixel: why thumbnails instead of full images?
 
-## 🚀 两种方式，即刻体验
+`preload.js` cannot wait for async loading — that would miss the first paint. But storing the full image in IndexedDB is async, and the multi-megabyte base64 strings won't fit in localStorage (limited quota). So PlainTab goes one step further after displaying the previous wallpaper: it uses Canvas to resize the image to 640px wide JPEG at 0.55 quality, resulting in compressed sizes typically between 30KB–60KB, safely stored in localStorage. On the next new tab open, `preload.js` reads it and uses it directly.
 
-| 方式 | 说明 | 适合场景 |
-|------|------|----------|
-| 🌐 **在线起始页** | 访问 [plaintab.netlify.app](https://plaintab.netlify.app)，在浏览器设置中设为主页 | 只想换一个清爽的主页 |
-| 🧩 **浏览器扩展** | 从 Chrome 或 Edge 商店安装扩展，新标签页自动变为 PlainTab | 希望每次打开新标签页都有极简体验 |
+At 640px, the thumbnail is sharp enough on 2K displays that it's indistinguishable from a full image — and behind controlling this dozen-KB footprint is the [Canvas API](https://developer.mozilla.org/docs/Web/API/Canvas_API)'s precise scaling combined with [`toDataURL('image/jpeg', 0.55)`](https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement/toDataURL) quality tuning. This thumbnail also serves as the rendering data source for the gallery's 3×4 grid — generated once, reused in two places.
 
-### 浏览器扩展 · 商店安装
-- **Chrome Web Store**: [点击访问](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo)
-- **Edge Add-ons**: [即将上架]()
+### Dual `requestAnimationFrame` drives CSS transitions
 
-> 💡 暂未上架？可通过开发者模式手动加载：进入 `chrome://extensions` → 开启**开发者模式** → **加载已解压的扩展程序** → 选择本项目文件夹
+The step from thumbnail to full-resolution image must trigger a CSS transition. But the browser's style calculation and rendering are asynchronous — if you add the class immediately after setting `backgroundImage`, the browser might process both states in the same frame render cycle, and the transition animation won't fire.
 
----
+```javascript
+requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+        front.classList.add('active');
+    });
+});
+```
 
-## 💡 开发者推荐：三张壁纸，三重入口
+The first [`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) ensures `backgroundImage` has been computed; the second ensures the styles have been committed to the rendering pipeline. Only then does adding the class cause the browser to see a change from "old style → new style", triggering the correct transition. Skip one step, and the transition is bypassed — the user sees a hard cut instead of a fade-in.
 
-装了扩展，你的新标签页已经很好看了。但你可能不知道——PlainTab 还部署在两个地方：
+### Why do IndexedDB and localStorage coexist?
 
-| 入口 | 设置项 | 推荐地址 |
-|------|--------|----------|
-| 🧩 **新标签页** | 浏览器扩展 | 加载本扩展 |
-| 🌐 **起始页** | 浏览器启动时打开 | `plaintab.netlify.app` |
-| 🏠 **主页** | 点击主页按钮时打开 | `kaininx.github.io/PlainTab` |
+The two storage systems are not an either/or choice — they have distinct roles:
 
-把 `plaintab.netlify.app` 设为浏览器的起始页，让它跟着 Bing 每日更新——每次打开浏览器，这就是你的**第二张壁纸**。
+| Storage | What it stores | Why it goes here |
+|---------|---------------|-----------------|
+| [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API) | Raw Blobs (Bing daily wallpaper, user-uploaded local images) | Large files need large quotas; async read/write is perfectly acceptable on non-first-paint paths |
+| [localStorage](https://developer.mozilla.org/docs/Web/API/Window/localStorage) | Thumbnail `data:` URLs, UI preferences, metadata, rotation index | **Synchronous reads** — this is the key. `preload.js` runs before the first paint and cannot wait for any async callback |
 
-没错，还没完。再找到浏览器外观设置里的"主页按钮"，填入 `kaininx.github.io/PlainTab`，换上你喜欢的另一张壁纸——现在你有了**第三张壁纸**。
+The IDB connection is cached as a singleton and automatically reconnects on `onclose`. Blobs retrieved from IDB may lose their MIME type — the `mime` field is always recorded during storage, and on retrieval, the blob is rebuilt with `new Blob([blob], {type: img.mime})` to ensure the Blob URL renders correctly.
 
-三个入口彼此隔离，互不干扰。给它们分别塞一张不同的本地壁纸，或者让它们各自跟着 Bing 每日刷新。打开浏览器是一张，点主页按钮是一张，开新标签页又是一张——换着看，不重样。
+### Thumbnail self-healing
 
-**Setup：**
-1. 装好扩展 → 新标签页 ✓
-2. 浏览器设置 → 启动时 → 打开特定网页 → 填入 `https://plaintab.netlify.app`
-3. 浏览器设置 → 外观 → 显示主页按钮 → 填入 `https://kaininx.github.io/PlainTab`
+`saveLocalImage()` writes to IDB (blob) first, then localStorage (thumbnail). These two steps are not an atomic transaction — if the page crashes between them, the thumbnail array will be one item shorter than the image array. PlainTab does not perform a global self-check at startup (that would mask more serious data inconsistencies). Instead, it **regenerates thumbnails on the fly when rotating to an image whose thumbnail is missing**. Repair only happens when the two arrays have the same length — a length mismatch indicates an unknown write anomaly, and skipping is the safer choice.
 
----
+### Blob URL lifecycle
 
-## 🛠️ 使用方式
+All Blob URLs created via [`URL.createObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) in the gallery are tracked in an array and bulk-revoked via [`URL.revokeObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/revokeObjectURL) when the gallery closes. But this path is a fallback — **pre-generated base64 thumbnails are preferred**, since base64 doesn't require creating/revoking Blob URLs and renders faster.
 
-| 操作 | 效果 |
-|------|------|
-| 鼠标移入右上角 | 显示语言 / 设置图标 |
-| 鼠标移近页面中心 | 搜索栏渐现（"鼠标触发"模式时） |
-| 点击齿轮图标 | 打开壁纸与高级选项面板 |
-| 点击地球图标 | 切换界面语言 |
-| 点击搜索引擎图标 | 循环切换 Google → Bing → 百度 → DuckDuckGo |
-| 在搜索栏按 `Enter` | 使用当前搜索引擎搜索 |
-| 按 `Esc` | 关闭所有面板 |
+### CSS custom properties for runtime theming
 
-### 壁纸
-- **Bing 每日壁纸**：每天自动拉取一次，仅缓存当天一张壁纸。旧缓存自动替换。
-- **本地壁纸**：上传任意大小的图片（IndexedDB 存储，**无文件大小限制**）。始终只保留最后一张上传的壁纸。一键恢复 Bing 每日壁纸。
+Icon opacity (`--icon-opacity`) is controlled through a single [CSS custom property](https://developer.mozilla.org/docs/Web/CSS/--*) modified via JS — one `setProperty` call, and the browser automatically repaints all elements referencing that variable. Design tokens (`--glass-bg`, `--glass-border`, `--text-primary`, etc.) are all defined on [`:root`](https://developer.mozilla.org/docs/Web/CSS/:root), with dark/light themes toggled via the [`prefers-color-scheme`](https://developer.mozilla.org/docs/Web/CSS/@media/prefers-color-scheme) media query.
 
-### 高级选项
-| 选项 | 说明 |
-|------|------|
-| 搜索栏模式 | 鼠标触发 / 常驻 / 始终隐藏 |
-| 图标不透明度 | 0 – 1（默认 0.45） |
-| 默认搜索引擎 | Google / Bing / Baidu / DuckDuckGo |
+### Glass-morphism panels
 
-> **Chrome 扩展 vs Web 版的搜索差异：** 为遵循 Chrome Web Store 的「单一用途」政策，扩展版使用 Chrome Search API 进行搜索，直接调用用户在浏览器设置中选定的默认搜索引擎，不再提供引擎切换功能。Web 版（Netlify / GitHub Pages）不受此限制，保留完整的搜索引擎选择器。除搜索实现外，两个版本功能完全一致。
->
-> 所有设置自动保存在 `localStorage`，无需登录，无云端同步。
+Settings and language panels use [`backdrop-filter: blur()`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) to blur the wallpaper content **behind** the panel — not a cheap semi-transparent overlay. Combined with `--glass-bg: rgba(18, 18, 22, 0.82)`, this creates a genuine sense of depth.
+
+### Mouse position-aware UI
+
+Corner buttons and the search bar only appear when needed — `isNearTopRight()` and `isInCenter()` use simple math functions to determine mouse position, avoiding the need for `mouseenter`/`mouseleave` bindings on the full-screen background layer. Hiding has a debounce delay (400ms for buttons, 150ms for the search bar), and is skipped when a panel is open or the input is focused. Every interaction path is the shortest possible: **appear quickly, disappear steadily** — never interrupt the user with false triggers.
+
+### Serialized Promise chain for batch uploads
+
+Users can select multiple local wallpapers at once. Each `saveLocalImage()` call reads and writes to IDB — parallel execution would cause data races. Batch upload uses a Promise chain to serialize all save operations, writing one image at a time. The first successfully saved image is displayed as the wallpaper; the rest are stored silently. This prevents the flickering that would be caused by repeatedly switching images.
+
+### `chrome.search.query()` for CWS compliance
+
+In extension mode, [`chrome.search.query()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/search/query) delegates search to the browser's default search engine — a requirement for Chrome Web Store single-purpose policy compliance. The engine selector is hidden from the DOM, and the icon becomes a static magnifying glass.
 
 ---
 
-## 🔧 新标签页底部灰条
+## Techniques used to eliminate latency
 
-安装扩展后，Chrome / Edge 新标签页右下角会显示页脚（标明当前扩展名称）。这是浏览器行为，并非 PlainTab 添加。
+PlainTab doesn't use any frameworks or libraries. Every API listed below was chosen to **eliminate one async wait, remove one visible flicker, or shave one frame of latency**:
 
-**关闭方法（来自 [Chrome 官方帮助](https://support.google.com/chrome/answer/11032183?hl=zh-Hans)）：**
+- **[`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode)** — Decodes asynchronously before setting `backgroundImage`, avoiding the decode pause during first paint. An `<img>` being loaded doesn't mean it's decoded — without calling `decode()`, the first paint may show a brief blank frame
+- **[`backdrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter)** — Replaces extra DOM layers and mask images with GPU-composited blur, zero additional layout cost
+- **[`<meta name="darkreader-lock">`](https://github.com/darkreader/darkreader/blob/main/tips/website-lock-meta-tag.md)** — Locks Dark Reader, preventing it from inverting wallpaper colors with filters — the wallpaper is visual content itself, and having it filtered would undo the fidelity efforts of the Canvas thumbnail pipeline
+- **[`color-scheme: dark light`](https://developer.mozilla.org/docs/Web/CSS/color-scheme)** — A single declaration lets the browser automatically adapt form elements, scrollbars, and system controls — no need to write two separate style overrides
+- **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — A unified easing curve shared by all fade-in and pop animations. Not `ease` or `ease-in-out` — this curve reaches its target faster at the start and decelerates more gently at the end. For millisecond-level UI response differences, the felt difference is noticeable
+- **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — Retrieves the browser UI language in extension mode, more accurately reflecting the user's true intent than `navigator.language`
+- **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — Instead of guessing render timing with `setTimeout`, it aligns precisely with the browser's frame cadence. Using it twice in succession ensures a clear frame boundary between style computation and commit
 
-打开新标签页 → 点击右下角「自定义 Chrome」✏️ 图标 → 页脚 → 关闭「在"新标签页"页面上显示页脚」。
+**The technologies NOT used are equally important**: zero external dependencies. No React, no Tailwind, no build tools. The CSP in `manifest.json` restricts `script-src 'self'` — the browser enforces pure vanilla JS. Every library not included means less parse time, less network overhead, and an earlier first paint.
 
----
-
-## 🌐 多语言支持
-
-内置 16 种语言，随浏览器语言自动切换，也可随时手动选择：
-`简体中文` `繁體中文` `English` `Español` `हिन्दी` `العربية` `Português` `Русский` `日本語` `Deutsch` `한국어` `Français` `Italiano` `Türkçe` `Polski` `Tiếng Việt`
-
-想贡献新语言？编辑 `languages.js` 并提交 Pull Request 即可。
-
----
-
-## 🤝 参与贡献
-
-欢迎任何 Issue 和 Pull Request。请保持 PlainTab 的极简风格——原生 JS，无构建步骤，无三方依赖。
+**Font stack**: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif` — OS-native fonts, zero network requests, zero layout shift. Font files are typically one of the largest blocking resources on a page — PlainTab sidesteps the entire problem.
 
 ---
 
-## 📄 许可证
+## Two runtime modes
 
-MIT © [Kaelri](https://github.com/kaininx)
+Same codebase, environment auto-detected at runtime:
+
+| Feature | Extension mode | Web mode |
+|---------|---------------|----------|
+| Environment detection | `chrome.runtime.id` exists | Everything else |
+| Search engine | Browser default (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo selectable |
+| Engine switching | Not switchable (static magnifying glass) | Cycle through icons on click |
+| Deployment | Chrome Web Store / Developer load | Netlify / GitHub Pages |
+| CSP | Declared in `manifest.json` | No CSP needed |
 
 ---
 
-## 🙏 致谢
+## Wallpaper loading priority
 
-- Bing 壁纸接口来自 [bing.img.run](https://bing.img.run) 和 [bing.biturl.top](https://bing.biturl.top)
-- 展示截图中使用的部分壁纸来自网络，谢谢每一位才华横溢的创作者。
+Each time a new tab opens, PlainTab searches for the fastest available wallpaper source in this order:
+
+1. **Local wallpaper rotation** — the user's own images (up to 12), blobs already in IDB, fetched directly. Thumbnails are pre-generated. Zero network overhead.
+2. **Today's Bing cache** — the Bing wallpaper already fetched today, blob in IDB, converted directly to a Blob URL for display. Zero network overhead.
+3. **Bing network fetch** — only when both previous tiers are unavailable does it hit the network. The URL is displayed immediately upon retrieval, while the blob is asynchronously downloaded and cached to IDB — eliminating network wait for the next time.
+
+In local wallpaper mode, the Bing wallpaper is silently updated in the background — users can switch back to Bing mode at any time without waiting for the network.
+
+The Bing API has two endpoints for primary/backup disaster recovery. Language codes (e.g., `zh-CN`) are mapped to Bing market codes, with some languages falling back to `en-US`.
 
 ---
 
-<p align="center">
-  <sub>干净 · 快速 · 无页面广告 · 只属于你</sub>
-</p>
+## Internationalization
+
+Supports 16 languages: 简体中文, 繁體中文, English, 日本語, 한국어, Español, Русский, Deutsch, Français, Italiano, Português, हिन्दी, العربية, Türkçe, Polski, Tiếng Việt.
+
+Two parallel i18n systems: Chrome's `_locales/` handles extension manifest metadata (only `extName` and `extDesc` keys), while [`languages.js`](js/languages.js) handles all UI strings. Language detection priority: Chrome UI language (extension mode) → `navigator.language` (web mode) → primary language match → English fallback.
+
+Found a translation issue or want to add a language? Everything lives in a single file: [`js/languages.js`](js/languages.js), a flat key-value map. Make your changes and submit a PR.
+
+---
+
+## Project structure
+
+```
+PlainTab/
+├── manifest.json            # Chrome/Edge extension manifest (Manifest V3)
+├── index.html               # Single HTML page (extension new tab / web start page)
+├── 404.html                 # Netlify SPA fallback
+├── LICENSE                  # MIT License
+│
+├── css/
+│   └── newtab.css           # All styles: dual-layer wallpaper, glass-morphism panels, search bar, responsive
+│
+├── js/
+│   ├── preload.js           # Synchronous IIFE: injects thumbnail into back layer before first paint
+│   ├── languages.js         # 16-language UI string table + language list
+│   └── newtab.js            # Main application: wallpaper management, i18n, storage, UI, search engine
+│
+├── _locales/                # Chrome i18n (16 language directories, extension manifest only)
+│   ├── en/messages.json
+│   ├── zh_CN/messages.json
+│   └── ...
+│
+├── icon/                    # Extension icons (16/48/128/2048 px)
+│
+├── imgs/                    # Screenshots and promo images
+│   ├── chrome_01.jpg ~ chrome_08.jpg  # Feature screenshots
+│   └── small_promo.png      # Chrome Web Store small promo tile
+│
+├── docs/                    # Multi-language READMEs (16 languages) + CHANGELOG
+│
+└── changelog/               # Per-language changelogs
+```
+
+- **[`css/`](css/)** — Single ~617-line file: dark/light themes, glass-morphism design tokens, 480px responsive breakpoint
+- **[`js/`](js/)** — Three files loaded in order: `preload.js` → `languages.js` → `newtab.js` (order is critical)
+- **[`_locales/`](_locales/)** — Contains only `extName` and `extDesc` for manifest; all UI strings managed by [`languages.js`](js/languages.js)
+- **[`imgs/`](imgs/)** — Screenshots and promo tiles required by Chrome Web Store
+- **[`docs/`](docs/)** and **[`changelog/`](changelog/)** — Multi-language documentation, 16 languages each in separate files
+
+---
+
+## Contributing & License
+
+Open source under the MIT license. Found a bug or have an idea? → [Open an Issue](https://github.com/kaininx/PlainTab/issues). Want to contribute code? → Fork + PR.
+
+A few ground rules:
+- **Stay zero-dependency** — no npm packages, CDN scripts, or frameworks
+- **No build steps** — `index.html` runs directly in the browser
+- **Don't expand permissions** — `manifest.json` keeps only the `search` permission
+
+📋 [Changelog](docs/CHANGELOG.md)
+
+---
+
+## Credits
+
+- Bing daily wallpaper images come from [Bing](https://www.bing.com) — thank you to the Microsoft Bing team for years of consistently beautiful daily photos
+- API proxies: [bing.biturl.top](https://bing.biturl.top) (public proxy) and [bing.kaininx.workers.dev](https://bing.kaininx.workers.dev) (Cloudflare Worker backup)
+- Wallpapers featured in screenshots are from creators across the web
+
+MIT · [Kaelri](https://github.com/kaininx)

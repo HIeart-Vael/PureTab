@@ -1,181 +1,277 @@
 <p align="center">
-  <img src="../icon/icon2048.png" alt="Logotipo PlainTab" width="80">
+  <img src="../icon/icon2048.png" alt="PlainTab Logo" width="80">
 </p>
 
-<h1 align="center">PlainTab V3 · Página Inicial Minimalista</h1>
+<h1 align="center">PlainTab · Nova Guia Minimalista</h1>
 
-> **Uma nova aba deve fazer apenas uma coisa:**
-> Abrir → mostrar um papel de parede que você aprecia → enviá-lo para a página que precisa.
-> Você realmente precisa da hora, uma saudação ou uma tela cheia de atalhos?
-> **A resposta do PlainTab: subtração radical. Uma reescrita completa com arquitetura de papel de parede de camada dupla. Zero cintilação — deixe sua nova aba retornar ao puro «PLAIN».**
+
+ > Uma nova guia so precisa fazer uma coisa — ser aberta, exibir um belo papel de parede e te levar para a proxima pagina. Voce realmente precisa de um relogio, uma saudacao ou uma tela cheia de atalhos? A resposta do PlainTab: subtracao maxima, velocidade maxima — faca sua nova guia voltar a ser o que sempre deveria ser: bonita e limpa.
 
 <p align="center">
-  <a href="../README.md">简体中文</a> · <a href="README_en.md">English</a> · <a href="README_ja.md">日本語</a> · <a href="README_ru.md">Русский</a> · <a href="README_ko.md">한국어</a> · <a href="README_es.md">Español</a> · <a href="README_hi.md">हिन्दी</a> · <a href="README_ar.md">العربية</a> · <a href="README_pt.md">Português</a> · <a href="README_de.md">Deutsch</a> · <a href="README_fr.md">Français</a> · <a href="README_it.md">Italiano</a> · <a href="README_tr.md">Türkçe</a> · <a href="README_pl.md">Polski</a> · <a href="README_vi.md">Tiếng Việt</a> · <a href="README_zh-TW.md">繁體中文</a>
+  <a href="../README.md">English</a> · <a href="README_zh-CN.md">中文 (简体)</a> · <a href="README_zh-TW.md">中文 (繁體)</a> · <a href="README_hi.md">हिन्दी</a> · <a href="README_es.md">Español</a> · <a href="README_ar.md">العربية</a> · <a href="README_fr.md">Français</a> · <a href="README_ru.md">Русский</a> · <a href="README_de.md">Deutsch</a> · <a href="README_ja.md">日本語</a> · <a href="README_it.md">Italiano</a> · <a href="README_tr.md">Türkçe</a> · <a href="README_vi.md">Tiếng Việt</a> · <a href="README_ko.md">한국어</a> · <a href="README_pl.md">Polski</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.4-blue?style=flat-square" alt="Versão">
+  <img src="https://img.shields.io/badge/version-3.1.0-blue?style=flat-square" alt="Versao">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licença">
+    <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licenca">
   </a>
   <a href="https://plaintab.netlify.app">
-    <img src="https://img.shields.io/badge/Live%20Demo-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Demonstração ao vivo">
+    <img src="https://img.shields.io/badge/Experimente%20online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
-</p>
-
-<p align="center">
-  <strong>Uma página inicial limpa, rápida e não intrusiva para novas abas.</strong><br>
-  Disponível em <a href="https://plaintab.netlify.app">plaintab.netlify.app</a> · zero cintilação · sem limite de tamanho de arquivo<br>
-  Papel de parede diário do Bing · Imagens locais · 16 idiomas · Barra de pesquisa flexível · <strong>Privacidade em primeiro lugar</strong>
 </p>
 
 <div align="center">
   <img src="../imgs/chrome_01.jpg" width="45%" />
-  <img src="../imgs/chrome_02.jpg" width="45%" /> 
-  <img src="../imgs/chrome_03.jpg" width="45%" />
-  <img src="../imgs/chrome_04.jpg" width="45%" /> 
-  <img src="../imgs/chrome_05.jpg" width="45%" />
-  <img src="../imgs/chrome_06.jpg" width="45%" /> 
-  <img src="../imgs/chrome_07.jpg" width="45%" />
-  <img src="../imgs/chrome_08.jpg" width="45%" /> 
+  <img src="../imgs/chrome_02.jpg" width="45%" />
 </div>
+
+<details>
+<summary><b>📸 Veja mais capturas de tela</b></summary>
+<div align="center">
+  <img src="../imgs/chrome_03.jpg" width="45%" />
+  <img src="../imgs/chrome_04.jpg" width="45%" />
+  <img src="../imgs/chrome_05.jpg" width="45%" />
+  <img src="../imgs/chrome_06.jpg" width="45%" />
+  <img src="../imgs/chrome_07.jpg" width="45%" />
+  <img src="../imgs/chrome_08.jpg" width="45%" />
+</div>
+</details>
+
+---
+Abrir uma nova guia e um gesto instantaneo — voce aperta `Ctrl+T` e espera que o papel de parede ja esteja la. Para fazer isso direito, todo o design do PlainTab gira em torno de um objetivo: **fazer o papel de parede aparecer na tela o mais rapido possivel**, sem nenhum processo de carregamento visivel. Arquitetura de camada dupla, pre-carregamento sincrono, pipeline de miniaturas via Canvas, estrategia de armazenamento hibrida — toda decisao tecnica leva a mesma coisa: mais rapido, mais suave, mais imperceptivel.
+
+O PlainTab e ao mesmo tempo uma extensao de navegador Manifest V3 e uma pagina web independente. Zero dependencias externas, sem etapa de build, vanilla JS + CSS puro. O modo extensao e o modo web compartilham o mesmo codigo, com deteccao automatica de ambiente em tempo de execucao. [Experimente online](https://plaintab.netlify.app).
 
 ---
 
-## 🆕 Novidades na v3
+## Comeco rapido
 
-A v3 é uma **reescrita completa do zero** com um avanço: **sistema de papel de parede de camada dupla com zero cintilação**.
+**Extensao de navegador**: instale pela [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
+
+**Pagina inicial online**: acesse [plaintab.netlify.app](https://plaintab.netlify.app) e defina-a como pagina inicial nas configuracoes do seu navegador.
+
+**Execucao local**:
+
+```bash
+git clone https://github.com/kaininx/PlainTab.git
+```
+
+Carregue o diretorio em `chrome://extensions` usando "Carregar extensao descompactada". Sem etapa de build, sem `npm install`.
 
 <details>
-<summary><b>💡 Por que a v2 cintilava?</b></summary>
+<summary><b>🔧 Como remover a barra cinza no final da nova guia?</b></summary>
 
-A versão antiga usava uma única `<div>` com alternância de `background-image` via CSS. Passar da miniatura (regra de folha de estilo) para a imagem completa (estilo inline) exigia uma mudança em cascata — durante a qual o navegador descartava o fundo renderizado por pelo menos um quadro, revelando o fundo cinza.
+Apos instalar a extensao, o Chrome / Edge pode exibir um rodape no canto inferior direito da nova guia (indicando o nome da extensao). Isso e comportamento do navegador e nao pode ser controlado pelo PlainTab via codigo.
+
+Para desativar: nova guia → "Personalizar Chrome" ✏️ no canto inferior direito → Rodape → desative "Mostrar rodape na pagina 'Nova guia'". Consulte a [Ajuda oficial do Chrome](https://support.google.com/chrome/answer/11032183?hl=pt-BR).
 
 </details>
 
-**Solução da v3 — Composição de camada dupla:**
-1. `#wallpaperBack` — sempre mantém uma imagem visível. `preload.js` escreve sincronamente uma miniatura de 640px antes da primeira pintura do navegador
-2. `#wallpaperFront` — começa transparente. Após a imagem completa ser decodificada, aparece gradualmente por cima
-3. Pelo menos uma camada sempre tem uma imagem visível → **sem flash cinza**
+---
 
-Consulte [V3_NOTE.md](./V3_NOTE.md) para detalhes técnicos completos.
+## Quao rapido e o papel de parede?
+
+A exibicao do papel de parede no PlainTab nao e "carregar uma imagem", mas sim **uma progressao em tres escalas de tempo**, cada uma aprimorando a experiencia da anterior:
+
+| Momento | O que acontece | O que o usuario ve |
+|---------|---------------|-------------------|
+| **0ms** (antes do primeiro quadro) | `preload.js` le de forma sincrona a miniatura base64 do `localStorage` e a escreve diretamente em `#wallpaperBack.style.backgroundImage` | Um papel de parede ja visivel — nao em alta definicao, mas **sem tela branca ou fundo cinza** |
+| **~300ms** | `loadWallpaper()` le o blob em cache do IndexedDB e o exibe via Blob URL | O papel de parede em alta definicao aparece, substituindo suavemente a miniatura com uma transicao de opacidade CSS |
+| **Apenas quando o cache expira** | Requisicao de rede a API do Bing → download do Blob → exibicao → cache assincrono no IDB | O usuario nao percebe — o papel de parede anterior permanece na camada de fundo como fallback |
+
+Cada tecnica a seguir serve a esses tres momentos — seja reduzindo o tempo, seja eliminando vestigios visiveis da transicao.
 
 ---
 
-## ✨ Por que PlainTab?
+## Destaques tecnicos
 
-- 🔒 **Privacidade absolutamente limpa** — Nenhum dado pessoal coletado. Todos os papéis de parede armazenados localmente.
-- 🚀 **Início de navegação unificado em um minuto** — Defina como página inicial + instale a extensão. A extensão nunca força alterações na página inicial.
-- 🧩 **Tão leve que você mal sente** — Zero dependências, JavaScript puro, inicialização instantânea.
-- 🌍 **Funciona de imediato** — Detecta automaticamente o idioma do navegador (16), suporta Google / Bing / Baidu / DuckDuckGo.
+### Zero tela branca no primeiro quadro: camada dupla + pre-carregamento sincrono
 
----
+Este e o design mais central do PlainTab. Antes do carregamento da imagem, uma nova guia exibe a cor de fundo padrao do navegador — geralmente uma tela branca ou fundo cinza. Duas camadas `<div>` resolvem este problema completamente:
 
-## 🚀 Duas formas de experimentar
+- **[`#wallpaperBack`](../index.html#L14)** (z-index: 0) — sempre mantem uma imagem visivel. [`preload.js`](../js/preload.js) e colocado no `<head>` e executado de forma sincrona, escrevendo a miniatura `data: URL` antes mesmo do primeiro quadro do navegador. Esta etapa e sincrona — nao passa por nenhuma API assincrona, nao espera por rede. No modo de rotacao de multiplas imagens, ele ate sabe qual indice de miniatura usar.
+- **[`#wallpaperFront`](../index.html#L16)** (z-index: 1, `opacity: 0`) — usado para transicoes de fade-in. A nova imagem e pre-decodificada em memoria via [`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode) → definida como fundo da camada frontal → transicao CSS de [`opacity`](https://developer.mozilla.org/docs/Web/CSS/transition) → apos a conclusao, estabilizada na camada traseira → front reseta para transparente.
 
-| Método | Descrição | Melhor para |
-|--------|-------------|----------|
-| 🌐 **Página inicial online** | Visite [plaintab.netlify.app](https://plaintab.netlify.app), defina como página inicial do navegador | Uma página inicial limpa sem instalar nada |
-| 🧩 **Extensão do navegador** | Instale da Chrome ou Edge Store | Experiência minimalista em cada nova aba |
+Principio central: **em qualquer momento, pelo menos uma camada contem uma imagem renderizada**. A camada traseira sempre tem algo para exibir; a frontal so entra em cena brevemente durante a transicao. Mesmo que o usuario observe quadro a quadro, nunca vera um instante vazio.
 
-### Extensão de Navegador · Instalação da Loja
-- **Chrome Web Store**: [Em breve]()
-- **Edge Add-ons**: [Em breve]()
+### Da entrada ao pixel: por que miniatura em vez da imagem original?
 
-> 💡 Ainda não está no ar? Carregue manualmente no modo desenvolvedor: vá a `chrome://extensions` → ative o **Modo desenvolvedor** → **Carregar sem compactação** → selecione a pasta do projeto
+O `preload.js` nao pode esperar carregamento assincrono — isso perderia o primeiro quadro. Mas armazenar a imagem original no IndexedDB e assincrono, e uma string base64 de varios MB nao cabe no `localStorage` (cota limitada). Entao, apos exibir o papel de parede anterior, o PlainTab **da um passo extra**: usa o Canvas para redimensionar a imagem para um JPEG de 640px de largura com qualidade 0.55, geralmente comprimindo para 30KB–60KB, armazenando com seguranca no `localStorage`. Na proxima abertura de nova guia, o `preload.js` o utiliza diretamente.
 
----
+640px e nitido o suficiente em telas 2K para nao parecer uma miniatura — e para controlar esses poucos KB de tamanho, por tras estao o dimensionamento preciso da [Canvas API](https://developer.mozilla.org/docs/Web/API/Canvas_API) + o ajuste de qualidade de [`toDataURL('image/jpeg', 0.55)`](https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement/toDataURL). Esta miniatura tambem e a fonte de dados para o grid 3x4 da galeria — gerada uma vez, reutilizada em dois lugares.
 
-## 💡 Escolha do desenvolvedor: três papéis de parede, três entradas
+### Duplo `requestAnimationFrame` impulsionando transicao CSS
 
-Você instalou a extensão — sua nova aba já está ótima. Mas aqui está algo que você talvez não saiba: o PlainTab também está implantado em mais dois lugares:
+Na etapa de transicao da miniatura para a imagem em alta definicao, a transicao CSS deve ser acionada. Mas o calculo de estilo e a renderizacao do navegador sao assincronos — se voce adicionar a classe imediatamente apos definir o `backgroundImage`, o navegador pode processar ambos os estados no mesmo quadro de renderizacao, e a animacao de transicao nao sera acionada.
 
-| Entrada | Configuração | URL |
-|---------|-------------|------|
-| 🧩 **Nova aba** | Extensão do navegador | Carregar esta extensão |
-| 🌐 **Página inicial** | Inicialização do navegador | `plaintab.netlify.app` |
-| 🏠 **Homepage** | Botão inicial | `kaininx.github.io/PlainTab` |
+```javascript
+requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+        front.classList.add('active');
+    });
+});
+```
 
-Defina `plaintab.netlify.app` como a página inicial do seu navegador, deixe-a seguir a atualização diária do Bing. Cada vez que você iniciar o navegador, esse será seu **segundo papel de parede**.
+O primeiro [`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) garante que o `backgroundImage` foi computado; o segundo garante que o estilo foi submetido ao pipeline de renderizacao. So entao, ao adicionar a classe, o navegador ve a mudanca de "estilo antigo → novo estilo" e pode acionar a transicao corretamente. Falte um passo, e a transicao e ignorada — o usuario ve uma troca brusca em vez de um fade-in suave.
 
-Sim, tem mais. Encontre o "Botão inicial" nas configurações de aparência do seu navegador, coloque `kaininx.github.io/PlainTab`, escolha outro papel de parede que você goste. Agora você tem um **terceiro papel de parede**.
+### Por que IndexedDB e localStorage coexistem?
 
-As três entradas são completamente isoladas. Dê a cada uma um papel de parede local diferente, ou deixe cada uma seguir a atualização diária do Bing. Abra o navegador: um papel de parede. Clique no botão inicial: outro. Abra uma nova aba: um terceiro. Rotação garantida.
+Os dois armazenamentos nao sao uma escolha binaria, mas uma divisao de trabalho:
 
-**Configuração:**
-1. Instale a extensão → Nova aba ✓
-2. Configurações do navegador → Ao iniciar → Abrir uma página específica → `https://plaintab.netlify.app`
-3. Configurações do navegador → Aparência → Mostrar botão inicial → `https://kaininx.github.io/PlainTab`
+| Armazenamento | O que contem | Por que aqui |
+|--------------|-------------|--------------|
+| **[IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API)** | Blobs originais (Bing daily, imagens locais enviadas pelo usuario) | Arquivos grandes precisam de cota grande; leitura/escrita assincrona e perfeitamente aceitavel em caminhos fora do primeiro quadro |
+| **[localStorage](https://developer.mozilla.org/docs/Web/API/Window/localStorage)** | Miniaturas `data: URL`, preferencias de UI, metadados, indice de rotacao | **Leitura sincrona** — este e o ponto-chave. `preload.js` executa antes do primeiro quadro e nao pode esperar por callbacks assincronos |
 
----
+A conexao IDB e armazenada em cache como singleton, recriada automaticamente em `onclose`. Blobs recuperados do IDB podem perder o MIME type — o campo `mime` e sempre registrado ao armazenar, e ao recuperar usa-se `new Blob([blob], {type: img.mime})` para reconstruir, garantindo que o Blob URL renderize corretamente.
 
-## 🛠️ Uso
+### Auto-cura de miniaturas
 
-| Ação | Efeito |
-|--------|--------|
-| Mover o mouse para o canto superior direito | Mostrar ícones de idioma / configurações |
-| Mover o mouse perto do centro | Barra de pesquisa aparece (modo flutuante) |
-| Clicar no ícone de engrenagem | Abrir painel de papel de parede e opções avançadas |
-| Clicar no ícone do globo | Alternar idioma da interface |
-| Clicar no ícone do mecanismo de pesquisa | Alternar Google → Bing → Baidu → DuckDuckGo |
-| Pressionar `Enter` na barra de pesquisa | Pesquisar com o mecanismo atual |
-| Pressionar `Esc` | Fechar todos os painéis |
+`saveLocalImage()` primeiro escreve no IDB (blob), depois no localStorage (miniatura). As duas etapas nao sao uma transacao atomica — se a pagina falhar exatamente entre elas, o array de miniaturas tera um item a menos que o array de imagens. O PlainTab nao faz uma auto-verificacao global na inicializacao (isso mascararia inconsistencias de dados mais graves), mas sim **regenera a miniatura no local** quando a rotacao encontra a imagem com a miniatura ausente. A correcao so ocorre quando os dois arrays tem o mesmo comprimento — comprimentos diferentes indicam uma anomalia de gravacao desconhecida; ignorar e a escolha mais segura.
 
-### Papel de parede
-- **Bing Diário**: Obtido automaticamente uma vez por dia. Apenas a imagem de hoje é armazenada em cache localmente.
-- **Papel de parede local**: Envie imagens de qualquer tamanho (IndexedDB, **sem limite de tamanho de arquivo**). Apenas a última imagem enviada é mantida. Redefinição com um clique para o Bing diário.
+### Ciclo de vida de Blob URLs
 
-### Opções avançadas
-| Opção | Descrição |
-|--------|-------------|
-| Modo da barra de pesquisa | Flutuante / Sempre / Oculta |
-| Opacidade do ícone | 0 – 1 (padrão 0.45) |
-| Mecanismo de pesquisa | Google / Bing / Baidu / DuckDuckGo |
+Todas as Blob URLs criadas via [`URL.createObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) na galeria sao rastreadas em um array e limpas em lote via [`URL.revokeObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/revokeObjectURL) ao fechar a galeria. Mas este caminho e um fallback — **miniaturas base64 pre-geradas sao prioritarias**, pois base64 nao requer criacao/revogacao de Blob URL e renderiza mais rapido.
 
-> **Extensão Chrome vs. Versão Web — Diferença de pesquisa:** Para cumprir a política de "Propósito Único" da Chrome Web Store, a extensão usa a Chrome Search API, que respeita o mecanismo de pesquisa padrão definido nas configurações do navegador do usuário. O recurso de alternância de mecanismo não está disponível no modo de extensão. A versão web (Netlify / GitHub Pages) não está sujeita a esta restrição e mantém o seletor completo de mecanismo de pesquisa. Além da implementação de pesquisa, ambas as versões são funcionalmente idênticas.
+### Propriedades customizadas CSS para tema em tempo de execucao
 
-> Todas as configurações salvas no `localStorage`. Sem conta, sem sincronização na nuvem.
+A opacidade dos icones (`--icon-opacity`) e controlada via JS modificando uma [propriedade customizada CSS](https://developer.mozilla.org/docs/Web/CSS/--*), unificando todos os botoes de canto e Paineis — uma unica `setProperty` faz o navegador redesenhar automaticamente todos os elementos que referenciam essa variavel. Os tokens de design (`--glass-bg`, `--glass-border`, `--text-primary`, etc.) sao todos definidos em [`:root`](https://developer.mozilla.org/docs/Web/CSS/:root), com tema escuro/claro alternado via media query [`prefers-color-scheme`](https://developer.mozilla.org/docs/Web/CSS/@media/prefers-color-scheme).
+
+### Paineis de vidro fosco
+
+Os Paineis de configuracoes e idioma usam [`backdrop-filter: blur()`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter) para desfocar o conteudo do papel de parede **atras** do Painel — nao e uma solucao barata de mascara semitransparente. Combinado com `--glass-bg: rgba(18, 18, 22, 0.82)`, produz uma verdadeira sensacao de profundidade.
+
+### UI sensivel a posicao do mouse
+
+Os botoes de canto e a barra de pesquisa so aparecem quando necessarios — duas funcoes matematicas `isNearTopRight()` e `isInCenter()` determinam a posicao do mouse, sem necessidade de bind `mouseenter`/`mouseleave` no fundo da tela inteira. O ocultamento tem atraso (400ms para botoes, 150ms para a barra de pesquisa) e e ignorado quando o painel esta aberto ou o campo de entrada esta focado. Cada caminho de interacao e o mais curto possivel: **aparecer rapido, desaparecer estavel**, sem interromper o usuario por disparos acidentais.
+
+### Cadeia de Promises serial para upload em lote
+
+Usuarios podem selecionar varias imagens locais de uma vez. Cada `saveLocalImage()` le e escreve no IDB — execucao paralela causaria condicoes de corrida. Uploads em lote usam uma cadeia de Promises serial para todas as operacoes de salvamento, escrevendo uma imagem de cada vez; a primeira imagem salva com sucesso e exibida como papel de parede, as demais sao apenas armazenadas. Assim, o usuario nao ve cintilacoes causadas por trocas repetidas de imagem.
+
+### `chrome.search.query()` para conformidade com CWS
+
+No modo extensao, [`chrome.search.query()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/search/query) delega a pesquisa ao mecanismo de busca padrao do navegador — requisito de conformidade com a politica de proposito unico da Chrome Web Store. O seletor de mecanismo e ocultado do DOM e o icone se torna uma lupa estatica.
 
 ---
 
-## 🔧 Barra de rodapé da nova guia
+## Tecnologias usadas para eliminar latencia
 
-Após instalar a extensão, o Chrome / Edge mostra um rodapé no canto inferior direito da página de nova guia (exibindo o nome da extensão). Isso é um comportamento do navegador, não algo que o PlainTab adiciona.
+O PlainTab nao usa nenhum framework ou biblioteca. Cada API abaixo foi escolhida para **eliminar uma espera assincrona, eliminar uma cintilacao visivel, reduzir um quadro de latencia**:
 
-**Como ocultar (de acordo com a [Ajuda do Chrome](https://support.google.com/chrome/answer/11032183?hl=pt)):**
+- **[`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode)** — decodifica assincronamente antes de definir o `backgroundImage`, evitando a pausa de decodificacao no primeiro quadro. O carregamento do `<img>` nao significa que a decodificacao terminou; sem chamar `decode()`, pode aparecer um quadro branco breve na primeira renderizacao
+- **[`backdrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter)** — usa desfoque sintetizado por GPU em vez de camadas DOM extras e mascaras de imagem, zero custo adicional de layout
+- **[`<meta name="darkreader-lock">`](https://github.com/darkreader/darkreader/blob/main/tips/website-lock-meta-tag.md)** — bloqueia o Dark Reader, impedindo que ele inverta as cores do papel de parede com filtros — o papel de parede e conteudo visual, e ser filtrado anularia o esforco de fidelidade do pipeline de miniaturas via Canvas
+- **[`color-scheme: dark light`](https://developer.mozilla.org/docs/Web/CSS/color-scheme)** — uma unica declaracao faz o navegador adaptar automaticamente as cores de formularios, barras de rolagem e controles do sistema, sem necessidade de dois conjuntos de estilos manuais
+- **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — curva de easing unificada para todos os fades e animacoes de pop-in. Nao e `ease` ou `ease-in-out` — esta curva chega ao alvo mais rapido no inicio e tem uma atenuacao mais suave no final; para diferencas de resposta de UI na escala de milissegundos, a diferenca perceptivel e clara
+- **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — no modo extensao, obtem o idioma da UI do navegador, refletindo a real intencao do usuario com mais precisao do que `navigator.language`
+- **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — nao depende de `setTimeout` para adivinhar o momento da renderizacao, mas alinha-se precisamente ao ritmo de quadros do navegador. Usado duas vezes consecutivas para garantir uma fronteira de quadro clara entre o calculo de estilo e a submissao
 
-Abra uma nova guia → clique no ícone "Personalizar o Chrome" ✏️ no canto inferior direito → Rodapé → desative "Mostrar rodapé na página Nova guia".
+**As tecnologias nao usadas sao igualmente importantes**: zero dependencias externas. Sem React, Tailwind ou ferramentas de build. O CSP no `manifest.json` restringe `script-src 'self'` — o navegador impoe vanilla JS puro. Cada biblioteca nao incluida significa menos tempo de parsing, menor sobrecarga de rede, primeiro quadro mais cedo.
 
----
-
-## 🌐 Suporte multilíngue
-
-16 idiomas integrados, detectados automaticamente pelo navegador, selecionáveis manualmente a qualquer momento:
-`English` `简体中文` `繁體中文` `Español` `हिन्दी` `العربية` `Português` `Русский` `日本語` `Deutsch` `한국어` `Français` `Italiano` `Türkçe` `Polski` `Tiếng Việt`
-
----
-
-## 🤝 Contribuição
-
-Issues e Pull Requests são bem-vindas. Mantenha o PlainTab minimalista — JavaScript puro, sem etapas de compilação, sem dependências.
+**Font stack**: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif` — fontes nativas do sistema operacional, zero requisicoes de rede, zero deslocamento de layout. Arquivos de fonte estao entre os maiores recursos de bloqueio de pagina; o PlainTab contorna todo o problema.
 
 ---
 
-## 📄 Licença
+## Dois modos de operacao
 
-MIT © [Kaelri](https://github.com/kaininx)
+Mesmo codigo, deteccao automatica de ambiente em tempo de execucao:
+
+| Caracteristica | Modo Extensao | Modo Web |
+|---------------|---------------|----------|
+| Deteccao de ambiente | `chrome.runtime.id` existe | Todos os outros casos |
+| Mecanismo de busca | Padrao do navegador (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo selecionavel |
+| Alternancia de mecanismo | Nao alternavel (lupa estatica) | Rotacao ao clicar no icone |
+| Implantacao | Chrome Web Store / carregamento pelo desenvolvedor | Netlify / GitHub Pages hospedagem direta |
+| CSP | Declarado no `manifest.json` | Sem CSP |
 
 ---
 
-## 🙏 Agradecimentos
+## Prioridade de carregamento do papel de parede
 
-- APIs de papel de parede do Bing: [bing.img.run](https://bing.img.run) e [bing.biturl.top](https://bing.biturl.top)
-- Alguns papéis de parede nas capturas de tela são da web — agradecimentos a cada criador talentoso.
+Cada vez que uma nova guia e aberta, a seguinte ordem de fontes de papel de parede mais rapidas e consultada:
+
+1. **Rodizio de wallpapers locais** — imagens do proprio usuario (ate 12), blob ja no IDB, acesso direto. Miniatura pre-gerada. Zero custo de rede.
+2. **Cache Bing do dia** — o wallpaper Bing ja obtido no dia, blob no IDB, convertido diretamente para Blob URL. Zero custo de rede.
+3. **Requisicao de rede ao Bing** — so acessa a rede se os dois niveis anteriores nao estiverem disponiveis. Apos obter a URL, exibe imediatamente enquanto faz o download assincrono do blob para o IDB, eliminando a espera de rede na proxima vez.
+
+No modo de wallpapers locais, o wallpaper Bing tambem e atualizado silenciosamente em segundo plano — o usuario pode mudar para o modo Bing a qualquer momento sem esperar pela rede.
+
+A API do Bing tem dois endpoints para redundancia ativa-passiva; o codigo de idioma (ex.: `zh-CN`) e mapeado para o codigo de mercado Bing, com alguns idiomas fallback para `en-US`.
 
 ---
 
-<p align="center">
-  <sub>Limpo · Rápido · Sem anúncios · Apenas seu</sub>
-</p>
+## Internacionalizacao
+
+Suporte a 16 idiomas: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Русский, Deutsch, Français, Italiano, Portugues, हिन्दी, العربية, Türkçe, Polski, Tiếng Việt.
+
+Dois sistemas i18n paralelos: o Chrome `_locales/` cuida dos metadados do manifesto da extensao (apenas duas chaves: `extName`, `extDesc`), enquanto o [`languages.js`](../js/languages.js) gerencia todas as strings de UI. Prioridade de deteccao de idioma: idioma da UI do Chrome (modo extensao) → `navigator.language` (modo web) → correspondencia de idioma principal → fallback para English.
+
+A traducao tem falhas ou quer adicionar um novo idioma? O arquivo de idiomas e apenas o [`js/languages.js`](../js/languages.js), um mapeamento chave-valor simples. Faca as alteracoes e abra um PR.
+
+---
+
+## Estrutura do projeto
+
+```
+PlainTab/
+├── manifest.json            # Manifesto da extensao Chrome/Edge (Manifest V3)
+├── index.html               # Unica pagina HTML (nova guia da extensao / pagina inicial web)
+├── 404.html                 # Pagina de fallback SPA do Netlify
+├── LICENSE                  # Licenca MIT
+│
+├── css/
+│   └── newtab.css           # Todos os estilos: camada dupla, vidro fosco, barra de pesquisa, responsivo
+│
+├── js/
+│   ├── preload.js           # IIFE sincrono: injeta miniatura na camada traseira antes do primeiro quadro
+│   ├── languages.js         # Tabela de strings de UI em 16 idiomas + lista de idiomas
+│   └── newtab.js            # Programa principal: gerenciamento de wallpaper, i18n, armazenamento, UI, mecanismo de busca
+│
+├── _locales/                # i18n do Chrome (16 diretorios de idioma, apenas manifesto)
+│   ├── en/messages.json
+│   ├── zh_CN/messages.json
+│   └── ...
+│
+├── icon/                    # Icones da extensao (16/48/128/2048 px)
+│
+├── imgs/                    # Capturas de tela e imagens promocionais
+│   ├── chrome_01.jpg ~ chrome_08.jpg  # Capturas de tela de funcionalidades
+│   └── small_promo.png      # Imagem promocional pequena da Chrome Web Store
+│
+├── docs/                    # READMEs multilingues (16 idiomas) + CHANGELOG
+│
+└── changelog/               # Registros de alteracoes por idioma
+```
+
+- **[`css/`](../css/)** — arquivo unico de ~617 linhas, tema escuro/claro, tokens de design glassmorphism, breakpoint responsivo 480px
+- **[`js/`](../js/)** — tres arquivos carregados em ordem: `preload.js` → `languages.js` → `newtab.js` (ordem nao pode ser alterada)
+- **[`_locales/`](../_locales/)** — contem apenas `extName` e `extDesc` para o manifesto da extensao; todas as strings de UI sao gerenciadas por [`languages.js`](../js/languages.js)
+- **[`imgs/`](../imgs/)** — capturas de tela e imagens promocionais necessarias para a Chrome Web Store
+- **[`docs/`](../docs/)** e **[`changelog/`](../changelog/)** — documentacao multilingue, 16 idiomas em arquivos independentes
+
+---
+
+## Contribuicao & Licenca
+
+Codigo aberto sob licenca MIT. Encontrou um bug ou tem uma ideia? → [Abra uma Issue](https://github.com/kaininx/PlainTab/issues); quer modificar o codigo? → Fork + PR.
+
+Algumas convencoes:
+- **Mantenha zero dependencias** — sem pacotes npm, scripts CDN ou frameworks
+- **Nao adicione etapas de build** — `index.html` deve rodar diretamente no navegador
+- **Nao expanda permissoes** — `manifest.json` mantem apenas a permissao `search`
+
+📋 [Registro de alteracoes](CHANGELOG.md)
+
+---
+
+## Agradecimentos
+
+- As imagens diarias do Bing vem do [Bing](https://www.bing.com), agradecimentos a equipe da Microsoft Bing por fornecer imagens de alta qualidade diariamente
+- Proxies da API: [bing.biturl.top](https://bing.biturl.top) (proxy publico) e [bing.kaininx.workers.dev](https://bing.kaininx.workers.dev) (Cloudflare Worker de backup)
+- Os papeis de parede exibidos nas capturas de tela sao de varios criadores da internet
+
+MIT · [Kaelri](https://github.com/kaininx)

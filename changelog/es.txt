@@ -1,5 +1,11 @@
 Registro de cambios
 
+• v3.1.0
+  • Galería de fondos locales: subir, eliminar, rotar múltiples fondos con selección por lotes; refactorización de código (nombres semánticos, división de funciones, comentarios de diseño); mejora de estilos de títulos de paneles; localización multilingüe mejorada; CSP corregido para eliminar dominios de API JSON.
+
+• v3.0.5
+  • Proxy de API Bing actualizado (soporte regional + deduplicación de imágenes); caché de fondos optimizado (verificar IDB antes de descargar); claves de localStorage unificadas; archivos changelog en 16 idiomas añadidos; registros y semántica de código mejorados.
+
 • v3.0.4
   • Corregida la carga de fondos: la lista blanca CSP `img-src` no incluía los orígenes del CDN de Bing (`www.bing.com`, `cn.bing.com`), por lo que las imágenes redirigidas desde las API proxy eran bloqueadas por el navegador.
 

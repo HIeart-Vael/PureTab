@@ -1,5 +1,11 @@
 Nhật ký thay đổi
 
+• v3.1.0
+  • Thư viện hình nền cục bộ: tải lên, xóa, xoay vòng nhiều hình nền với chọn hàng loạt; tái cấu trúc mã (đặt tên ngữ nghĩa, chia nhỏ hàm, chú thích thiết kế); cải thiện kiểu tiêu đề bảng; nâng cao bản địa hóa đa ngôn ngữ; sửa CSP để xóa miền JSON API.
+
+• v3.0.5
+  • Nâng cấp proxy Bing API (hỗ trợ khu vực + loại bỏ trùng lặp hình ảnh); tối ưu hóa bộ nhớ đệm hình nền (kiểm tra IDB trước khi tải xuống); thống nhất khóa localStorage; thêm tệp changelog 16 ngôn ngữ; cải thiện ghi nhật ký và ngữ nghĩa mã.
+
 • v3.0.4
   • Đã sửa lỗi tải hình nền: danh sách cho phép CSP `img-src` thiếu nguồn Bing CDN (`www.bing.com`, `cn.bing.com`), do đó hình ảnh được chuyển hướng từ API proxy bị trình duyệt chặn.
 
