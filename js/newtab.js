@@ -278,6 +278,26 @@
         });
     }
 
+    /**
+     * 在单个事务中批量删除多个 key。
+     *
+     * WHY 单事务批量删除：
+     *   resetToBing 可能删除 12 张图片的 blob，每条一个事务会产生
+     *   12 次事务创建/提交/回调开销。合并为单个事务后只有 1 次开销。
+     */
+    function idbDeleteMany(keys) {
+        if (!keys.length) return Promise.resolve();
+        return openDB().then(function (db) {
+            return new Promise(function (resolve, reject) {
+                var tx = db.transaction(DB_STORE_NAME, 'readwrite');
+                var store = tx.objectStore(DB_STORE_NAME);
+                keys.forEach(function (key) { store.delete(key); });
+                tx.oncomplete = resolve;
+                tx.onerror = function (e) { reject(e.target.error); };
+            });
+        });
+    }
+
     /* ================================================================
        7. 壁纸核心 — 双图层零白屏系统
 
@@ -931,11 +951,7 @@
         localStorage.removeItem(LS_KEY_LOCAL_INDEX);
         localStorage.setItem(LS_KEY_MODE, 'bing');
 
-        var chain = Promise.resolve();
-        order.forEach(function (id) {
-            chain = chain.then(function () { return idbDelete(imgKey(id)); });
-        });
-        return chain.then(function () {
+        return idbDeleteMany(order.map(function (id) { return imgKey(id); })).then(function () {
             return loadWallpaper();
         }).then(function () {
             wallpaperInfoEl.textContent = t('wpBing');
