@@ -169,6 +169,8 @@ PlainTab ne ispolzuet nikakikh freimvorkov i bibliotek. Kazhdyi iz sleduiushchik
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — edinaia krivaia easing dlia vsekh poiavlenii i vsplyvaiushchikh animatsii. Ne `ease` i ne `ease-in-out` — eta krivaia bystree dostigaet tseli v nachale i imeet bolee miagkoe zatukhanie v kontse; dlia razlichii v otklike UI na urovne millisekund raznitsa oshchutima
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — v rezhime rasshireniia poluchaet iazyk UI brauzera, otrazhaia realnoe namerenie polzovatelia tochnee, chem `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — ne polagaetsia na `setTimeout` dlia ugadyvaniia momenta renderinga, a tochno sinkhroniziruetsia s kadrovym ritmom brauzera. Dvoinoi vyzov garantiruet chetkuiu granitsu kadra mezhdu vychisleniem stilei i ikh otpravkoi
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Odnovremenno zapuskaet obe konechnye tochki Bing API i ispolzuet otvet toi, kotoraia otvetit pervoi, ustraniaia nuzhnoe ozhidanie
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Ogranichivaet kazhdyi zapros k Bing API 8 sekundami, chisto preryvaia proigravshee soedinenie vmesto togo, chtoby ostavliat ego viset do taimauta TCP na urovne OS
 
 **Neispolzuemye tekhnologii ne menee vazhny**: nol vneshnikh zavisimostei. Bez React, Tailwind ili instrumentov sborki. CSP v `manifest.json` ogranichivaet `script-src 'self'` — brauzer obespechivaet vypolnenie chistogo vanilla JS. Kazhdaia nevkliuchennaia biblioteka oznachaet menshe vremeni na parsing, menshe setevykh nakladnykh raskhodov, bolee rannii pervyi kadr.
 
@@ -200,7 +202,7 @@ Pri kazhdom otkrytii novoi vkladki poisk samogo bystrogo istochnika oboev proisk
 
 V rezhime lokalnykh oboev izobrazhenie Bing takzhe tikho obnovliaetsia v fone — polzovat mozhet v liuboi moment perekliuchitsia na rezhim Bing bez ozhidaniia seti.
 
-API Bing imeet dve konechnye tochki dlia aktivnogo/passivnogo rezervirovaniia; kod iazyka (naprimer, `zh-CN`) sopostavliaetsia s rynochnym kodom Bing, nekotorye iazyki s zapasnym variantom `en-US`.
+API Bing zapuskaet obe konechnye tochki odnovremenno cherez `Promise.any` s 8-sekundnym taimautom cherez `AbortController` — samyi bystryi otvet pobezhdaet. Nagruzka JSON minimalna, poetomu dopolnitelnyi zapros prakticheski nichego ne stoit, no gonka obespechivaet optimalnuiu zaderzhku nezavisimo ot vashego mestopolozheniia. Kod iazyka (naprimer, `zh-CN`) sopostavliaetsia s rynochnym kodom Bing, nekotorye iazyki perekhodiat na `en-US`.
 
 ---
 

@@ -169,6 +169,8 @@ PlainTab no utiliza ningun framework ni libreria. Cada una de las siguientes API
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — curva de aceleracion unificada, compartida por todas las animaciones de aparicion y emergentes. No es `ease` ni `ease-in-out`—esta curva llega mas rapido al objetivo al principio y tiene una caida mas suave al final; para diferencias de respuesta de UI a nivel de milisegundos, la diferencia en la sensacion es notable
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — obtiene el idioma de la UI del navegador en modo extension, reflejando la intencion real del usuario con mas precision que `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — no depende de `setTimeout` para adivinar el momento del renderizado, sino que se alinea con precision al ritmo de fotogramas del navegador. Usarlo dos veces asegura un limite de fotograma claro entre el calculo de estilos y su envio
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Dispara ambos endpoints de la API de Bing simultáneamente y usa el que responda primero, eliminando esperas innecesarias
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Limita cada solicitud a la API de Bing a 8 segundos, abortando limpiamente la conexión perdedora en lugar de dejarla colgada hasta el tiempo de espera TCP del sistema operativo
 
 **Las tecnologias no utilizadas son igualmente importantes**: cero dependencias externas. Sin React, Tailwind ni herramientas de compilacion. La CSP en `manifest.json` restringe `script-src 'self'`—el navegador impone vanilla JS puro. Cada libreria no incluida significa menos tiempo de analisis, menos sobrecarga de red, un primer fotograma mas temprano.
 
@@ -200,7 +202,7 @@ Cada vez que se abre una nueva pestana, se busca la fuente de fondo de pantalla 
 
 En modo de fondos locales, el fondo de Bing tambien se actualiza silenciosamente en segundo plano—el usuario puede volver al modo Bing en cualquier momento sin esperar a la red.
 
-La API de Bing tiene dos endpoints para conmutacion por error principal-respaldo, los codigos de idioma (como `zh-CN`) se asignan a codigos de mercado de Bing, y algunos idiomas recurren a `en-US`.
+La API de Bing dispara ambos endpoints simultaneamente mediante `Promise.any` con un tiempo de espera de 8 segundos via `AbortController` — la respuesta mas rapida gana. Los payloads JSON son minusculos, por lo que la solicitud extra cuesta practicamente nada, pero la competencia garantiza la latencia optima sin importar donde te encuentres. Los codigos de idioma (como `zh-CN`) se asignan a codigos de mercado de Bing, y algunos idiomas recurren a `en-US`.
 
 ---
 

@@ -169,6 +169,8 @@ O PlainTab nao usa nenhum framework ou biblioteca. Cada API abaixo foi escolhida
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — curva de easing unificada para todos os fades e animacoes de pop-in. Nao e `ease` ou `ease-in-out` — esta curva chega ao alvo mais rapido no inicio e tem uma atenuacao mais suave no final; para diferencas de resposta de UI na escala de milissegundos, a diferenca perceptivel e clara
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — no modo extensao, obtem o idioma da UI do navegador, refletindo a real intencao do usuario com mais precisao do que `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — nao depende de `setTimeout` para adivinhar o momento da renderizacao, mas alinha-se precisamente ao ritmo de quadros do navegador. Usado duas vezes consecutivas para garantir uma fronteira de quadro clara entre o calculo de estilo e a submissao
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Dispara ambos os endpoints da API do Bing simultaneamente e usa o que responder primeiro, eliminando esperas desnecessarias
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Limita cada requisicao a API do Bing em 8 segundos, abortando limpidamente a conexao perdedora em vez de deixa-la pendurada no timeout TCP do sistema operacional
 
 **As tecnologias nao usadas sao igualmente importantes**: zero dependencias externas. Sem React, Tailwind ou ferramentas de build. O CSP no `manifest.json` restringe `script-src 'self'` — o navegador impoe vanilla JS puro. Cada biblioteca nao incluida significa menos tempo de parsing, menor sobrecarga de rede, primeiro quadro mais cedo.
 
@@ -200,7 +202,7 @@ Cada vez que uma nova guia e aberta, a seguinte ordem de fontes de papel de pare
 
 No modo de wallpapers locais, o wallpaper Bing tambem e atualizado silenciosamente em segundo plano — o usuario pode mudar para o modo Bing a qualquer momento sem esperar pela rede.
 
-A API do Bing tem dois endpoints para redundancia ativa-passiva; o codigo de idioma (ex.: `zh-CN`) e mapeado para o codigo de mercado Bing, com alguns idiomas fallback para `en-US`.
+A API do Bing dispara ambos os endpoints simultaneamente via `Promise.any` com um tempo limite de 8 segundos via `AbortController` — a resposta mais rapida vence. Os payloads JSON sao minusculos, entao a requisicao extra custa praticamente nada, mas a disputa garante latencia ideal independentemente de onde voce estiver. O codigo de idioma (ex.: `zh-CN`) e mapeado para o codigo de mercado Bing, com alguns idiomas fallback para `en-US`.
 
 ---
 

@@ -169,6 +169,8 @@ PlainTab verwendet keine Frameworks oder Bibliotheken. Jede der folgenden APIs w
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — einheitliche Easing-Kurve fur alle Einblend- und Pop-in-Animationen. Nicht `ease` oder `ease-in-out` — diese Kurve erreicht das Ziel am Anfang schneller und hat am Ende eine sanftere Abklingung; bei Unterschieden in der UI-Reaktion im Millisekundenbereich ist der Unterschied spurbar
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — im Erweiterungsmodus wird die UI-Sprache des Browsers abgerufen, die die wahre Absicht des Benutzers genauer widerspiegelt als `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — verlasst sich nicht auf `setTimeout`, um den Render-Zeitpunkt zu erraten, sondern synchronisiert sich prazise mit dem Frame-Rhythmus des Browsers. Die doppelte Verwendung stellt eine klare Framegrenze zwischen Stilberechnung und -ubergabe sicher
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Feuert beide Bing-API-Endpunkte gleichzeitig ab und verwendet den, der zuerst antwortet, wodurch unnotiges Warten entfallt
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Begrenzt jede Bing-API-Anfrage auf 8 Sekunden und bricht die verlierende Verbindung sauber ab, anstatt sie bis zum TCP-Timeout auf Betriebssystemebene hangen zu lassen
 
 **Die nicht verwendeten Technologien sind ebenso wichtig**: null externe Abhangigkeiten. Kein React, Tailwind oder Build-Tools. Das CSP in `manifest.json` schrankt `script-src 'self'` ein — der Browser erzwingt reines Vanilla-JS. Jede nicht eingebundene Bibliothek bedeutet weniger Parsing-Zeit, weniger Netzwerk-Overhead, einen fruheren ersten Frame.
 
@@ -200,7 +202,7 @@ Bei jedem Offnen eines neuen Tabs wird in der folgenden Reihenfolge nach der sch
 
 Im lokalen Hintergrundbildmodus wird das Bing-Bild auch im Hintergrund still aktualisiert — der Benutzer kann jederzeit ohne Netzwerkwartezeit in den Bing-Modus wechseln.
 
-Die Bing-API hat zwei Endpunkte fur aktive/passive Ausfallsicherung; der Sprachcode (z. B. `zh-CN`) wird auf den Bing-Marktcode abgebildet, wobei einige Sprachen auf `en-US` zuruckfallen.
+Die Bing-API feuert beide Endpunkte gleichzeitig uber `Promise.any` mit einem 8-Sekunden-`AbortController`-Timeout ab — die schnellste Antwort gewinnt. Die JSON-Payloads sind winzig, daher kostet die zusatzliche Anfrage praktisch nichts, und dennoch sorgt das Rennen fur optimale Latenz, egal wo du dich befindest. Der Sprachcode (z. B. `zh-CN`) wird auf den Bing-Marktcode abgebildet, wobei einige Sprachen auf `en-US` zuruckfallen.
 
 ---
 

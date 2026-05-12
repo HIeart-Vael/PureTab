@@ -168,6 +168,8 @@ PlainTab non utilizza framework o librerie. Ogni API seguente è stata scelta pe
 - **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — curva di easing unificata per tutte le animazioni di dissolvenza e comparsa. Non è `ease` o `ease-in-out` — questa curva raggiunge il target più velocemente all'inizio e ha un decadimento più morbido alla fine. Per risposte UI dell'ordine di millisecondi, la differenza percettiva è notevole
 - **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — in modalità estensione, recupera la lingua UI del browser, riflettendo in modo più accurato l'intenzione reale dell'utente rispetto a `navigator.language`
 - **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — non si basa su `setTimeout` per indovinare i tempi di rendering, ma si allinea precisamente al ritmo dei fotogrammi del browser. L'uso doppio consecutivo garantisce un confine di frame netto tra il calcolo degli stili e l'invio
+- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Attiva entrambi gli endpoint dell'API Bing simultaneamente e usa quello che risponde per primo, eliminando attese inutili
+- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Limita ogni richiesta all'API Bing a 8 secondi, abortendo pulitamente la connessione perdente invece di lasciarla in sospeso fino al timeout TCP del sistema operativo
 
 **Le tecnologie non utilizzate sono altrettanto importanti**: zero dipendenze esterne. Niente React, Tailwind o strumenti di build. La CSP in `manifest.json` limita `script-src 'self'` — il browser applica rigorosamente il vanilla JS puro. Ogni libreria non introdotta significa meno tempo di parsing, meno overhead di rete e un primo frame più anticipato.
 
@@ -199,7 +201,7 @@ Ogni volta che si apre una nuova scheda, viene cercata la fonte di sfondo più v
 
 In modalità sfondi locali, lo sfondo Bing viene comunque aggiornato silenziosamente in background — l'utente può passare alla modalità Bing in qualsiasi momento senza dover attendere la rete.
 
-L'API Bing ha due endpoint per il failover principale/secondario. I codici lingua (ad es. `zh-CN`) vengono mappati ai codici mercato Bing, con alcune lingue che ricadono su `en-US`.
+L'API Bing attiva entrambi gli endpoint simultaneamente tramite `Promise.any` con un timeout di 8 secondi via `AbortController` — la risposta piu veloce vince. I payload JSON sono minuscoli, quindi la richiesta extra costa praticamente nulla, eppure la competizione garantisce la latenza ottimale indipendentemente da dove ti trovi. I codici lingua (ad es. `zh-CN`) vengono mappati ai codici mercato Bing, con alcune lingue che ricadono su `en-US`.
 
 ---
 
