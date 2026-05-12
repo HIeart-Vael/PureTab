@@ -236,15 +236,23 @@
          这样每个时刻至少有一层持有已渲染图像 —— 零白屏。
        ================================================================ */
 
-    /** 将图片预加载到浏览器缓存 */
+    /**
+     * 将图片预加载到浏览器缓存，返回已解码的 Image 对象。
+     *
+     * WHY 设置 crossOrigin：
+     *   返回的 Image 对象会被 generateThumbnail 复用，而 canvas.toDataURL()
+     *   要求图片必须以 CORS 方式加载。统一在预加载阶段设置 crossOrigin，
+     *   避免后续需要重新发起请求。blob URL 天然同源，设置 crossOrigin 无副作用。
+     */
     function preloadImage(url) {
         return new Promise(function (resolve) {
             var img = new Image();
+            img.crossOrigin = 'anonymous';
             img.onload = function () {
                 // WHY: decode() 确保图片已解码，避免首次绘制时的解码延迟闪烁
-                img.decode().then(function () { resolve(true); }, function () { resolve(true); });
+                img.decode().then(function () { resolve(img); }, function () { resolve(img); });
             };
-            img.onerror = function () { resolve(false); };
+            img.onerror = function () { resolve(null); };
             img.src = url;
         });
     }
@@ -258,7 +266,9 @@
      *   才能触发淡入动画。跳过其中任意一步都会导致过渡不生效。
      */
     function applyWallpaper(url, mode) {
-        return preloadImage(url).then(function () {
+        var preloadedImg = null;
+        return preloadImage(url).then(function (img) {
+            preloadedImg = img;
             wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
             return new Promise(function (resolve) {
                 requestAnimationFrame(function () {
@@ -276,7 +286,8 @@
         }).then(function () {
             currentMode = mode;
             wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
-            return generateThumbnail(url).then(function (thumb) {
+            // ★ 复用 preloadImage 已加载的 Image 对象，避免二次加载 + 二次解码
+            return generateThumbnail(preloadedImg).then(function (thumb) {
                 if (thumb) {
                     // WHY: bing 模式写入预计算缓存，让 preload.js 一次 getItem 即可命中
                     //      local 模式由 tryLoadLocalWallpaper 同步写入，不在此处异步覆盖（避免竞态错位）
@@ -297,23 +308,36 @@
      * WHY 640px 宽 JPEG 0.55 质量：
      *   缩略图以 CSS url(data:...) 格式存入 localStorage，需要控制在 quota 内。
      *   640px 在 1920 屏幕上也足够锐利。JPEG 0.55 是体积与画质的平衡点。
+     *
+     * WHY 接受 Image 对象或 URL：
+     *   当 source 是已加载的 Image 对象时，直接复用它绘制 Canvas，
+     *   避免二次网络请求 + 二次解码——这是最大的性能瓶颈。
+     *   当 source 是字符串 URL 时（如 saveLocalImage 的 !show 路径），
+     *   仍走原有的 new Image + onload 流程，向后兼容。
      */
-    function generateThumbnail(url) {
+    function generateThumbnail(source) {
+        function processImage(img) {
+            var canvas = document.createElement('canvas');
+            var scale = THUMB_MAX_W / img.width;
+            canvas.width = THUMB_MAX_W;
+            canvas.height = Math.floor(img.height * scale);
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            return 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
+        }
+
+        // ★ 传入已加载的 Image 对象 → 零额外 IO，同步生成缩略图
+        if (source && typeof source !== 'string') {
+            return Promise.resolve(processImage(source));
+        }
+
+        // 传入 URL 字符串 → 兼容旧调用路径（如 saveLocalImage 的 !show 分支）
         return new Promise(function (resolve) {
             var img = new Image();
             img.crossOrigin = 'anonymous';
-            img.onload = function () {
-                var canvas = document.createElement('canvas');
-                var scale = THUMB_MAX_W / img.width;
-                canvas.width = THUMB_MAX_W;
-                canvas.height = Math.floor(img.height * scale);
-                var ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                var thumb = 'url(' + canvas.toDataURL('image/jpeg', 0.55) + ')';
-                resolve(thumb);
-            };
+            img.onload = function () { resolve(processImage(img)); };
             img.onerror = function () { resolve(null); };
-            img.src = url;
+            img.src = source;
         });
     }
 
