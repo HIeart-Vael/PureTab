@@ -10,7 +10,7 @@
  > `Ctrl+T` is an instantaneous action — you press it and expect your wallpaper to already be there. Not "loaded fast", but **there from the start**. Dual-layer wallpaper, synchronous preloading, Canvas thumbnail pipeline, hybrid storage — every technical decision converges on the same thing: faster, smoother, more seamless.
 
 <p align="center">
-  <a href="docs/README_zh-CN.md">中文 (简体)</a> · <a href="docs/README_zh-TW.md">中文 (繁體)</a> · <a href="docs/README_hi.md">हिन्दी</a> · <a href="docs/README_es.md">Español</a> · <a href="docs/README_ar.md">العربية</a> · <a href="docs/README_fr.md">Français</a> · <a href="docs/README_pt.md">Português</a> · <a href="docs/README_ru.md">Русский</a> · <a href="docs/README_de.md">Deutsch</a> · <a href="docs/README_ja.md">日本語</a> · <a href="docs/README_it.md">Italiano</a> · <a href="docs/README_tr.md">Türkçe</a> · <a href="docs/README_vi.md">Tiếng Việt</a> · <a href="docs/README_ko.md">한국어</a> · <a href="docs/README_pl.md">Polski</a>
+  <a href="docs/README_zh-CN.md">中文 (简体)</a> · <a href="docs/README_zh-TW.md">中文 (繁體)</a> · <a href="docs/README_hi.md">हिन्दी</a> · <a href="docs/README_es.md">Español</a> · <a href="docs/README_ar.md">العربية</a> · <a href="docs/README_fr.md">Français</a> · <a href="docs/README_pt_BR.md">Português</a> · <a href="docs/README_ru.md">Русский</a> · <a href="docs/README_de.md">Deutsch</a> · <a href="docs/README_ja.md">日本語</a> · <a href="docs/README_it.md">Italiano</a> · <a href="docs/README_tr.md">Türkçe</a> · <a href="docs/README_vi.md">Tiếng Việt</a> · <a href="docs/README_ko.md">한국어</a> · <a href="docs/README_pl.md">Polski</a>
 </p>
 
 <p align="center">
