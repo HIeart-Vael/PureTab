@@ -1,5 +1,7 @@
 Historia Aktualizacji
 
+• v3.1.2 · Zmiana nazwy _locales/pt na pt_BR w celu zgodności z Chrome Web Store; ujednolicenie formatu changelogu do zwięzłego stylu; zmiana nazw plików portugalskich na pt_BR dla spójności.
+
 • v3.1.1 · Przełączenie API Bing w tryb wyścigu Promise.any z 8-sekundowym limitem AbortController; aktualizacja wszystkich 16 wersji językowych README odzwierciedlająca nową strategię pobierania.
 
 • v3.1.0 · Galeria tapet lokalnych: przesyłanie/usuwanie/rotacja wielu tapet lokalnych, wybór wsadowy plików; refaktoryzacja kodu; poprawa stylów paneli; rozszerzenie lokalizacji wielojęzycznej; naprawa CSP — usunięcie domen JSON API.

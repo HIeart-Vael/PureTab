@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="Sürüm">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="Sürüm">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -252,7 +252,7 @@ PlainTab/
 - **[`js/`](../js/)** — üç dosya sırayla yüklenir: `preload.js` → `languages.js` → `newtab.js` (sıra değiştirilemez)
 - **[`_locales/`](../_locales/)** — yalnızca uzantı manifestosu için `extName` ve `extDesc` içerir; tüm UI dizeleri [`languages.js`](../js/languages.js) tarafından yönetilir
 - **[`imgs/`](../imgs/)** — Chrome Web Store için gereken ekran görüntüleri ve tanıtım resimleri
-- **[`docs/`](../docs/)** ve **[`changelog/`](../changelog/)** — çok dilli dokümantasyon, 16 dil için ayrı dosyalar
+- **[`docs/`](../docs/)** — çok dilli dokümantasyon, 16 dil için ayrı dosyalar
 
 ---
 
@@ -265,7 +265,7 @@ Birkaç kural:
 - **Derleme adımı eklemeyin** — `index.html` doğrudan tarayıcıda çalışmalıdır
 - **İzin genişletmeyin** — `manifest.json` yalnızca `search` iznini tutar
 
-📋 [Değişiklik günlüğü](CHANGELOG.md)
+📋 [Değişiklik günlüğü](changelog.md)
 
 ---
 

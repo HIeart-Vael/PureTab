@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="バージョン">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="バージョン">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -255,7 +255,7 @@ PlainTab/
 - **[`js/`](../js/)** — 三つのファイルが順番にロードされる：`preload.js` → `languages.js` → `newtab.js`（順序は変更不可）
 - **[`_locales/`](../_locales/)** — 拡張機能マニフェスト用の `extName` と `extDesc` のみ；すべての UI 文字列は [`languages.js`](../js/languages.js) が管理
 - **[`imgs/`](../imgs/)** — Chrome Web Store に必要なスクリーンショットとプロモーション画像
-- **[`docs/`](../docs/)** と **[`changelog/`](../changelog/)** — 多言語ドキュメント、16 言語それぞれ独立したファイル
+- **[`docs/`](../docs/)** — 多言語ドキュメント、16 言語それぞれ独立したファイル
 
 ---
 
@@ -268,7 +268,7 @@ MIT ライセンスでオープンソース。バグやアイデアがあれば 
 - **ビルドステップを追加しない**——`index.html` をブラウザで直接実行できるままにする
 - **権限を拡大しない**——`manifest.json` には `search` 一つのみを維持する
 
-📋 [更新履歴](CHANGELOG.md)
+📋 [更新履歴](changelog.md)
 
 ---
 

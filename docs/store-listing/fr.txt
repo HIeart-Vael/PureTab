@@ -1,0 +1,75 @@
+PlainTab est une extension de navigateur qui rend chaque nouvel onglet agréable à regarder.
+
+Pourquoi ? Parce que votre nouvel onglet mérite un beau fond d'écran, pas de la publicité, des actualités et des raccourcis.
+
+Pourquoi choisir PlainTab ?
+
+• 【Liberté du fond d'écran】
+• Mise à jour automatique quotidienne avec l'image du jour Bing — deux points d'accès mondiaux en compétition, rapide où que vous soyez.
+• Vitesse de chargement locale extrême — les fonds d'écran sont stockés sur votre machine et chargés instantanément à l'ouverture d'un nouvel onglet, un ordre de grandeur plus rapide que le réseau.
+• Prend en charge jusqu'à 12 fonds d'écran locaux avec rotation automatique à chaque nouvel onglet. Galerie 3×4 pour visualiser, supprimer ou changer à tout moment.
+
+• 【Protection absolue de la vie privée】
+• Pas de publicité, pas de pistage, aucune collecte de données.
+• Tous les fonds d'écran sont stockés hors ligne sur votre machine — pas de téléversement, pas de synchronisation, aucun transit par un serveur. Votre navigation vous appartient exclusivement.
+
+• 【Rapide, sans distraction】
+• JavaScript natif pur, zéro dépendance externe. Aucun framework tiers — la page s'affiche dès l'ouverture du navigateur.
+• Les fonds d'écran génèrent en arrière-plan un aperçu ultra-léger. Au prochain nouvel onglet, il se charge instantanément depuis le stockage local, sans solliciter le réseau.
+
+• 【Flexible, pas compliqué】
+• Détection automatique de la langue parmi 16 langues disponibles.
+• Barre de recherche : apparaît au survol / toujours affichée / masquée.
+• Moteur de recherche : Google / Bing / Baidu / DuckDuckGo (mode Web).
+
+• 【Open source transparent】
+• Code source entièrement ouvert : https://github.com/kaininx/PlainTab
+• Démo en ligne : https://plaintab.netlify.app
+
+✨ Combinaison recommandée (par le développeur) :
+• 📌 Nouvel onglet : installez l'extension et définissez jusqu'à 12 fonds d'écran différents, sans limite de taille.
+• 📌 Page de démarrage : réglez le navigateur sur https://plaintab.netlify.app , gardez le mode Bing par défaut.
+• 📌 Bouton Accueil : définissez https://kaininx.github.io/PlainTab/ — c'est la page GitHub Pages du projet, avec des fonds d'écran supplémentaires.
+
+PlainTab est fait pour vous si vous en avez assez :
+• d'un nouvel onglet saturé de publicités, d'actualités et de raccourcis inutiles
+• des extensions qui collectent discrètement vos données en arrière-plan
+• d'un navigateur qui ralentit à force d'extensions — vous voulez une vitesse native
+• de voir la même image tous les jours sur votre nouvel onglet
+
+Assistance et retours
+• Vous aimez PlainTab ? Notez-nous sur le Chrome Web Store.
+• GitHub : https://github.com/kaininx/PlainTab
+• Une question ou une suggestion ? Ouvrez une Issue.
+
+Journal des mises à jour
+
+• v3.1.2 · Renommage de _locales/pt en pt_BR pour la conformité Chrome Web Store; unification du format du changelog en style compact; renommage des fichiers portugais en pt_BR pour la cohérence.
+
+• v3.1.1 · Passage de l'API Bing en mode concurrent Promise.any avec un timeout AbortController de 8 secondes ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération.
+
+• v3.1.0 · Galerie locale de fonds d'écran : téléversement/suppression/rotation de plusieurs fonds d'écran locaux, sélection par lots ; refonte du code ; amélioration du style des panneaux ; localisation multilingue complétée ; correction CSP — suppression des domaines JSON API.
+
+• v3.0.5 · Mise à niveau du proxy API Bing (requêtes régionalisées + déduplication des images) ; optimisation du cache des fonds d'écran ; unification des clés localStorage ; ajout de journaux d'évolution en 16 langues ; amélioration des logs et de la sémantique du code.
+
+• v3.0.4 · Correction d'un échec de chargement des fonds d'écran : la liste blanche CSP img-src ne contenait pas les domaines CDN Bing, les images redirigées par le proxy API étaient bloquées.
+
+• v3.0.3 · Accélération du rendu du premier écran via CSSOM, renforcement de la sécurité CSP, nettoyage du code mort, ajout d'icônes SVG et de supports promotionnels.
+
+• v3.0.2 · Arrière-plan adaptatif au mode sombre, refonte de la structure du code, bande d'information multilingue en bas.
+
+• v3.0.1 · Intégration de l'API Chrome Search, conformité à la règle d'usage unique du Chrome Web Store.
+
+• v3.0.0 · Réécriture complète : architecture à deux couches éliminant le flash blanc du nouvel onglet, ajout d'un fond gris de secours.
+
+• v2.2.7 · Ajout des README en anglais, japonais, coréen, russe et chinois simplifié ; mode de recherche par défaut changé en « toujours afficher ».
+
+• v2.2.6 · Optimisation de la logique de chargement des fonds d'écran et du cache des miniatures, réorganisation des constantes de l'API Bing.
+
+• v2.2.5 · Préchargement des fonds d'écran et optimisation de la première image, élimination de l'écran blanc du nouvel onglet.
+
+• v2.2.4 · Migration du stockage des fonds d'écran de localStorage vers IndexedDB.
+
+• v2.2.3 · Téléversement de fonds d'écran locaux, amélioration de l'expérience de changement de moteur de recherche.
+
+• v1.2.0 · Première version : système de fonds d'écran, interface en 16 langues, localisation Chrome i18n, licence MIT.

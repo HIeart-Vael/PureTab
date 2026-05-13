@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="Phiên bản">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="Phiên bản">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -252,7 +252,7 @@ PlainTab/
 - **[`js/`](../js/)** — ba tệp tải theo thứ tự: `preload.js` → `languages.js` → `newtab.js` (không thể đảo thứ tự)
 - **[`_locales/`](../_locales/)** — chỉ chứa `extName` và `extDesc` cho manifest tiện ích; tất cả chuỗi UI do [`languages.js`](../js/languages.js) quản lý
 - **[`imgs/`](../imgs/)** — ảnh chụp màn hình và ảnh quảng bá cần thiết cho Chrome Web Store
-- **[`docs/`](../docs/)** và **[`changelog/`](../changelog/)** — tài liệu đa ngôn ngữ, tệp riêng cho mỗi ngôn ngữ trong số 16 ngôn ngữ
+- **[`docs/`](../docs/)** — tài liệu đa ngôn ngữ, tệp riêng cho mỗi ngôn ngữ trong số 16 ngôn ngữ
 
 ---
 
@@ -265,7 +265,7 @@ Một vài quy ước:
 - **Không thêm bước xây dựng** — `index.html` chạy trực tiếp trong trình duyệt
 - **Không mở rộng quyền** — `manifest.json` chỉ giữ quyền `search`
 
-📋 [Nhật ký thay đổi](CHANGELOG.md)
+📋 [Nhật ký thay đổi](changelog.md)
 
 ---
 

@@ -1,5 +1,7 @@
 Registro de alterações
 
+• v3.1.2 · Renomeado _locales/pt para pt_BR para conformidade com a Chrome Web Store; formato do changelog unificado para estilo compacto; arquivos em português renomeados para pt_BR para consistência.
+
 • v3.1.1 · A API do Bing foi alterada para o modo de corrida Promise.any com um tempo limite de 8 segundos via AbortController; todos os 16 READMEs de idiomas foram atualizados para refletir a nova estratégia de obtenção.
 
 • v3.1.0 · Galeria local de papéis de parede: envio/exclusão/rotação de múltiplos papéis de parede locais, seleção em lote; refatoração de código; melhoria nos estilos dos painéis; localização multilíngue aprimorada; correção de CSP com remoção de domínios de API JSON.

@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="LICENSE">
@@ -247,16 +247,16 @@ PlainTab/
 │   ├── chrome_01.jpg ~ chrome_08.jpg  # Feature screenshots
 │   └── small_promo.png      # Chrome Web Store small promo tile
 │
-├── docs/                    # Multi-language READMEs (16 languages) + CHANGELOG
-│
-└── changelog/               # Per-language changelogs
+├── docs/                    # All documentation
+│   ├── changelog-i18n/      #   Per-language changelogs (16 languages)
+│   └── store-listing/             #   Per-language CWS descriptions (16 languages)
 ```
 
 - **[`css/`](css/)** — Single ~617-line file: dark/light themes, glass-morphism design tokens, 480px responsive breakpoint
 - **[`js/`](js/)** — Three files loaded in order: `preload.js` → `languages.js` → `newtab.js` (order is critical)
 - **[`_locales/`](_locales/)** — Contains only `extName` and `extDesc` for manifest; all UI strings managed by [`languages.js`](js/languages.js)
 - **[`imgs/`](imgs/)** — Screenshots and promo tiles required by Chrome Web Store
-- **[`docs/`](docs/)** and **[`changelog/`](changelog/)** — Multi-language documentation, 16 languages each in separate files
+- **[`docs/`](docs/)** — All documentation: 16-language READMEs, `changelog.md`, `release-note.md`, `requirements.md`, `architecture.md`, `changelog-i18n/`, `store-listing/`
 
 ---
 
@@ -269,7 +269,7 @@ A few ground rules:
 - **No build steps** — `index.html` runs directly in the browser
 - **Don't expand permissions** — `manifest.json` keeps only the `search` permission
 
-📋 [Changelog](docs/CHANGELOG.md)
+📋 [Changelog](docs/changelog.md)
 
 ---
 

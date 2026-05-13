@@ -1,5 +1,7 @@
 更新日志
 
+• v3.1.2 · 将 _locales/pt 重命名为 pt_BR 以符合 Chrome Web Store 规范；统一 changelog 为紧凑格式；葡萄牙语相关文件同步重命名为 pt_BR。
+
 • v3.1.1 · 将 Bing API 切换为 Promise.any 竞速模式并添加 8 秒 AbortController 超时；更新全部 16 语言 README 以反映新的获取策略。
 
 • v3.1.0 · 本地壁纸画廊：上传/删除/轮播多张本地壁纸，批量选择文件；代码重构；优化面板样式；完善多语言本地化；修复 CSP 移除 JSON API 域名。

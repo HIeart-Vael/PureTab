@@ -1,5 +1,7 @@
 Güncelleme Geçmişi
 
+• v3.1.2 · Chrome Web Store uyumluluğu için _locales/pt, pt_BR olarak yeniden adlandırıldı; changelog biçimi tek satırlık kompak stilde birleştirildi; Portekizce dosyalar tutarlılık için pt_BR olarak yeniden adlandırıldı.
+
 • v3.1.1 · Bing API'si Promise.any yarış moduna geçirildi ve 8 saniyelik AbortController zaman aşımı eklendi; yeni getirme stratejisini yansıtmak için 16 dildeki README dosyalarının tamamı güncellendi.
 
 • v3.1.0 · Yerel duvar kağıdı galerisi: birden çok yerel duvar kağıdını yükleme/silme/döngüye alma, toplu dosya seçimi; kod yeniden düzenlemesi; panel stilleri iyileştirildi; çoklu dil desteği genişletildi; CSP'den JSON API alan adları kaldırıldı.

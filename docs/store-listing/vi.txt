@@ -1,0 +1,75 @@
+PlainTab là tiện ích mở rộng trình duyệt giúp mỗi lần mở tab mới là một lần mãn nhãn.
+
+Tại sao? Bởi vì tab mới của bạn xứng đáng có một hình nền đẹp, chứ không phải quảng cáo, tin tức và link nhanh.
+
+Tại sao chọn PlainTab?
+
+• 【Tự Do Hình Nền】
+• Cập nhật ảnh đẹp hàng ngày từ Bing — song song hai điểm đầu cuối toàn cầu, dù ở đâu cũng nhanh.
+• Tốc độ tải hình nền cục bộ cực nhanh — hình nền được lưu trên máy bạn, khi mở tab mới đọc trực tiếp ngay lập tức, nhanh hơn tải qua mạng một cấp độ.
+• Hỗ trợ tải lên tối đa 12 ảnh nền cục bộ, mỗi lần mở tab mới tự động chuyển đổi. Xem trước dạng lưới 3×4, xóa hay đổi bất cứ lúc nào.
+
+• 【Bảo Vệ Quyền Riêng Tư Tuyệt Đối】
+• Không quảng cáo, không theo dõi, không thu thập bất kỳ dữ liệu nào.
+• Tất cả hình nền được lưu trữ ngoại tuyến trên máy bạn — không tải lên, không đồng bộ, không qua bất kỳ máy chủ nào. Hành vi duyệt web chỉ thuộc về bạn.
+
+• 【Siêu Nhanh, Không Gây Phiền Nhiễu】
+• Thuần JavaScript gốc, không phụ thuộc bên ngoài. Không framework thứ ba, mở trình duyệt là hiện ra ngay.
+• Hình nền được tạo ảnh xem trước siêu nhẹ ở chế độ nền, lần sau mở tab mới đọc trực tiếp từ máy ngay lập tức, không qua mạng.
+
+• 【Linh Hoạt, Không Rắc Rối】
+• Tự động phát hiện 16 ngôn ngữ.
+• Thanh tìm kiếm: hiện khi di chuột / luôn hiển thị / ẩn.
+• Công cụ tìm kiếm: Google / Bing / Baidu / DuckDuckGo (Chế độ Web).
+
+• 【Mã Nguồn Mở, Minh Bạch】
+• Mã nguồn hoàn toàn mở: https://github.com/kaininx/PlainTab
+• Dùng thử trực tuyến: https://plaintab.netlify.app
+
+✨ Gợi Ý Sử Dụng Kết Hợp (Nhà Phát Triển Khuyên Dùng):
+• 📌 Tab Mới: Cài tiện ích này, cho phép bạn đặt tới 12 hình nền khác nhau, không giới hạn kích thước.
+• 📌 Trang Khởi Động: Đặt trình duyệt về https://plaintab.netlify.app , giữ chế độ hình nền Bing hàng ngày mặc định.
+• 📌 Nút Trang Chủ: Đặt thành https://kaininx.github.io/PlainTab/ — đây là GitHub Pages của dự án, bạn có thể thêm hình nền yêu thích riêng.
+
+PlainTab phù hợp nếu bạn đã quá chán:
+• Tab mới nhồi nhét quảng cáo, tin tức và link nhanh vô dụng
+• Tiện ích mở rộng lén thu thập dữ liệu của bạn ở chế độ nền
+• Cài nhiều tiện ích là trình duyệt chậm, muốn tốc độ như gốc
+• Ngày nào mở tab mới cũng thấy một ảnh, nhàm chán
+
+Hỗ Trợ và Phản Hồi
+• Thích PlainTab? Hãy đánh giá tốt cho chúng tôi trên Chrome Web Store.
+• GitHub: https://github.com/kaininx/PlainTab
+• Có câu hỏi hoặc góp ý? Đừng ngại tạo Issue.
+
+Nhật Ký Cập Nhật
+
+• v3.1.2 · Đã đổi tên _locales/pt thành pt_BR để tuân thủ Chrome Web Store; thống nhất định dạng changelog sang kiểu gọn nhẹ; đổi tên tệp tiếng Bồ Đào Nha thành pt_BR cho nhất quán.
+
+• v3.1.1 · Chuyển Bing API sang chế độ chạy đua Promise.any và thêm AbortController 8 giây; cập nhật toàn bộ README 16 ngôn ngữ để phản ánh chiến lược tải mới.
+
+• v3.1.0 · Thư viện hình nền cục bộ: tải lên/xoay vòng/xóa nhiều hình nền cục bộ, chọn tệp hàng loạt; tái cấu trúc mã; cải thiện kiểu bảng điều khiển; hoàn thiện bản địa hóa đa ngôn ngữ; sửa CSP loại bỏ tên miền JSON API.
+
+• v3.0.5 · Nâng cấp proxy Bing API (yêu cầu theo khu vực + khử trùng lặp ảnh); tối ưu bộ nhớ đệm hình nền; hợp nhất tên khóa localStorage; thêm changelog 16 ngôn ngữ; cải thiện nhật ký và ngữ nghĩa mã.
+
+• v3.0.4 · Sửa lỗi tải hình nền: danh sách trắng CSP img-src thiếu tên miền CDN của Bing, hình ảnh sau khi proxy API chuyển hướng bị trình duyệt chặn.
+
+• v3.0.3 · Tăng tốc kết xuất khung hình đầu tiên qua CSSOM, gia cố bảo mật CSP, dọn mã chết, thêm biểu tượng SVG và tài liệu quảng bá.
+
+• v3.0.2 · Nền thích ứng chế độ tối, tái cấu trúc mã, thêm thanh thông tin đa ngôn ngữ ở cuối.
+
+• v3.0.1 · Tích hợp Chrome Search API, vượt qua kiểm duyệt tuân thủ mục đích duy nhất của Chrome Web Store.
+
+• v3.0.0 · Viết lại hoàn toàn: kiến trúc hai lớp loại bỏ hiện tượng trắng màn hình khi mở tab mới, thêm nền xám dự phòng.
+
+• v2.2.7 · Thêm README bằng 5 ngôn ngữ Anh/Nhật/Hàn/Nga/Trung Giản Thể, chế độ tìm kiếm mặc định đổi thành "luôn hiển thị".
+
+• v2.2.6 · Tối ưu logic tải hình nền và bộ nhớ đệm ảnh xem trước, sắp xếp các hằng số Bing API.
+
+• v2.2.5 · Tải trước hình nền và tối ưu khung hình đầu tiên, khắc phục màn hình trắng khi mở tab mới.
+
+• v2.2.4 · Di chuyển kho lưu trữ hình nền từ localStorage sang IndexedDB.
+
+• v2.2.3 · Tải lên hình nền cục bộ, cải thiện trải nghiệm chuyển đổi công cụ tìm kiếm.
+
+• v1.2.0 · Phát hành đầu tiên: hệ thống hình nền, giao diện 16 ngôn ngữ, bản địa hóa Chrome i18n, giấy phép MIT.

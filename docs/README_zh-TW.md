@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue?style=flat-square" alt="版本">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue?style=flat-square" alt="版本">
   <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
   <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
   <a href="../LICENSE">
@@ -256,7 +256,7 @@ PlainTab/
 - **[`js/`](../js/)** — 三個檔案依序載入：`preload.js` → `languages.js` → `newtab.js`（順序不可顛倒）
 - **[`_locales/`](../_locales/)** — 僅含擴充清單用 `extName` 和 `extDesc`；所有 UI 字串由 [`languages.js`](../js/languages.js) 管理
 - **[`imgs/`](../imgs/)** — Chrome Web Store 所需截圖和宣傳圖
-- **[`docs/`](../docs/)** 與 **[`changelog/`](../changelog/)** — 多語言文件，16 種語言各自獨立檔案
+- **[`docs/`](../docs/)** — 多語言文件，16 種語言各自獨立檔案
 
 ---
 
@@ -269,7 +269,7 @@ MIT 協議開源。遇到 bug 或想法 → [提交 Issue](https://github.com/ka
 - **不要加建置步驟**——`index.html` 直接在瀏覽器裡執行
 - **不要擴充權限**——`manifest.json` 只保留 `search` 這一個權限
 
-📋 [更新日誌](CHANGELOG.md)
+📋 [更新日誌](changelog.md)
 
 ---
 
