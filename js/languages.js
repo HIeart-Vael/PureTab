@@ -401,6 +401,107 @@ window.I18N = {
     }
 };
 
+// 命令面板新增的 i18n key，挂载在 I18N 上便于 t() 查找
+// 只完整定义 zh-CN 和 en，其余语言缺 key 时 t() 会回退到 en → raw key
+(function () {
+    var newKeys = {
+        recommend: 'Recommended',
+        allShortcuts: 'All Shortcuts',
+        searchResults: 'Search Results',
+        noResults: 'No matching shortcuts',
+        noShortcuts: 'No shortcuts yet. Type /add to create one.',
+        addShortcut: 'Add Shortcut',
+        editShortcut: 'Edit Shortcut',
+        deleteShortcut: 'Delete Shortcut',
+        shortcutName: 'Name (e.g. GitHub)',
+        shortcutURL: 'URL (e.g. https://github.com)',
+        fetchTitle: 'Fetch page title',
+        fetchingTitle: 'Fetching title…',
+        nameRequired: 'Name is required',
+        urlRequired: 'Please enter a valid URL (http:// or https://)',
+        duplicateURL: 'This URL already exists',
+        add: 'Add',
+        save: 'Save',
+        added: 'Added',
+        yes: 'Yes, delete',
+        no: 'Cancel',
+        commands: 'Commands',
+        helpAdd: 'Add a new shortcut',
+        helpEdit: 'Edit an existing shortcut',
+        helpDelete: 'Delete a shortcut',
+        helpRecent: 'Show recently opened shortcuts',
+        helpSortAZ: 'Sort alphabetically (A-Z)',
+        helpSortFreq: 'Sort by usage frequency',
+        helpImport: 'Import from browser bookmarks',
+        helpExport: 'Export shortcuts as JSON file',
+        helpClear: 'Delete all shortcuts',
+        helpHide: 'Hide a shortcut',
+        helpUnhide: 'Unhide a shortcut',
+        helpReset: 'Reset all usage frequencies',
+        recentShortcuts: 'Recent',
+        noRecentShortcuts: 'No recent shortcuts',
+        clearConfirm: 'Delete all shortcuts? This cannot be undone.',
+        cpHotkeyLabel: 'Command Palette Shortcut',
+        cpRecommendLabel: 'Show recommendations',
+        hiddenModeHint: 'Hidden mode — press Esc to close then Ctrl+K',
+        normalModeHint: 'Normal mode — press Esc to close then Ctrl+Shift+K',
+        hideShortcutTitle: 'Hide Shortcuts',
+        hiddenShortcuts: 'Hidden',
+        noHiddenShortcuts: 'No hidden shortcuts'
+    };
+    var zhCN = {
+        recommend: '推荐',
+        allShortcuts: '全部快捷链接',
+        searchResults: '搜索结果',
+        noResults: '未找到匹配的快捷链接',
+        noShortcuts: '暂无快捷链接，输入 /add 创建',
+        addShortcut: '新建快捷链接',
+        editShortcut: '编辑快捷链接',
+        deleteShortcut: '删除快捷链接',
+        shortcutName: '名称 (如 GitHub)',
+        shortcutURL: '链接 (如 https://github.com)',
+        fetchTitle: '自动获取名称',
+        fetchingTitle: '正在获取标题…',
+        nameRequired: '请输入名称',
+        urlRequired: '请输入有效的链接 (以 http:// 或 https:// 开头)',
+        duplicateURL: '该链接已存在',
+        add: '确定',
+        save: '保存',
+        added: '已添加',
+        yes: '确定删除',
+        no: '取消',
+        commands: '可用命令',
+        helpAdd: '新建快捷链接',
+        helpEdit: '编辑快捷链接',
+        helpDelete: '删除快捷链接',
+        helpRecent: '最近使用的快捷链接',
+        helpSortAZ: '按字母排序 (A-Z)',
+        helpSortFreq: '按使用频率排序',
+        helpImport: '从浏览器书签导入',
+        helpExport: '导出为 JSON 文件',
+        helpClear: '清空所有快捷链接',
+        helpHide: '隐藏快捷链接',
+        helpUnhide: '取消隐藏快捷链接',
+        helpReset: '重置所有使用频率',
+        recentShortcuts: '最近使用',
+        noRecentShortcuts: '暂无使用记录',
+        clearConfirm: '确定删除所有快捷链接？此操作不可撤销。',
+        cpHotkeyLabel: '命令面板快捷键',
+        cpRecommendLabel: '显示频率推荐',
+        hiddenModeHint: '当前隐藏模式 — 请按 Esc 关闭后再按 Ctrl+K',
+        normalModeHint: '当前普通模式 — 请按 Esc 关闭后再按 Ctrl+Shift+K',
+        hideShortcutTitle: '隐藏快捷链接',
+        hiddenShortcuts: '已隐藏',
+        noHiddenShortcuts: '没有隐藏的快捷链接'
+    };
+    for (var lang in window.I18N) {
+        var base = (lang === 'zh-CN') ? zhCN : newKeys;
+        for (var k in base) {
+            if (!window.I18N[lang][k]) window.I18N[lang][k] = base[k];
+        }
+    }
+})();
+
 window.LanguageList = [
     { code: 'zh-CN', name: '中文 (简体)' },
     { code: 'zh-TW', name: '中文 (繁體)' },

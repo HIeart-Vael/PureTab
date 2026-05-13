@@ -77,6 +77,14 @@
                     <option value="duckduckgo">DuckDuckGo</option>
                 </select>
             </div>
+            <div class="setting-row">
+                <label>Command Palette</label>
+                <input type="text" id="cpHotkeyInput" value="Ctrl+K">
+            </div>
+            <div class="setting-row">
+                <label>Show recommendations</label>
+                <input type="checkbox" id="cpRecommendCheck" checked>
+            </div>
             <button class="panel-btn" id="resetAdvBtn">Reset defaults</button>
         </div>
     </div>
@@ -84,6 +92,15 @@
     <div class="language-panel" id="langPanel">
         <div class="lang-title">Language</div>
         <div id="langOptions"></div>
+    </div>
+
+    <!-- 命令面板 -->
+    <div class="cmd-palette-overlay" id="cmdOverlay">
+        <div class="cmd-palette" id="cmdPalette">
+            <div class="cp-pinned-bar" id="cpPinnedBar"></div>
+            <input class="cp-search-input" id="cpSearchInput" placeholder="搜索名称或网址..." autocomplete="off" spellcheck="false">
+            <div class="cp-content" id="cpContent"></div>
+        </div>
     </div>
 
     <script src="js/languages.js"></script>

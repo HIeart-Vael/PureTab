@@ -40,6 +40,19 @@
     var DEFAULT_OPACITY = 0.45;
     var DEFAULT_ENGINE = 'google';
 
+    // 命令面板相关 localStorage key
+    var LS_KEY_SHORTCUTS = 'ptab_shortcuts';
+    var LS_KEY_SHORTCUT_ICONS = 'ptab_shortcut_icons';
+    var LS_KEY_SHORTCUT_RECENTS = 'ptab_shortcut_recents';
+    var LS_KEY_SHORTCUT_HOTKEY = 'ptab_shortcut_hotkey';
+    var LS_KEY_SHORTCUT_HIDDEN_HOTKEY = 'ptab_shortcut_hidden_hotkey';
+    var LS_KEY_SHORTCUT_RECOMMEND = 'ptab_shortcut_recommend';
+    var LS_KEY_SHORTCUT_VIEW = 'ptab_shortcut_view';
+    var LS_KEY_SHORTCUT_HIDDEN = 'ptab_shortcut_hidden';
+
+    var CP_COMMANDS_NORMAL = ['add', 'edit', 'delete', 'hide', 'recent', 'import', 'export', 'reset', 'clear', 'help'];
+    var CP_COMMANDS_HIDDEN = ['add', 'edit', 'delete', 'unhide', 'recent', 'import', 'export', 'reset', 'clear', 'help'];
+
     var log = function (tag, msg) { console.log('[' + tag + '] ' + msg); };
     var warn = function (tag, msg) { console.warn('[' + tag + '] ' + msg); };
 
@@ -80,6 +93,13 @@
     var opacityNumInput = document.getElementById('opacityNum');
     var engineSelect = document.getElementById('engineSel');
     var resetAdvancedBtn = document.getElementById('resetAdvBtn');
+    var cmdOverlay = document.getElementById('cmdOverlay');
+    var cmdPalette = document.getElementById('cmdPalette');
+    var cpPinnedBar = document.getElementById('cpPinnedBar');
+    var cpSearchInput = document.getElementById('cpSearchInput');
+    var cpContent = document.getElementById('cpContent');
+    var cpHotkeyInput = document.getElementById('cpHotkeyInput');
+    var cpRecommendCheck = document.getElementById('cpRecommendCheck');
 
     /* ================================================================
        4. 状态变量
@@ -101,6 +121,17 @@
     // 搜索设置（持久化到 localStorage）
     var searchMode = DEFAULT_SEARCH_MODE;  // 'hover' | 'always' | 'never'
     var currentOpacity = DEFAULT_OPACITY;
+
+    // 命令面板状态
+    var isPaletteOpen = false;
+    var isHiddenMode = false;          // 当前是否隐藏模式面板
+    var cpSearchTerm = '';
+    var cpKeyIndex = 0;
+    var cpCurrentPage = 1;
+    var cpItemsPerPage = 15;
+    var cpViewMode = localStorage.getItem(LS_KEY_SHORTCUT_VIEW) || 'list';
+    var cpCurrentMode = 'list';
+    var cpEditTarget = null;
     var currentEngine = DEFAULT_ENGINE;
     var engineIndex = 0;
     var langBtns = null; // 缓存语言面板按钮引用，避免每次切换重建 DOM
@@ -1109,7 +1140,9 @@
         // 慢速路径：有缺失时 fallback 到 IDB 全量读取
         var reads = order.map(function (id) { return idbGet(imgKey(id)); });
         Promise.all(reads).then(function (images) {
-            // 顺便回填缓存，下次就走快速路径
+            // WHY: IDB 读取是异步的，resolve 时面板可能已被关闭（鼠标离开 500ms 自动关闭）。
+            // 此时跳过渲染，避免往已隐藏的 DOM 中插入节点造成泄漏。
+            if (!isSettingsPanelOpen) return;
             var m = loadMeta();
             var changed = false;
             images.forEach(function (img, i) {
@@ -1120,7 +1153,13 @@
             });
             if (changed) saveMeta(m);
             renderLocalGallery(order, images, thumbs);
-        }).catch(function () { });
+        }).catch(function (err) {
+            // WHY: IDB 读取失败时降级用 localStorage 数据渲染，而不是静默吞错让画廊永远空白。
+            // meta 和 thumbs 都在 localStorage 中，即使没有 blob 回退，缩略图通常也够用。
+            console.error('PlainTab: IDB read failed in refreshLocalGallery, falling back to localStorage', err);
+            if (!isSettingsPanelOpen) return;
+            renderLocalGallery(order, order.map(function (id) { return meta[id] || { name: '', size: 0 }; }), thumbs);
+        });
     }
 
     /**
@@ -1693,7 +1732,1328 @@
     }
 
     /* ================================================================
-       17. 事件绑定
+       17. 命令面板 —— 快捷链接
+
+       WHY 命令面板替代传统图标矩阵：
+         壁纸 100% 干净。快捷键呼出面板，搜索/管理快捷链接，
+         不使用时完全不可见。命令栏支持鼠标滚轮横向滚动。
+       ================================================================ */
+
+    /** 数据层：读写快捷链接相关 localStorage */
+    function loadShortcuts() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUTS) || '[]'); } catch (e) { return []; }
+    }
+    function saveShortcuts(arr) {
+        try { localStorage.setItem(LS_KEY_SHORTCUTS, JSON.stringify(arr)); return true; } catch (e) { return false; }
+    }
+    function loadIcons() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_ICONS) || '{}'); } catch (e) { return {}; }
+    }
+    function saveIcons(obj) {
+        try { localStorage.setItem(LS_KEY_SHORTCUT_ICONS, JSON.stringify(obj)); return true; } catch (e) { return false; }
+    }
+    function loadRecents() {
+        try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_RECENTS) || '[]'); } catch (e) { return []; }
+    }
+    function saveRecents(arr) {
+        try { localStorage.setItem(LS_KEY_SHORTCUT_RECENTS, JSON.stringify(arr)); return true; } catch (e) { return false; }
+    }
+    function loadHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HOTKEY) || 'ctrl+k'; }
+    function saveHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HOTKEY, key); return true; } catch (e) { return false; } }
+    function loadRecommend() { return localStorage.getItem(LS_KEY_SHORTCUT_RECOMMEND) !== 'false'; }
+    function saveRecommend(bool) { try { localStorage.setItem(LS_KEY_SHORTCUT_RECOMMEND, bool ? 'true' : 'false'); } catch (e) {} }
+    function loadHidden() { try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN) || '[]'); } catch (e) { return []; } }
+    function saveHidden(arr) { try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN, JSON.stringify(arr)); return true; } catch (e) { return false; } }
+    function loadHiddenHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN_HOTKEY) || 'ctrl+shift+k'; }
+    function saveHiddenHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN_HOTKEY, key); return true; } catch (e) { return false; } }
+
+    /** 访问记录：更新访问频次 + 追加最近使用 */
+    function recordAccess(id) {
+        var shortcuts = loadShortcuts();
+        var found = false;
+        for (var i = 0; i < shortcuts.length; i++) {
+            if (shortcuts[i].id === id) { shortcuts[i].freq = (shortcuts[i].freq || 0) + 1; found = true; break; }
+        }
+        if (found) saveShortcuts(shortcuts);
+        var recents = loadRecents().filter(function (rid) { return rid !== id; });
+        recents.unshift(id);
+        if (recents.length > 10) recents.pop();
+        saveRecents(recents);
+    }
+
+    /**
+     * 获取 favicon URL（DuckDuckGo 代理，全球可用，国内也能访问）。
+     */
+    function getFaviconUrl(url) {
+        try {
+            var host = url.match(/^https?:\/\/([^\/]+)/);
+            if (!host) return null;
+            return 'https://icons.duckduckgo.com/ip3/' + host[1] + '.ico';
+        } catch (e) { return null; }
+    }
+
+    /** 首字母颜色（hash 保证同一字母颜色一致） */
+    function letterColor(letter) {
+        var colors = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#34495e',
+                      '#c0392b','#d35400','#27ae60','#2980b9','#8e44ad','#16a085','#f39c12','#2c3e50'];
+        var idx = (letter || 'A').toUpperCase().charCodeAt(0) % colors.length;
+        return colors[idx];
+    }
+
+    /** 渲染图标 DOM：favicon 图片 或 首字母方块 */
+    function renderIconEl(iconData, name, cls) {
+        cls = cls || 'cp-item-icon';
+        var el = document.createElement('div');
+        el.className = cls;
+        if (iconData && iconData.indexOf('LETTER:') !== 0) {
+            var img = document.createElement('img');
+            img.src = iconData;
+            img.onerror = function () {
+                var letter = (name || '?')[0].toUpperCase();
+                el.style.background = letterColor(letter);
+                el.textContent = letter;
+                img.remove();
+            };
+            el.appendChild(img);
+        } else {
+            var letter = (name || '?')[0].toUpperCase();
+            el.style.background = letterColor(letter);
+            el.textContent = letter;
+        }
+        return el;
+    }
+
+    /**
+     * Canvas 指纹检测 DuckDuckGo 占位图标。
+     * DDG 对无真实 favicon 的站点返回 48×48 通用占位图，像素特征固定。
+     * 返回 true 表示是占位图，应回退首字母。
+     */
+    function isDDGPlaceholder(img) {
+        if (img.naturalWidth !== 48 || img.naturalHeight !== 48) return false;
+        try {
+            var canvas = document.createElement('canvas');
+            canvas.width = 48;
+            canvas.height = 48;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            var data = ctx.getImageData(0, 0, 48, 48).data;
+            var hash = 0;
+            for (var i = 0; i < 256; i++) {
+                hash = ((hash << 5) - hash) + data[i];
+                hash |= 0;
+            }
+            return hash === -1750283373;
+        } catch (e) { return false; }
+    }
+
+    /* ================================================================
+       17a. 命令面板 —— 视图渲染
+       ================================================================ */
+
+    /** 渲染固定命令栏 */
+    function renderPinnedBar() {
+        cpPinnedBar.innerHTML = '';
+        var cmds = isHiddenMode ? CP_COMMANDS_HIDDEN : CP_COMMANDS_NORMAL;
+        cmds.forEach(function (cmd) {
+            var btn = document.createElement('span');
+            btn.className = 'cp-pinned-btn';
+            btn.textContent = cmd;
+            btn.addEventListener('click', function (e) { e.stopPropagation(); handleCommand(cmd); });
+            cpPinnedBar.appendChild(btn);
+        });
+        // 视图切换按钮（SVG 图标，显示当前模式）
+        var toggleBtn = document.createElement('span');
+        toggleBtn.className = 'cp-pinned-btn cp-view-toggle';
+        toggleBtn.title = '切换视图模式';
+        if (cpViewMode === 'icon') {
+            toggleBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0.5" y="0.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/><rect x="8" y="0.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/><rect x="0.5" y="8" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/><rect x="8" y="8" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/></svg>';
+        } else {
+            toggleBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1.5" width="12" height="2.2" rx="1" fill="currentColor" opacity="0.9"/><rect x="1" y="5.9" width="12" height="2.2" rx="1" fill="currentColor" opacity="0.9"/><rect x="1" y="10.3" width="12" height="2.2" rx="1" fill="currentColor" opacity="0.9"/></svg>';
+        }
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            cpViewMode = cpViewMode === 'icon' ? 'list' : 'icon';
+            localStorage.setItem(LS_KEY_SHORTCUT_VIEW, cpViewMode);
+            renderPinnedBar();
+            // 刷新当前视图
+            if (cpCurrentMode === 'list' || cpCurrentMode === 'feedback') renderShortcutList(cpSearchTerm);
+            else if (cpCurrentMode === 'recent') renderRecentList();
+            else if (cpCurrentMode === 'deleteGrid') renderGrid('delete', cpCurrentPage);
+            else if (cpCurrentMode === 'editGrid') renderGrid('edit', cpCurrentPage);
+            else if (cpCurrentMode === 'hideGrid') renderHideGrid(cpCurrentPage);
+            else if (cpCurrentMode === 'unhideGrid') renderUnhideGrid(cpCurrentPage);
+        });
+        cpPinnedBar.appendChild(toggleBtn);
+    }
+
+    /** 渲染命令栏滚轮横向滚动 */
+    function handlePinnedWheel(e) {
+        e.preventDefault();
+        cpPinnedBar.scrollLeft += e.deltaY;
+    }
+
+    /** 渲染快捷链接列表（列表模式 / 图标模式，统一推荐 5 且互斥） */
+    function renderShortcutList(filter) {
+        filter = (filter || '').toLowerCase();
+        var hidden = loadHidden();
+        var allShortcuts = loadShortcuts();
+        // 普通模式过滤隐藏；隐藏模式只显示隐藏
+        var shortcuts;
+        if (isHiddenMode) {
+            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
+        } else {
+            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        }
+        var icons = loadIcons();
+        var showRec = !filter && !isHiddenMode && loadRecommend();
+
+        // 推荐区：按频率取前 5
+        var recommended = [];
+        var recommendedIds = {};
+        if (showRec) {
+            var byFreq = shortcuts.slice().sort(function (a, b) { return (b.freq || 0) - (a.freq || 0); });
+            recommended = byFreq.slice(0, 5);
+            recommended.forEach(function (s) { recommendedIds[s.id] = true; });
+        }
+
+        // A-Z 区：排除推荐项，字母排序
+        var rest = shortcuts.filter(function (s) { return !recommendedIds[s.id]; });
+        rest.sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+
+        // 搜索时合并全部过滤
+        if (filter) {
+            var allFiltered = shortcuts.filter(function (s) {
+                return s.name.toLowerCase().indexOf(filter) !== -1 || s.url.toLowerCase().indexOf(filter) !== -1;
+            });
+            recommended = [];
+            recommendedIds = {};
+            rest = allFiltered;
+        }
+
+        var html = '';
+
+        if (cpViewMode === 'icon') {
+            // 图标模式：推荐区独立 1 排，A-Z 区接续分页（有推荐时 A-Z 2 排/页 10 项，无推荐时 3 排/页 15 项）
+            if (recommended.length) {
+                html += '<div class="cp-section-title">' + t('recommend') + '</div>';
+                html += '<div class="cp-grid cp-grid-rec">';
+                recommended.forEach(function (s) { html += buildGridIconHTML(s, icons[s.id]); });
+                for (var j = recommended.length; j < 5; j++) html += '<div class="cp-grid-item has-label empty"></div>';
+                html += '</div>';
+            }
+            if (rest.length > 0) {
+                var iconPageSize = recommended.length ? 10 : 15;
+                var totalPages = Math.ceil(rest.length / iconPageSize);
+                if (cpCurrentPage > totalPages) cpCurrentPage = totalPages;
+                if (cpCurrentPage < 1) cpCurrentPage = 1;
+                var page = cpCurrentPage;
+                var start = (page - 1) * iconPageSize;
+                var pageItems = rest.slice(start, start + iconPageSize);
+
+                if (filter) html += '<div class="cp-section-title">' + t('searchResults') + (totalPages > 1 ? ' (' + page + '/' + totalPages + ')' : '') + '</div>';
+                else html += '<div class="cp-section-title">' + t('allShortcuts') + ' (A-Z)' + (totalPages > 1 ? ' ' + page + '/' + totalPages : '') + '</div>';
+                html += '<div class="cp-grid">';
+                pageItems.forEach(function (s) { html += buildGridIconHTML(s, icons[s.id]); });
+                for (var k = pageItems.length; k < iconPageSize; k++) html += '<div class="cp-grid-item has-label empty"></div>';
+                html += '</div>';
+                if (totalPages > 1) html += renderPaginationHTML(page, totalPages);
+            }
+            if (rest.length === 0 && !recommended.length) {
+                html += '<div class="cp-empty">' + (filter ? t('noResults') : t('noShortcuts')) + '</div>';
+            }
+        } else {
+            // 列表模式
+            if (recommended.length) {
+                html += '<div class="cp-section-title">' + t('recommend') + '</div>';
+                recommended.forEach(function (s) { html += buildItemHTML(s, icons[s.id]); });
+            }
+            if (filter) html += '<div class="cp-section-title">' + t('searchResults') + '</div>';
+            else if (rest.length > 0) html += '<div class="cp-section-title">' + t('allShortcuts') + ' (A-Z)</div>';
+            if (rest.length === 0 && !recommended.length) {
+                html += '<div class="cp-empty">' + (filter ? t('noResults') : t('noShortcuts')) + '</div>';
+            } else {
+                rest.forEach(function (s) { html += buildItemHTML(s, icons[s.id]); });
+            }
+        }
+
+        cpContent.innerHTML = html;
+        applyIconStyles(cpContent);
+        applyMarqueeLabels(cpContent);
+        cpKeyIndex = 0;
+    }
+
+    /** 构建图标模式的单个网格项 */
+    function buildGridIconHTML(s, iconData) {
+        var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+        var letter = isLetter ? (iconData ? iconData.replace('LETTER:', '') : s.name[0].toUpperCase()) : s.name[0].toUpperCase();
+        var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+        return '<div class="cp-grid-item has-label" data-id="' + s.id + '">' +
+            '<div class="cp-grid-item-icon-wrap">' +
+            '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>' +
+            '</div>' +
+            '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>' +
+            '</div>';
+    }
+
+    function buildItemHTML(s, iconData, extraClass) {
+        extraClass = extraClass || '';
+        var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+        var letter = isLetter ? (iconData ? iconData.replace('LETTER:', '') : s.name[0].toUpperCase()) : s.name[0].toUpperCase();
+        var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+        return '<div class="cp-item' + (extraClass ? ' ' + extraClass : '') + '" data-id="' + s.id + '">' +
+            '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>' +
+            '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>' +
+            '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>' +
+            '</div>';
+    }
+
+    function escapeHTML(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /** 应用图标样式：文字图标嵌套彩色内圆，img 错误/DDG 占位图回落内圆 */
+    function applyIconStyles(container) {
+        var icons = container.querySelectorAll('.cp-item-icon, .cp-grid-item-icon, .cp-feedback-icon');
+        icons.forEach(function (el) {
+            if (!el.querySelector('img, .cp-icon-inner')) {
+                // 文字图标：灰白外圆 + 彩色内圆 + 字母
+                var inner = document.createElement('span');
+                inner.className = 'cp-icon-inner';
+                inner.style.background = el.getAttribute('data-letter-color');
+                inner.textContent = el.getAttribute('data-letter');
+                el.textContent = '';
+                el.appendChild(inner);
+            }
+        });
+        // 为 img 绑定 error / DDG 占位图回落
+        var imgs = container.querySelectorAll('.cp-item-icon img, .cp-grid-item-icon img, .cp-feedback-icon img');
+        imgs.forEach(function (img) {
+            var fallback = function () {
+                var p = img.parentElement;
+                img.remove();
+                var inner = document.createElement('span');
+                inner.className = 'cp-icon-inner';
+                inner.style.background = p.getAttribute('data-letter-color');
+                inner.textContent = p.getAttribute('data-letter');
+                p.appendChild(inner);
+            };
+            img.addEventListener('error', fallback, { once: true });
+            img.addEventListener('load', function () {
+                if (isDDGPlaceholder(this)) fallback();
+            }, { once: true });
+        });
+    }
+
+    /** 检测名称溢出并添加跑马灯动画（rAF 等布局完成后再检测） */
+    function applyMarqueeLabels(container) {
+        requestAnimationFrame(function () {
+            var labels = container.querySelectorAll('.cp-item-name, .cp-grid-item-label');
+            labels.forEach(function (el) {
+                if (el.scrollWidth > el.clientWidth) {
+                    var text = el.textContent;
+                    el.innerHTML = '<span>' + text + '</span><span>' + text + '</span>';
+                    el.classList.add('marquee');
+                }
+            });
+        });
+    }
+
+    /**
+     * cpContent 滑入动画。
+     * fromLeft: true=从左侧滑入(上一页), false=从右侧滑入(下一页)。
+     * 在 renderShortcutList 渲染完毕之后调用。
+     */
+    function slideInContent(fromLeft) {
+        cpContent.style.transition = 'none';
+        cpContent.style.transform = 'translateX(' + (fromLeft ? '-24px' : '24px') + ')';
+        cpContent.style.opacity = '0';
+        cpContent.offsetHeight; // 强制回流
+        cpContent.style.transition = 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease';
+        cpContent.style.transform = 'translateX(0)';
+        cpContent.style.opacity = '1';
+    }
+
+    /** 渲染 /add 或 /edit 表单 */
+    function renderForm(mode, item) {
+        var isEdit = mode === 'edit';
+        cpContent.innerHTML = '<div class="cp-form">' +
+            '<span class="cp-form-label">' + (isEdit ? t('editShortcut') : t('addShortcut')) + '</span>' +
+            '<input class="cp-form-input" id="cpFormName" placeholder="' + t('shortcutName') + '" value="' + (item ? escapeHTML(item.name) : '') + '" autocomplete="off">' +
+            '<div class="cp-form-url-row">' +
+            '<input class="cp-form-input" id="cpFormURL" placeholder="' + t('shortcutURL') + '" value="' + (item ? escapeHTML(item.url) : '') + '" autocomplete="off">' +
+            '<button class="cp-form-fetch-btn" id="cpFormFetchBtn" title="' + t('fetchTitle') + '">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+            '</button>' +
+            '</div>' +
+            '<div class="cp-form-error" id="cpFormError"></div>' +
+            '<button class="cp-form-submit" id="cpFormSubmit">' + (isEdit ? t('save') : t('add')) + '</button>' +
+            '</div>';
+
+        document.getElementById('cpFormSubmit').addEventListener('click', function () {
+            if (isEdit) handleEditSubmit(item.id);
+            else handleAddSubmit();
+        });
+        document.getElementById('cpFormName').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('cpFormURL').focus();
+            }
+        });
+        document.getElementById('cpFormURL').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (isEdit) handleEditSubmit(item.id);
+                else handleAddSubmit();
+            }
+        });
+        document.getElementById('cpFormFetchBtn').addEventListener('click', function () {
+            handleFetchTitle();
+        });
+        setTimeout(function () { document.getElementById('cpFormName').focus(); }, 50);
+    }
+
+    /** 渲染 /delete 或 /edit（跟随视图模式，仅显示当前面板范围内的快捷链接） */
+    function renderGrid(mode, page) {
+        var allShortcuts = loadShortcuts();
+        var hidden = loadHidden();
+        var shortcuts;
+        if (isHiddenMode) {
+            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
+        } else {
+            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        }
+        var icons = loadIcons();
+        var totalPages = 1;
+        var items = shortcuts;
+        var start = 0;
+        var sectionTitle;
+
+        if (cpViewMode === 'icon') {
+            totalPages = Math.max(1, Math.ceil(shortcuts.length / cpItemsPerPage));
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+            cpCurrentPage = page;
+            start = (page - 1) * cpItemsPerPage;
+            items = shortcuts.slice(start, start + cpItemsPerPage);
+            sectionTitle = (mode === 'delete' ? t('deleteShortcut') : t('editShortcut')) +
+                ' (' + (start + 1) + '-' + Math.min(start + cpItemsPerPage, shortcuts.length) + ' / ' + shortcuts.length + ')';
+        } else {
+            // 列表模式：全量展示，自然纵向滚动
+            cpCurrentPage = 1;
+            sectionTitle = (mode === 'delete' ? t('deleteShortcut') : t('editShortcut')) +
+                ' (' + shortcuts.length + ')';
+        }
+
+        var html = '<div class="cp-section-title">' + sectionTitle + '</div>';
+
+        if (cpViewMode === 'icon') {
+            // 图标模式：grid
+            html += '<div class="cp-grid">';
+            for (var i = 0; i < cpItemsPerPage; i++) {
+                if (i < items.length) {
+                    var s = items[i];
+                    var letter = s.name[0].toUpperCase();
+                    var iconData = icons[s.id];
+                    var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+                    var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+                    html += '<div class="cp-grid-item has-label" data-id="' + s.id + '">';
+                    html += '<div class="cp-grid-item-icon-wrap">';
+                    html += '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
+                    if (mode === 'delete') html += '<button class="cp-grid-item-del" data-id="' + s.id + '"></button>';
+                    html += '</div>';
+                    html += '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="cp-grid-item has-label empty"></div>';
+                }
+            }
+            html += '</div>';
+        } else {
+            // 列表模式：单列 + 操作按钮
+            items.forEach(function (s) {
+                var letter = s.name[0].toUpperCase();
+                var iconData = icons[s.id];
+                var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+                var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+                html += '<div class="cp-item' + (mode === 'edit' ? '' : '') + '" data-id="' + s.id + '">';
+                html += '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
+                html += '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>';
+                html += '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>';
+                if (mode === 'delete') {
+                    html += '<button class="cp-item-del" data-id="' + s.id + '"></button>';
+                }
+                html += '</div>';
+            });
+        }
+
+        if (cpViewMode === 'icon' && totalPages > 1) {
+            html += renderPaginationHTML(cpCurrentPage, totalPages);
+        }
+
+        cpContent.innerHTML = html;
+        applyIconStyles(cpContent);
+        applyMarqueeLabels(cpContent);
+
+        // 绑定事件
+        if (mode === 'delete') {
+            var dels = cpContent.querySelectorAll('.cp-grid-item-del, .cp-item-del');
+            dels.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    handleDeleteClick(btn.dataset.id);
+                });
+            });
+        } else {
+            var targets = cpContent.querySelectorAll('.cp-grid-item:not(.empty), .cp-item');
+            targets.forEach(function (el) {
+                el.addEventListener('click', function (e) {
+                    if (e.target.closest('.cp-grid-item-del, .cp-item-del')) return;
+                    handleEditClick(el.dataset.id);
+                });
+            });
+        }
+    }
+
+    function renderPaginationHTML(current, total) {
+        var html = '<div class="cp-pagination">';
+        for (var i = 1; i <= total; i++) {
+            html += '<div class="cp-pagination-dot' + (i === current ? ' active' : '') + '" data-page="' + i + '"></div>';
+        }
+        html += '</div>';
+        return html;
+    }
+
+    /** 渲染添加成功反馈 */
+    function renderFeedback(name, iconData) {
+        var letter = name[0].toUpperCase();
+        var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+        var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+        cpContent.innerHTML = '<div class="cp-feedback">' +
+            '<div class="cp-feedback-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>' +
+            '<span class="cp-feedback-text">' + escapeHTML(name) + ' ' + t('added') + '</span>' +
+            '</div>';
+        applyIconStyles(cpContent);
+    }
+
+    /** 2 秒后从反馈返回列表 */
+    function scheduleFeedbackReturn() {
+        setTimeout(function () {
+            if (cpCurrentMode !== 'feedback') return;
+            cpCurrentMode = 'list';
+            renderShortcutList('');
+            cpSearchInput.value = '';
+            cpSearchTerm = '';
+            cpSearchInput.focus();
+        }, 2000);
+    }
+
+    /**
+     * 异步预加载 favicon 用于反馈展示。
+     * 先展示首字母，favicon 就绪后替换图标区域。
+     */
+    function showFeedbackWithFavicon(name, favUrl, letterFallback, shortcutId) {
+        var letter = name[0].toUpperCase();
+        renderFeedback(name, letterFallback);
+        scheduleFeedbackReturn();
+
+        var img = new Image();
+        img.onload = function () {
+            // DDG 占位图 → 不升级，维持首字母
+            if (isDDGPlaceholder(this)) return;
+            // 真实 favicon → 持久化为 URL
+            var icons = loadIcons();
+            icons[shortcutId] = favUrl;
+            saveIcons(icons);
+            // 刷新反馈图标
+            var fbIcon = document.querySelector('.cp-feedback-icon');
+            if (fbIcon && cpCurrentMode === 'feedback') {
+                fbIcon.innerHTML = '';
+                var imgEl = document.createElement('img');
+                imgEl.src = favUrl;
+                imgEl.addEventListener('error', function () {
+                    imgEl.remove();
+                    var inner = document.createElement('span');
+                    inner.className = 'cp-icon-inner';
+                    inner.style.background = letterColor(letter);
+                    inner.textContent = letter;
+                    fbIcon.appendChild(inner);
+                }, { once: true });
+                fbIcon.appendChild(imgEl);
+            }
+        };
+        img.onerror = function () {};
+        img.src = favUrl;
+    }
+
+    /** 渲染 /help 命令列表 */
+    function renderHelp() {
+        var helpItems = [
+            { cmd: '/add', desc: t('helpAdd') },
+            { cmd: '/edit', desc: t('helpEdit') },
+            { cmd: '/delete', desc: t('helpDelete') },
+            { cmd: '/recent', desc: t('helpRecent') },
+            { cmd: isHiddenMode ? '/unhide' : '/hide', desc: t(isHiddenMode ? 'helpUnhide' : 'helpHide') },
+            { cmd: '/reset', desc: t('helpReset') },
+            { cmd: '/import', desc: t('helpImport') },
+            { cmd: '/export', desc: t('helpExport') },
+            { cmd: '/clear', desc: t('helpClear') }
+        ];
+        var html = '<div class="cp-section-title">' + t('commands') + '</div><div class="cp-help-list">';
+        helpItems.forEach(function (h) {
+            html += '<div class="cp-help-item"><span class="cp-help-cmd">' + h.cmd + '</span><span class="cp-help-desc">' + h.desc + '</span></div>';
+        });
+        html += '</div>';
+        cpContent.innerHTML = html;
+    }
+
+    /** 渲染 /recent 最近访问（仅显示当前面板范围内的） */
+    function renderRecentList() {
+        var allShortcuts = loadShortcuts();
+        var hidden = loadHidden();
+        var icons = loadIcons();
+        var recents = loadRecents();
+        var html = '<div class="cp-section-title">' + t('recentShortcuts') + '</div>';
+        var items = [];
+        recents.forEach(function (rid) {
+            var s = allShortcuts.find(function (sc) { return sc.id === rid; });
+            if (!s) return;
+            var isHiddenItem = hidden.indexOf(s.id) !== -1;
+            if (isHiddenMode) { if (isHiddenItem) items.push(s); }
+            else { if (!isHiddenItem) items.push(s); }
+        });
+        if (!items.length) {
+            html += '<div class="cp-empty">' + t('noRecentShortcuts') + '</div>';
+        } else if (cpViewMode === 'icon') {
+            html += '<div class="cp-grid">';
+            items.forEach(function (s) { html += buildGridIconHTML(s, icons[s.id]); });
+            var rem = items.length % 5;
+            if (rem > 0) for (var k = rem; k < 5; k++) html += '<div class="cp-grid-item has-label empty"></div>';
+            html += '</div>';
+        } else {
+            items.forEach(function (s) { html += buildItemHTML(s, icons[s.id]); });
+        }
+        cpContent.innerHTML = html;
+        applyIconStyles(cpContent);
+        applyMarqueeLabels(cpContent);
+    }
+
+    /* ================================================================
+       17b. 命令面板 —— 交互控制
+       ================================================================ */
+
+    function showPaletteHint(msg) {
+        cpContent.innerHTML = '<div class="cp-hint">' + escapeHTML(msg) + '</div>';
+        setTimeout(function () { cpContent.textContent = ''; }, 2000);
+    }
+
+    function openPalette() {
+        if (isPaletteOpen && isHiddenMode) {
+            showPaletteHint(t('hiddenModeHint'));
+            return;
+        }
+        if (isPaletteOpen) return;
+        isPaletteOpen = true;
+        isHiddenMode = false;
+        cmdOverlay.style.visibility = 'visible';
+        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        renderPinnedBar();
+        cpSearchInput.value = '';
+        cpSearchTerm = '';
+        cpCurrentMode = 'list';
+        cpCurrentPage = 1;
+        cpKeyIndex = 0;
+        renderShortcutList('');
+        setTimeout(function () { cpSearchInput.focus(); }, 100);
+    }
+
+    function openHiddenPalette() {
+        if (isPaletteOpen && !isHiddenMode) {
+            showPaletteHint(t('normalModeHint'));
+            return;
+        }
+        if (isPaletteOpen) return;
+        isPaletteOpen = true;
+        isHiddenMode = true;
+        cmdOverlay.style.visibility = 'visible';
+        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        renderPinnedBar();
+        cpSearchInput.value = '';
+        cpCurrentMode = 'list';
+        cpCurrentPage = 1;
+        renderShortcutList('');
+        setTimeout(function () { cpSearchInput.focus(); }, 100);
+    }
+
+    function closePalette() {
+        if (!isPaletteOpen) return;
+        isPaletteOpen = false;
+        isHiddenMode = false;
+        var overlayAnim = cmdOverlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        overlayAnim.onfinish = function () { cmdOverlay.style.visibility = 'hidden'; };
+        cpSearchTerm = '';
+        cpKeyIndex = 0;
+        cpCurrentPage = 1;
+        cpCurrentMode = 'list';
+        cpEditTarget = null;
+    }
+
+    function handleSearchInput(e) {
+        var val = cpSearchInput.value.trim();
+        cpSearchTerm = val;
+
+        // 检测 /command 前缀
+        if (val.indexOf('/') === 0) {
+            var parts = val.split(/\s+/);
+            var cmd = parts[0].toLowerCase();
+            // 仅输入 / 时保持列表
+            if (cmd === '/') { renderShortcutList(''); return; }
+            if (cmd === '/add') { handleCommand('add'); return; }
+            if (cmd === '/edit') { handleCommand('edit'); return; }
+            if (cmd === '/delete') { handleCommand('delete'); return; }
+            if (cmd === '/help') { handleCommand('help'); return; }
+            if (cmd === '/recent') { handleCommand('recent'); return; }
+            if (cmd === '/hide' && !isHiddenMode) { handleCommand('hide'); return; }
+            if (cmd === '/unhide' && isHiddenMode) { handleCommand('unhide'); return; }
+            if (cmd === '/import') { handleCommand('import'); return; }
+            if (cmd === '/export') { handleCommand('export'); return; }
+            if (cmd === '/reset') { handleCommand('reset'); return; }
+            if (cmd === '/clear') { handleCommand('clear'); return; }
+        }
+
+        // 普通搜索过滤
+        cpCurrentMode = 'list';
+        cpCurrentPage = 1;
+        renderShortcutList(val);
+    }
+
+    function handleCommand(cmd) {
+        cpSearchInput.value = '';
+        cpSearchTerm = '';
+        cpCurrentPage = 1;
+        cpKeyIndex = 0;
+
+        if (cmd === 'add') {
+            cpCurrentMode = 'add';
+            renderForm('add', null);
+        } else if (cmd === 'edit') {
+            cpCurrentMode = 'editGrid';
+            renderGrid('edit', 1);
+        } else if (cmd === 'delete') {
+            cpCurrentMode = 'deleteGrid';
+            renderGrid('delete', 1);
+        } else if (cmd === 'help') {
+            cpCurrentMode = 'help';
+            renderHelp();
+        } else if (cmd === 'recent') {
+            cpCurrentMode = 'recent';
+            renderRecentList();
+        } else if (cmd === 'hide') {
+            cpCurrentMode = 'hideGrid';
+            renderHideGrid(1);
+        } else if (cmd === 'unhide') {
+            cpCurrentMode = 'unhideGrid';
+            renderUnhideGrid(1);
+        } else if (cmd === 'reset') {
+            cpCurrentMode = 'reset';
+            handleReset();
+        } else if (cmd === 'import') {
+            handleImport();
+        } else if (cmd === 'export') {
+            handleExport();
+        } else if (cmd === 'clear') {
+            cpCurrentMode = 'clear';
+            handleClear();
+        } else if (cmd.indexOf('sort') === 0) {
+            // 兼容旧命令
+            var mode = cmd.split(/\s+/)[1] || 'a-z';
+            handleSort(mode);
+        }
+    }
+
+    /**
+     * 从 URL 自动获取页面标题。
+     * 优先用 fetch 解析 <title> 标签；CORS 失败时回退到域名。
+     */
+    function fetchPageTitle(url, callback) {
+        try {
+            fetch(url, { method: 'GET', mode: 'cors' }).then(function (res) {
+                if (!res.ok) { callback(null); return; }
+                return res.text();
+            }).then(function (html) {
+                if (!html) { callback(null); return; }
+                var m = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+                var title = m ? m[1].trim() : null;
+                callback(title);
+            }).catch(function () { callback(null); });
+        } catch (e) { callback(null); }
+    }
+
+    // 是否已尝试请求过 fetch 权限（整个会话只弹一次权限框）
+    var _fetchPermRequested = false;
+    var _fetchPermGranted = false;
+
+    /**
+     * 点击链接按钮 → 从 URL 获取页面标题填入名称字段（覆盖已有值）。
+     * 扩展模式下通过 chrome.permissions.request 动态请求 host 权限，
+     * 避免在 manifest 中声明 broad host_permissions 导致审核被拒。
+     */
+    function handleFetchTitle() {
+        var urlEl = document.getElementById('cpFormURL');
+        var nameEl = document.getElementById('cpFormName');
+        var btn = document.getElementById('cpFormFetchBtn');
+        var url = (urlEl && urlEl.value || '').trim();
+        if (!url) return;
+        if (!url.match(/^https?:\/\//)) url = 'https://' + url;
+
+        var isExt = typeof chrome !== 'undefined' && chrome.permissions && !!chrome.runtime && !!chrome.runtime.id;
+        var doFetch = function () {
+            btn.classList.add('loading');
+            btn.disabled = true;
+            nameEl.placeholder = t('fetchingTitle');
+            fetchPageTitle(url, function (title) {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                nameEl.placeholder = t('shortcutName');
+                if (title) {
+                    nameEl.value = title;
+                } else {
+                    nameEl.value = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+                }
+                nameEl.focus();
+            });
+        };
+
+        if (!isExt) {
+            // 网页模式：直接尝试 fetch（大概率 CORS 失败，回退域名）
+            doFetch();
+            return;
+        }
+
+        // 扩展模式：检查是否需要请求权限
+        if (_fetchPermGranted) { doFetch(); return; }
+
+        if (!_fetchPermRequested) {
+            _fetchPermRequested = true;
+            chrome.permissions.request({
+                origins: ['https://*/*', 'http://*/*']
+            }, function (granted) {
+                _fetchPermGranted = granted;
+                if (granted) {
+                    doFetch();
+                } else {
+                    // 用户拒绝 → 用域名回退，不转圈
+                    nameEl.value = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+                    nameEl.focus();
+                }
+            });
+        } else {
+            // 之前请求过但被拒 → 直接用域名回退
+            nameEl.value = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+            nameEl.focus();
+        }
+    }
+
+    function doAddOrEditSubmit(isEdit, editId) {
+        var nameEl = document.getElementById('cpFormName');
+        var urlEl = document.getElementById('cpFormURL');
+        var errorEl = document.getElementById('cpFormError');
+        var name = (nameEl && nameEl.value || '').trim();
+        var url = (urlEl && urlEl.value || '').trim();
+
+        // URL 验证
+        if (!url) { errorEl.textContent = t('urlRequired'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return; }
+        if (!url.match(/^https?:\/\//)) url = 'https://' + url;
+        // 拒绝无域名结构或非 http/https 的 URL（如 aaa / javascript: / file:）
+        if (!url.match(/^https?:\/\/[^\s\/]+\.[^\s\/]+/)) { errorEl.textContent = t('urlRequired'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return; }
+
+        // 重复检查（编辑模式下排除自身）
+        var shortcuts = loadShortcuts();
+        if (shortcuts.some(function (s) { return s.url.toLowerCase() === url.toLowerCase() && (!isEdit || s.id !== editId); })) {
+            errorEl.textContent = t('duplicateURL'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return;
+        }
+
+        // 名称为空时用域名作为回退
+        if (!name) name = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+
+        if (isEdit) {
+            for (var i = 0; i < shortcuts.length; i++) {
+                if (shortcuts[i].id === editId) { shortcuts[i].name = name; shortcuts[i].url = url; break; }
+            }
+            saveShortcuts(shortcuts);
+            var editIcons = loadIcons();
+            editIcons[editId] = getFaviconUrl(url) || ('LETTER:' + name[0].toUpperCase());
+            saveIcons(editIcons);
+            cpCurrentMode = 'list';
+            cpEditTarget = null;
+            renderShortcutList('');
+            cpSearchInput.value = '';
+            cpSearchTerm = '';
+            setTimeout(function () { cpSearchInput.focus(); }, 50);
+        } else {
+            var id = generateId();
+            var now = Date.now();
+            shortcuts.push({ id: id, name: name, url: url, freq: 0, added: now });
+            saveShortcuts(shortcuts);
+            if (isHiddenMode) {
+                var h = loadHidden();
+                h.push(id);
+                saveHidden(h);
+            }
+            var icons = loadIcons();
+            var favUrl = getFaviconUrl(url);
+            var letterFallback = 'LETTER:' + name[0].toUpperCase();
+            // 先存首字母；showFeedbackWithFavicon 确认非 DDG 占位图后才升级为 URL
+            icons[id] = letterFallback;
+            saveIcons(icons);
+
+            // 异步加载 favicon，加载成功直接展示，失败则 3s 后展示首字母
+            cpCurrentMode = 'feedback';
+            if (favUrl) {
+                showFeedbackWithFavicon(name, favUrl, letterFallback, id);
+            } else {
+                renderFeedback(name, letterFallback);
+                scheduleFeedbackReturn();
+            }
+        }
+    }
+
+    function handleAddSubmit() {
+        doAddOrEditSubmit(false, null);
+    }
+
+    function handleEditClick(id) {
+        var shortcuts = loadShortcuts();
+        var item = shortcuts.find(function (s) { return s.id === id; });
+        if (!item) return;
+        cpCurrentMode = 'add';
+        cpEditTarget = id;
+        renderForm('edit', item);
+    }
+
+    function handleEditSubmit(id) {
+        doAddOrEditSubmit(true, id);
+    }
+
+    function handleDeleteClick(id) {
+        var shortcuts = loadShortcuts().filter(function (s) { return s.id !== id; });
+        saveShortcuts(shortcuts);
+        var icons = loadIcons();
+        delete icons[id];
+        saveIcons(icons);
+        var recents = loadRecents().filter(function (rid) { return rid !== id; });
+        saveRecents(recents);
+        var hidden = loadHidden().filter(function (h) { return h !== id; });
+        saveHidden(hidden);
+        renderGrid('delete', cpCurrentPage);
+    }
+
+    function handleGridScroll(e) {
+        var modeMap = { 'deleteGrid': 'delete', 'editGrid': 'edit', 'hideGrid': 'hide', 'unhideGrid': 'unhide' };
+        var mode = modeMap[cpCurrentMode];
+        if (!mode) return;
+        // 获取当前模式下的总数
+        var allShortcuts = loadShortcuts();
+        var hidden = loadHidden();
+        var filtered;
+        if (cpCurrentMode === 'unhideGrid') {
+            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
+        } else if (cpCurrentMode === 'hideGrid') {
+            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        } else if (isHiddenMode) {
+            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
+        } else {
+            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        }
+        var totalPages = Math.max(1, Math.ceil(filtered.length / cpItemsPerPage));
+        if (e.deltaY > 0 && cpCurrentPage < totalPages) {
+            cpCurrentPage++;
+            if (cpCurrentMode === 'hideGrid') renderHideGrid(cpCurrentPage);
+            else if (cpCurrentMode === 'unhideGrid') renderUnhideGrid(cpCurrentPage);
+            else renderGrid(mode, cpCurrentPage);
+        } else if (e.deltaY < 0 && cpCurrentPage > 1) {
+            cpCurrentPage--;
+            if (cpCurrentMode === 'hideGrid') renderHideGrid(cpCurrentPage);
+            else if (cpCurrentMode === 'unhideGrid') renderUnhideGrid(cpCurrentPage);
+            else renderGrid(mode, cpCurrentPage);
+        }
+    }
+
+    /** 图标模式主页轮滚翻页（A-Z 区：有推荐 10 格/页，无推荐 15 格/页） */
+    function handleIconPageScroll(e) {
+        var hidden = loadHidden();
+        var allShortcuts = loadShortcuts();
+        var visible = isHiddenMode
+            ? allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; })
+            : allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        if (cpSearchTerm) {
+            visible = visible.filter(function (s) {
+                return s.name.toLowerCase().indexOf(cpSearchTerm) !== -1 || s.url.toLowerCase().indexOf(cpSearchTerm) !== -1;
+            });
+        }
+        // 排除推荐项（推荐不参与 A-Z 翻页）
+        if (!cpSearchTerm && !isHiddenMode && loadRecommend()) {
+            var byFreq = visible.slice().sort(function (a, b) { return (b.freq || 0) - (a.freq || 0); });
+            var recIds = {};
+            byFreq.slice(0, 5).forEach(function (s) { recIds[s.id] = true; });
+            visible = visible.filter(function (s) { return !recIds[s.id]; });
+        }
+        var iconPageSize = (!cpSearchTerm && !isHiddenMode && loadRecommend()) ? 10 : 15;
+        var totalPages = Math.ceil(visible.length / iconPageSize);
+        if (e.deltaY > 0 && cpCurrentPage < totalPages) {
+            e.preventDefault();
+            cpCurrentPage++;
+            renderShortcutList(cpSearchTerm);
+            slideInContent(false);
+        } else if (e.deltaY < 0 && cpCurrentPage > 1) {
+            e.preventDefault();
+            cpCurrentPage--;
+            renderShortcutList(cpSearchTerm);
+            slideInContent(true);
+        }
+    }
+
+    function handleSort(mode) {
+        var shortcuts = loadShortcuts();
+        if (!mode || mode === 'a-z' || mode === 'az') {
+            shortcuts.sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
+        } else if (mode === 'z-a' || mode === 'za') {
+            shortcuts.sort(function (a, b) { return b.name.toLowerCase().localeCompare(a.name.toLowerCase()); });
+        } else if (mode === 'freq') {
+            shortcuts.sort(function (a, b) { return (b.freq || 0) - (a.freq || 0); });
+        } else if (mode === 'recent') {
+            var recents = loadRecents();
+            shortcuts.sort(function (a, b) {
+                var ai = recents.indexOf(a.id), bi = recents.indexOf(b.id);
+                if (ai !== -1 && bi !== -1) return ai - bi;
+                if (ai !== -1) return -1;
+                if (bi !== -1) return 1;
+                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+            });
+        }
+        saveShortcuts(shortcuts);
+        cpCurrentMode = 'list';
+        renderShortcutList('');
+        cpSearchInput.value = '';
+        cpSearchTerm = '';
+    }
+
+    function handleShortcutClick(id) {
+        var shortcuts = loadShortcuts();
+        var item = shortcuts.find(function (s) { return s.id === id; });
+        if (!item) return;
+        recordAccess(id);
+        window.open(item.url, '_self');
+    }
+
+    function handleImport() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.html,.htm';
+        input.addEventListener('change', function () {
+            var file = input.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function () {
+                var text = reader.result;
+                var links = [];
+                var re = /<A\s+[^>]*HREF="([^"]*)"[^>]*>([^<]*)<\/A>/gi;
+                var m;
+                while ((m = re.exec(text)) !== null) {
+                    var linkUrl = m[1];
+                    var linkName = m[2].replace(/<[^>]+>/g, '').trim();
+                    if (linkUrl && linkName && linkUrl.match(/^https?:\/\//)) links.push({ name: linkName, url: linkUrl });
+                }
+                if (!links.length) { log('CmdPalette', 'no bookmarks found'); return; }
+                var shortcuts = loadShortcuts();
+                var existUrls = {};
+                shortcuts.forEach(function (s) { existUrls[s.url.toLowerCase()] = true; });
+                var added = 0;
+                var newIds = [];
+                links.forEach(function (l) {
+                    if (existUrls[l.url.toLowerCase()]) return;
+                    var newId = generateId();
+                    shortcuts.push({ id: newId, name: l.name, url: l.url, freq: 0, added: Date.now() });
+                    existUrls[l.url.toLowerCase()] = true;
+                    newIds.push(newId);
+                    added++;
+                });
+                saveShortcuts(shortcuts);
+                if (isHiddenMode && newIds.length) {
+                    var h = loadHidden();
+                    h = h.concat(newIds);
+                    saveHidden(h);
+                }
+                log('CmdPalette', 'imported ' + added + ' bookmarks (' + (links.length - added) + ' duplicates skipped)');
+                cpCurrentMode = 'list';
+                renderShortcutList('');
+            };
+            reader.readAsText(file);
+        });
+        input.click();
+    }
+
+    function handleExport() {
+        var shortcuts = loadShortcuts();
+        var data = JSON.stringify(shortcuts, null, 2);
+        var blob = new Blob([data], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'plaintab-shortcuts-' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        // 不关闭面板
+    }
+
+    function handleReset() {
+        var shortcuts = loadShortcuts();
+        shortcuts.forEach(function (s) { s.freq = 0; });
+        saveShortcuts(shortcuts);
+        renderShortcutList('');
+    }
+
+    /** hide 网格（列表模式全量纵向滚动，图标模式 15 格/页） */
+    function renderHideGrid(page) {
+        var hidden = loadHidden();
+        var shortcuts = loadShortcuts().filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        var icons = loadIcons();
+        var totalPages, start, items, sectionTitle;
+
+        if (cpViewMode === 'icon') {
+            totalPages = Math.max(1, Math.ceil(shortcuts.length / cpItemsPerPage));
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+            cpCurrentPage = page;
+            start = (page - 1) * cpItemsPerPage;
+            items = shortcuts.slice(start, start + cpItemsPerPage);
+            sectionTitle = t('hideShortcutTitle') + ' (' + (start + 1) + '-' + Math.min(start + cpItemsPerPage, shortcuts.length) + ' / ' + shortcuts.length + ')';
+        } else {
+            totalPages = 1;
+            cpCurrentPage = 1;
+            items = shortcuts;
+            sectionTitle = t('hideShortcutTitle') + ' (' + shortcuts.length + ')';
+        }
+
+        var html = '<div class="cp-section-title">' + sectionTitle + '</div>';
+        if (cpViewMode === 'icon') {
+            html += '<div class="cp-grid">';
+            for (var i = 0; i < (cpViewMode === 'icon' ? cpItemsPerPage : items.length); i++) {
+                if (i < items.length) {
+                    var s = items[i];
+                    var letter = s.name[0].toUpperCase();
+                    var iconData = icons[s.id];
+                    var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+                    var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+                    html += '<div class="cp-grid-item has-label" data-id="' + s.id + '">';
+                    html += '<div class="cp-grid-item-icon-wrap">';
+                    html += '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
+                    html += '<button class="cp-grid-item-del cp-hide-btn" data-id="' + s.id + '"></button>';
+                    html += '</div>';
+                    html += '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>';
+                    html += '</div>';
+                } else if (cpViewMode === 'icon') { html += '<div class="cp-grid-item has-label empty"></div>'; }
+            }
+            html += '</div>';
+        } else {
+            items.forEach(function (s) {
+                var letter = s.name[0].toUpperCase();
+                var iconData = icons[s.id];
+                var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+                var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+                html += '<div class="cp-item" data-id="' + s.id + '">';
+                html += '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
+                html += '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>';
+                html += '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>';
+                html += '<button class="cp-item-del cp-hide-btn" data-id="' + s.id + '"></button>';
+                html += '</div>';
+            });
+        }
+        if (cpViewMode === 'icon' && totalPages > 1) html += renderPaginationHTML(cpCurrentPage, totalPages);
+        cpContent.innerHTML = html;
+        applyIconStyles(cpContent);
+        applyMarqueeLabels(cpContent);
+        var btns = cpContent.querySelectorAll('.cp-hide-btn');
+        btns.forEach(function (btn) {
+            btn.addEventListener('click', function () { hideShortcut(btn.dataset.id); });
+        });
+    }
+
+    function hideShortcut(id) {
+        var hidden = loadHidden();
+        if (hidden.indexOf(id) === -1) { hidden.push(id); saveHidden(hidden); }
+        renderHideGrid(cpCurrentPage);
+    }
+
+    /** unhide 网格（列表模式全量纵向滚动，图标模式 15 格/页） */
+    function renderUnhideGrid(page) {
+        var shortcuts = loadShortcuts();
+        var hidden = loadHidden();
+        var icons = loadIcons();
+        var hiddenItems = shortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
+        var totalPages, start, items;
+
+        if (cpViewMode === 'icon') {
+            totalPages = Math.max(1, Math.ceil(hiddenItems.length / cpItemsPerPage));
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+            cpCurrentPage = page;
+            start = (page - 1) * cpItemsPerPage;
+            items = hiddenItems.slice(start, start + cpItemsPerPage);
+        } else {
+            totalPages = 1;
+            cpCurrentPage = 1;
+            items = hiddenItems;
+        }
+
+        var html = '<div class="cp-section-title">' + t('hiddenShortcuts') + ' (' + hiddenItems.length + ')' + '</div>';
+        if (!items.length) { html += '<div class="cp-empty">' + t('noHiddenShortcuts') + '</div>'; }
+        else if (cpViewMode === 'icon') {
+            html += '<div class="cp-grid">';
+            for (var i = 0; i < cpItemsPerPage; i++) {
+                if (i < items.length) {
+                    var s = items[i];
+                    var letter = s.name[0].toUpperCase();
+                    var iconData = icons[s.id];
+                    var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+                    var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+                    html += '<div class="cp-grid-item has-label" data-id="' + s.id + '">';
+                    html += '<div class="cp-grid-item-icon-wrap">';
+                    html += '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
+                    html += '<button class="cp-grid-item-del unhide cp-unhide-btn" data-id="' + s.id + '"></button>';
+                    html += '</div>';
+                    html += '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>';
+                    html += '</div>';
+                } else { html += '<div class="cp-grid-item has-label empty"></div>'; }
+            }
+            html += '</div>';
+        } else {
+            items.forEach(function (s) {
+                var letter = s.name[0].toUpperCase();
+                var iconData = icons[s.id];
+                var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
+                var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
+                html += '<div class="cp-item" data-id="' + s.id + '">';
+                html += '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
+                html += '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>';
+                html += '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>';
+                html += '<button class="cp-item-del cp-unhide-btn unhide" data-id="' + s.id + '"></button>';
+                html += '</div>';
+            });
+        }
+        if (cpViewMode === 'icon' && totalPages > 1) html += renderPaginationHTML(cpCurrentPage, totalPages);
+        cpContent.innerHTML = html;
+        applyIconStyles(cpContent);
+        applyMarqueeLabels(cpContent);
+        var btns = cpContent.querySelectorAll('.cp-unhide-btn');
+        btns.forEach(function (btn) {
+            btn.addEventListener('click', function () { unhideShortcut(btn.dataset.id); });
+        });
+    }
+
+    function unhideShortcut(id) {
+        var hidden = loadHidden().filter(function (h) { return h !== id; });
+        saveHidden(hidden);
+        renderUnhideGrid(cpCurrentPage);
+    }
+
+    function handleClear() {
+        // 二次确认：面板内显示确认提示
+        cpContent.innerHTML = '<div class="cp-clear-confirm">' +
+            '<p class="cp-clear-text">' + t('clearConfirm') + '</p>' +
+            '<button id="cpClearYes" class="cp-clear-btn-yes">' + t('yes') + '</button>' +
+            '<button id="cpClearNo" class="cp-clear-btn-no">' + t('no') + '</button>' +
+            '</div>';
+        document.getElementById('cpClearYes').addEventListener('click', function () {
+            saveShortcuts([]);
+            saveIcons({});
+            saveRecents([]);
+            saveHidden([]);
+            cpCurrentMode = 'list';
+            renderShortcutList('');
+            cpSearchInput.value = '';
+            cpSearchTerm = '';
+            setTimeout(function () { cpSearchInput.focus(); }, 50);
+        });
+        document.getElementById('cpClearNo').addEventListener('click', function () {
+            cpCurrentMode = 'list';
+            renderShortcutList('');
+            cpSearchInput.value = '';
+            cpSearchTerm = '';
+            setTimeout(function () { cpSearchInput.focus(); }, 50);
+        });
+    }
+
+    /** 键盘导航 */
+    function handleKeyNav(e) {
+        if (!isPaletteOpen) return;
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            // 表单/网格/help/recent/feedback 模式：返回列表
+            if (cpCurrentMode !== 'list') {
+                cpCurrentMode = 'list';
+                cpSearchInput.value = '';
+                cpSearchTerm = '';
+                cpCurrentPage = 1;
+                renderShortcutList('');
+                setTimeout(function () { cpSearchInput.focus(); }, 50);
+                return;
+            }
+            closePalette();
+            return;
+        }
+
+        if (cpCurrentMode === 'list' || cpCurrentMode === 'recent' || cpCurrentMode === 'help') {
+            // 仅列表模式支持键盘导航
+        }
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (cpCurrentMode === 'feedback') return;
+            if (cpCurrentMode === 'add') {
+                var submitBtn = document.getElementById('cpFormSubmit');
+                if (submitBtn && document.activeElement === cpSearchInput) return; // 搜索框中回车不触发提交
+                if (submitBtn) submitBtn.click();
+                return;
+            }
+            // 列表模式：高亮项
+            if (cpCurrentMode === 'list') {
+                var items = cpContent.querySelectorAll('.cp-item');
+                if (items.length && cpKeyIndex >= 0 && cpKeyIndex < items.length) {
+                    var id = items[cpKeyIndex].dataset.id;
+                    if (id) handleShortcutClick(id);
+                }
+            }
+        }
+
+        if (cpCurrentMode === 'editGrid' || cpCurrentMode === 'deleteGrid' || cpCurrentMode === 'hideGrid' || cpCurrentMode === 'unhideGrid') return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            var items = cpContent.querySelectorAll('.cp-item');
+            if (items.length) {
+                cpKeyIndex = Math.min(cpKeyIndex + 1, items.length - 1);
+                highlightItems(items);
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            cpKeyIndex = Math.max(cpKeyIndex - 1, 0);
+            highlightItems(cpContent.querySelectorAll('.cp-item'));
+        }
+    }
+
+    function highlightItems(items) {
+        items.forEach(function (item, i) {
+            if (i === cpKeyIndex) item.classList.add('key-hover');
+            else item.classList.remove('key-hover');
+        });
+    }
+
+    /* ================================================================
+       18. 事件绑定
 
        WHY 所有事件绑定集中管理：
          方便一目了然地看到整个页面的交互逻辑，
@@ -1758,17 +3118,100 @@
         // --- 键盘快捷键 ---
 
         document.addEventListener('keydown', function (e) {
+            // 命令面板优先处理键盘事件
+            if (isPaletteOpen) {
+                // WHY: 表单输入框（名称/URL）有独立的 Enter 处理逻辑，
+                // 全局 handleKeyNav 不应重复处理，否则编辑提交后会立即跳转第一个列表项。
+                var isFormInput = document.activeElement && document.activeElement.closest('#cpFormName, #cpFormURL');
+                if (!(e.key === 'Enter' && isFormInput)) {
+                    handleKeyNav(e);
+                }
+                if (e.key === 'Enter' && document.activeElement === cpSearchInput) { e.preventDefault(); return; }
+                if (e.key !== 'Escape') return;
+            }
             if (e.key === 'Escape') { closeAll(); hideCorners(); }
+            // WHY: Ctrl+K / Cmd+K 作为命令面板快捷键
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) { e.preventDefault(); openPalette(); return; }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'k') { e.preventDefault(); openHiddenPalette(); return; }
             // WHY: Ctrl+Shift+W (Cmd+Shift+W on Mac) 作为设置面板的键盘快捷键
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); isSettingsPanelOpen ? closeSettings() : openSettings(); }
-            if (e.key === 'Enter' && document.activeElement === searchInput) doSearch(searchInput.value);
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); isSettingsPanelOpen ? closeSettings() : openSettings(); return; }
+            if (e.key === 'Enter' && document.activeElement === searchInput) { doSearch(searchInput.value); return; }
+        });
+
+        // --- 鼠标快捷方式 ---
+
+        // 双击空白页面 → 打开 Normal 面板
+        document.addEventListener('dblclick', function (e) {
+            if (isPaletteOpen) return;
+            // 不响应对按钮/输入框的双击
+            if (e.target.closest('button, input, select, .settings-panel, .language-panel')) return;
+            openPalette();
+        });
+
+        // 鼠标中键 → 打开 Hidden 面板
+        document.addEventListener('auxclick', function (e) {
+            if (e.button !== 1) return; // 仅中键
+            if (isPaletteOpen) return;
+            e.preventDefault(); // 阻止浏览器默认的自动滚动
+            openHiddenPalette();
+        });
+
+        // --- 命令面板事件 ---
+
+        cmdOverlay.addEventListener('click', function (e) {
+            if (e.target === cmdOverlay) closePalette();
+        });
+
+        cpSearchInput.addEventListener('input', function () { handleSearchInput(); });
+
+        cpContent.addEventListener('wheel', function (e) {
+            e.stopPropagation();
+            if ((cpCurrentMode === 'deleteGrid' || cpCurrentMode === 'editGrid' || cpCurrentMode === 'hideGrid' || cpCurrentMode === 'unhideGrid') && cpViewMode === 'icon') {
+                e.preventDefault();
+                handleGridScroll(e);
+            } else if (cpCurrentMode === 'list' && cpViewMode === 'icon') {
+                handleIconPageScroll(e);
+            }
+        });
+
+        cpContent.addEventListener('click', function (e) {
+            e.stopPropagation();
+            // 仅主列表和最近使用模式下才允许点击跳转
+            var canNavigate = cpCurrentMode === 'list' || cpCurrentMode === 'recent';
+            if (canNavigate) {
+                var item = e.target.closest('.cp-item');
+                if (item && item.dataset.id) {
+                    handleShortcutClick(item.dataset.id);
+                    return;
+                }
+                var gridItem = e.target.closest('.cp-grid-item:not(.empty)');
+                if (gridItem && gridItem.dataset.id) {
+                    handleShortcutClick(gridItem.dataset.id);
+                    return;
+                }
+            }
+            var dot = e.target.closest('.cp-pagination-dot');
+            if (dot && dot.dataset.page) {
+                var page = parseInt(dot.dataset.page);
+                if (cpCurrentMode === 'hideGrid') renderHideGrid(page);
+                else if (cpCurrentMode === 'unhideGrid') renderUnhideGrid(page);
+                else if (cpCurrentMode === 'list') { var prev = cpCurrentPage; cpCurrentPage = page; renderShortcutList(cpSearchTerm); slideInContent(page < prev); }
+                else { var modeMap = { 'deleteGrid': 'delete', 'editGrid': 'edit' }; var m = modeMap[cpCurrentMode] || 'edit'; renderGrid(m, page); }
+            }
         });
 
         // --- 全局点击关闭 ---
 
         document.addEventListener('click', function (e) {
+            if (isPaletteOpen && !cmdPalette.contains(e.target)) closePalette();
             if (isSettingsPanelOpen && !settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettings();
             if (isLangPanelOpen && !langPanel.contains(e.target) && e.target !== langBtn && !langBtn.contains(e.target)) closeLangPanel();
+            // 点击空白区域 → 聚焦搜索栏
+            if (!isPaletteOpen && !isSettingsPanelOpen && !isLangPanelOpen && document.activeElement !== searchInput) {
+                if (e.target === document.body || e.target === wallpaperBackEl || e.target === wallpaperFrontEl || !e.target.closest('button, input, select, .settings-panel, .language-panel, .cmd-palette-overlay')) {
+                    searchInput.focus();
+                }
+            }
             hideCorners();
         });
 
@@ -1847,12 +3290,22 @@
             saveSettings();
         });
         engineSelect.addEventListener('change', function () { applyEngine(engineSelect.value); });
+        // 命令面板快捷键 & 推荐设置
+        cpHotkeyInput.value = loadHotkey();
+        cpRecommendCheck.checked = loadRecommend();
+        cpHotkeyInput.addEventListener('change', function () { saveHotkey(cpHotkeyInput.value || 'ctrl+k'); });
+        cpRecommendCheck.addEventListener('change', function () { saveRecommend(cpRecommendCheck.checked); });
+
         resetAdvancedBtn.addEventListener('click', function () {
             applySearchMode(DEFAULT_SEARCH_MODE);
             searchModeSelect.value = DEFAULT_SEARCH_MODE;
             applyOpacity(DEFAULT_OPACITY);
             if (!IS_EXTENSION) applyEngine(DEFAULT_ENGINE);
-            else saveSettings(); // 扩展模式下只需保存 searchMode 和 opacity
+            else saveSettings();
+            cpHotkeyInput.value = 'ctrl+k';
+            saveHotkey('ctrl+k');
+            cpRecommendCheck.checked = true;
+            saveRecommend(true);
         });
 
         /**
