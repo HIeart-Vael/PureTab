@@ -1,43 +1,29 @@
-Journal des modifications
+Journal des mises à jour
 
-• v3.1.1
-  • Passage de l'API Bing en mode compétition avec Promise.any et timeout de 8s avec AbortController ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération et ajouter les techniques de latence Promise.any/AbortController.
+• v3.1.1 · Passage de l'API Bing en mode concurrent Promise.any avec un timeout AbortController de 8 secondes ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération.
 
-• v3.1.0
-  • Galerie de fonds d'écran locaux : télécharger, supprimer, faire pivoter plusieurs fonds avec sélection par lot ; refactorisation du code (nommage sémantique, division des fonctions, commentaires de conception) ; amélioration des styles de titre des panneaux ; localisation multilingue enrichie ; CSP corrigé pour supprimer les domaines d'API JSON.
+• v3.1.0 · Galerie locale de fonds d'écran : téléversement/suppression/rotation de plusieurs fonds d'écran locaux, sélection par lots ; refonte du code ; amélioration du style des panneaux ; localisation multilingue complétée ; correction CSP — suppression des domaines JSON API.
 
-• v3.0.5
-  • Proxy API Bing mis à niveau (support régional + déduplication d'images) ; cache de fonds d'écran optimisé (vérifier IDB avant téléchargement) ; clés localStorage unifiées ; fichiers changelog en 16 langues ajoutés ; journalisation et sémantique du code améliorées.
+• v3.0.5 · Mise à niveau du proxy API Bing (requêtes régionalisées + déduplication des images) ; optimisation du cache des fonds d'écran ; unification des clés localStorage ; ajout de journaux d'évolution en 16 langues ; amélioration des logs et de la sémantique du code.
 
-• v3.0.4
-  • Correction du chargement du fond d'écran : la liste blanche CSP `img-src` ne contenait pas les origines du CDN Bing (`www.bing.com`, `cn.bing.com`), donc les images redirigées depuis les API proxy étaient bloquées par le navigateur.
+• v3.0.4 · Correction d'un échec de chargement des fonds d'écran : la liste blanche CSP img-src ne contenait pas les domaines CDN Bing, les images redirigées par le proxy API étaient bloquées.
 
-• v3.0.3
-  • Contournement de CSSOM sur le chemin critique de préchargement pour un premier affichage plus rapide ; CSP renforcée ; code mort supprimé ; icônes SVG et supports promotionnels ajoutés.
+• v3.0.3 · Accélération du rendu du premier écran via CSSOM, renforcement de la sécurité CSP, nettoyage du code mort, ajout d'icônes SVG et de supports promotionnels.
 
-• v3.0.2
-  • Fond adaptatif pour mode sombre, code restructuré, barre inférieure multilingue.
+• v3.0.2 · Arrière-plan adaptatif au mode sombre, refonte de la structure du code, bande d'information multilingue en bas.
 
-• v3.0.1
-  • Passage à Chrome Search API pour la conformité à usage unique de CWS.
+• v3.0.1 · Intégration de l'API Chrome Search, conformité à la règle d'usage unique du Chrome Web Store.
 
-• v3.0.0
-  • Réécriture complète : architecture double couche pour un rendu du fond d'écran sans scintillement avec fond de secours. (Voir V3_NOTE.md)
+• v3.0.0 · Réécriture complète : architecture à deux couches éliminant le flash blanc du nouvel onglet, ajout d'un fond gris de secours.
 
-• v2.2.7
-  • Ajout de README en 5 langues, mode de recherche par défaut réglé sur « toujours visible ».
+• v2.2.7 · Ajout des README en anglais, japonais, coréen, russe et chinois simplifié ; mode de recherche par défaut changé en « toujours afficher ».
 
-• v2.2.6
-  • Optimisation du chargement du fond d'écran et du cache de miniatures ; nettoyage des constantes de l'API Bing.
+• v2.2.6 · Optimisation de la logique de chargement des fonds d'écran et du cache des miniatures, réorganisation des constantes de l'API Bing.
 
-• v2.2.5
-  • Préchargement du fond d'écran et optimisation de la première image ajoutés pour éliminer le flash blanc à l'ouverture d'un nouvel onglet.
+• v2.2.5 · Préchargement des fonds d'écran et optimisation de la première image, élimination de l'écran blanc du nouvel onglet.
 
-• v2.2.4
-  • Migration du stockage du fond d'écran de localStorage vers IndexedDB.
+• v2.2.4 · Migration du stockage des fonds d'écran de localStorage vers IndexedDB.
 
-• v2.2.3
-  • Ajout du téléchargement de fond d'écran local et amélioration de l'expérience de changement de moteur de recherche.
+• v2.2.3 · Téléversement de fonds d'écran locaux, amélioration de l'expérience de changement de moteur de recherche.
 
-• v1.2.0
-  • Version initiale : évolution d'une simple page HTML vers une extension complète avec système de fond d'écran, interface en 16 langues, localisation Chrome i18n et licence MIT.
+• v1.2.0 · Première version : système de fonds d'écran, interface en 16 langues, localisation Chrome i18n, licence MIT.

@@ -1,43 +1,29 @@
 Changelog
 
-• v3.1.1
-  • Switched Bing API to Promise.any race with 8s AbortController timeout; updated all 16 READMEs to reflect new fetch strategy and added Promise.any/AbortController to latency techniques.
+• v3.1.1 · Switched Bing API to Promise.any race mode with 8-second AbortController timeout; updated all 16 language READMEs to reflect the new fetch strategy.
 
-• v3.1.0
-  • Local wallpaper gallery: upload, delete, rotate multiple wallpapers with batch file selection; code refactoring (semantic naming, split functions, design comments); improved panel title styling; enhanced multi-language localization; fixed CSP to remove JSON API domains.
+• v3.1.0 · Local wallpaper gallery: upload/delete/rotate multiple local wallpapers, batch file selection; code refactoring; improved panel styling; comprehensive i18n localization; fixed CSP by removing JSON API domains.
 
-• v3.0.5
-  • Upgraded Bing API proxy (region support + image dedup); optimized wallpaper caching (check IDB before download); unified localStorage keys; added 16-language changelog files; improved logging and code semantics.
+• v3.0.5 · Upgraded Bing API proxy (regionalized requests + image dedup); optimized wallpaper caching; unified localStorage key names; added 16-language changelog; improved logging and code semantics.
 
-• v3.0.4
-  • Fixed wallpaper loading: CSP `img-src` allowlist was missing Bing CDN origins (`www.bing.com`, `cn.bing.com`), so images redirected from proxy APIs were blocked.
+• v3.0.4 · Fixed wallpaper loading failure: CSP img-src allowlist was missing Bing CDN domains, causing images redirected by the proxy API to be blocked by the browser.
 
-• v3.0.3
-  • Bypassed CSSOM on critical preload path for faster first paint; tightened CSP; removed dead code; added SVG icons and promotion assets.
+• v3.0.3 · Bypassed CSSOM for accelerated first-frame rendering, CSP security hardening, dead code cleanup, added SVG icons and promotional assets.
 
-• v3.0.2
-  • Dark mode adaptive background, restructured codebase, multilingual footer bar.
+• v3.0.2 · Dark mode adaptive background, code structure refactoring, bottom multi-language info bar.
 
-• v3.0.1
-  • Switched to Chrome Search API for CWS single-purpose compliance.
+• v3.0.1 · Integrated Chrome Search API, passed Chrome Web Store single-purpose compliance review.
 
-• v3.0.0
-  • Complete rewrite: dual-layer architecture for zero-flicker wallpaper rendering with fallback background. (See V3_NOTE.md)
+• v3.0.0 · Complete rewrite: dual-layer architecture eliminates white flash on new tab, added fallback gray background.
 
-• v2.2.7
-  • Added 5-language READMEs, set default search mode to always-on.
+• v2.2.7 · Added README in English, Japanese, Korean, Russian, and Simplified Chinese; changed default search mode to "always visible".
 
-• v2.2.6
-  • Optimized wallpaper loading and thumbnail caching; cleaned up Bing API constants.
+• v2.2.6 · Optimized wallpaper loading logic and thumbnail caching; reorganized Bing API constants.
 
-• v2.2.5
-  • Added wallpaper preloading and first-frame optimization to eliminate the blank flash on new tab open.
+• v2.2.5 · Wallpaper preloading and first-frame optimization, eliminating white screen on new tab.
 
-• v2.2.4
-  • Migrated wallpaper storage from localStorage to IndexedDB.
+• v2.2.4 · Migrated wallpaper storage from localStorage to IndexedDB.
 
-• v2.2.3
-  • Added local wallpaper upload and improved search engine switching UX.
+• v2.2.3 · Local wallpaper upload, improved search engine switching experience.
 
-• v1.2.0
-  • Initial release: evolved from a single HTML page into a full extension with wallpaper system, 16-language UI, Chrome i18n locales, and MIT license.
+• v1.2.0 · Initial release: wallpaper system, 16-language UI, Chrome i18n localization, MIT license.

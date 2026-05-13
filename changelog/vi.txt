@@ -1,43 +1,29 @@
-Nhật ký thay đổi
+Nhật Ký Cập Nhật
 
-• v3.1.1
-  • Đã chuyển Bing API sang chế độ cạnh tranh với Promise.any và thời gian chờ 8 giây AbortController; đã cập nhật tất cả 16 README để phản ánh chiến lược tìm nạp mới và thêm kỹ thuật giảm độ trễ Promise.any/AbortController.
+• v3.1.1 · Chuyển Bing API sang chế độ chạy đua Promise.any và thêm AbortController 8 giây; cập nhật toàn bộ README 16 ngôn ngữ để phản ánh chiến lược tải mới.
 
-• v3.1.0
-  • Thư viện hình nền cục bộ: tải lên, xóa, xoay vòng nhiều hình nền với chọn hàng loạt; tái cấu trúc mã (đặt tên ngữ nghĩa, chia nhỏ hàm, chú thích thiết kế); cải thiện kiểu tiêu đề bảng; nâng cao bản địa hóa đa ngôn ngữ; sửa CSP để xóa miền JSON API.
+• v3.1.0 · Thư viện hình nền cục bộ: tải lên/xoay vòng/xóa nhiều hình nền cục bộ, chọn tệp hàng loạt; tái cấu trúc mã; cải thiện kiểu bảng điều khiển; hoàn thiện bản địa hóa đa ngôn ngữ; sửa CSP loại bỏ tên miền JSON API.
 
-• v3.0.5
-  • Nâng cấp proxy Bing API (hỗ trợ khu vực + loại bỏ trùng lặp hình ảnh); tối ưu hóa bộ nhớ đệm hình nền (kiểm tra IDB trước khi tải xuống); thống nhất khóa localStorage; thêm tệp changelog 16 ngôn ngữ; cải thiện ghi nhật ký và ngữ nghĩa mã.
+• v3.0.5 · Nâng cấp proxy Bing API (yêu cầu theo khu vực + khử trùng lặp ảnh); tối ưu bộ nhớ đệm hình nền; hợp nhất tên khóa localStorage; thêm changelog 16 ngôn ngữ; cải thiện nhật ký và ngữ nghĩa mã.
 
-• v3.0.4
-  • Đã sửa lỗi tải hình nền: danh sách cho phép CSP `img-src` thiếu nguồn Bing CDN (`www.bing.com`, `cn.bing.com`), do đó hình ảnh được chuyển hướng từ API proxy bị trình duyệt chặn.
+• v3.0.4 · Sửa lỗi tải hình nền: danh sách trắng CSP img-src thiếu tên miền CDN của Bing, hình ảnh sau khi proxy API chuyển hướng bị trình duyệt chặn.
 
-• v3.0.3
-  • Đã bỏ qua CSSOM trên đường dẫn tải trước quan trọng để hiển thị khung hình đầu tiên nhanh hơn; tăng cường CSP; xóa code thừa; thêm biểu tượng SVG và tài liệu quảng bá.
+• v3.0.3 · Tăng tốc kết xuất khung hình đầu tiên qua CSSOM, gia cố bảo mật CSP, dọn mã chết, thêm biểu tượng SVG và tài liệu quảng bá.
 
-• v3.0.2
-  • Hình nền thích ứng chế độ tối, tái cấu trúc code, thanh chân trang đa ngôn ngữ.
+• v3.0.2 · Nền thích ứng chế độ tối, tái cấu trúc mã, thêm thanh thông tin đa ngôn ngữ ở cuối.
 
-• v3.0.1
-  • Đã chuyển sang Chrome Search API để tuân thủ chính sách mục đích duy nhất của CWS.
+• v3.0.1 · Tích hợp Chrome Search API, vượt qua kiểm duyệt tuân thủ mục đích duy nhất của Chrome Web Store.
 
-• v3.0.0
-  • Viết lại toàn bộ: kiến trúc hai lớp để hiển thị hình nền không nhấp nháy với nền dự phòng. (Xem V3_NOTE.md)
+• v3.0.0 · Viết lại hoàn toàn: kiến trúc hai lớp loại bỏ hiện tượng trắng màn hình khi mở tab mới, thêm nền xám dự phòng.
 
-• v2.2.7
-  • Đã thêm README 5 ngôn ngữ, đặt chế độ tìm kiếm mặc định thành "luôn hiển thị".
+• v2.2.7 · Thêm README bằng 5 ngôn ngữ Anh/Nhật/Hàn/Nga/Trung Giản Thể, chế độ tìm kiếm mặc định đổi thành "luôn hiển thị".
 
-• v2.2.6
-  • Đã tối ưu hóa tải hình nền và bộ nhớ đệm hình thu nhỏ; dọn dẹp hằng số Bing API.
+• v2.2.6 · Tối ưu logic tải hình nền và bộ nhớ đệm ảnh xem trước, sắp xếp các hằng số Bing API.
 
-• v2.2.5
-  • Đã thêm tải trước hình nền và tối ưu hóa khung hình đầu tiên để loại bỏ hiện tượng nhấp nháy trắng khi mở tab mới.
+• v2.2.5 · Tải trước hình nền và tối ưu khung hình đầu tiên, khắc phục màn hình trắng khi mở tab mới.
 
-• v2.2.4
-  • Đã chuyển bộ nhớ hình nền từ localStorage sang IndexedDB.
+• v2.2.4 · Di chuyển kho lưu trữ hình nền từ localStorage sang IndexedDB.
 
-• v2.2.3
-  • Đã thêm tải lên hình nền cục bộ và cải thiện trải nghiệm chuyển đổi công cụ tìm kiếm.
+• v2.2.3 · Tải lên hình nền cục bộ, cải thiện trải nghiệm chuyển đổi công cụ tìm kiếm.
 
-• v1.2.0
-  • Phát hành lần đầu: phát triển từ một trang HTML đơn lẻ thành một tiện ích đầy đủ với hệ thống hình nền, giao diện 16 ngôn ngữ, bản địa hóa Chrome i18n và giấy phép MIT.
+• v1.2.0 · Phát hành đầu tiên: hệ thống hình nền, giao diện 16 ngôn ngữ, bản địa hóa Chrome i18n, giấy phép MIT.

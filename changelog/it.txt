@@ -1,43 +1,29 @@
 Registro delle modifiche
 
-• v3.1.1
-  • Passaggio dell'API Bing alla modalità competizione con Promise.any e timeout di 8s con AbortController; aggiornati tutti i 16 README per riflettere la nuova strategia di recupero e aggiungere le tecniche di latenza Promise.any/AbortController.
+• v3.1.1 · API Bing passata alla modalità concorrente Promise.any con timeout AbortController di 8 secondi; aggiornati tutti i 16 README per riflettere la nuova strategia di recupero.
 
-• v3.1.0
-  • Galleria sfondi locali: carica, elimina, ruota più sfondi con selezione multipla; refactoring del codice (nomi semantici, divisione funzioni, commenti di design); migliorati gli stili dei titoli dei pannelli; localizzazione multilingue potenziata; CSP corretto per rimuovere i domini API JSON.
+• v3.1.0 · Galleria sfondi locale: caricamento/eliminazione/rotazione di più sfondi locali, selezione batch di file; refactoring del codice; stile dei pannelli migliorato; localizzazione multilingua completata; correzione CSP — rimossi i domini delle API JSON.
 
-• v3.0.5
-  • Proxy API Bing aggiornato (supporto regionale + deduplicazione immagini); cache sfondi ottimizzata (controlla IDB prima del download); chiavi localStorage unificate; file changelog in 16 lingue aggiunti; logging e semantica del codice migliorati.
+• v3.0.5 · Aggiornamento del proxy API Bing (richieste regionalizzate + deduplicazione delle immagini); ottimizzazione della cache degli sfondi; unificazione delle chiavi localStorage; aggiunti changelog in 16 lingue; miglioramento dei log e della semantica del codice.
 
-• v3.0.4
-  • Risolto il caricamento dello sfondo: la whitelist CSP `img-src` non includeva le origini CDN di Bing (`www.bing.com`, `cn.bing.com`), quindi le immagini reindirizzate dalle API proxy venivano bloccate dal browser.
+• v3.0.4 · Correzione del fallimento di caricamento degli sfondi: la whitelist CSP img-src non includeva i domini CDN di Bing, bloccando le immagini reindirizzate dal proxy API.
 
-• v3.0.3
-  • Bypassato CSSOM sul percorso critico di precaricamento per un primo rendering più veloce; rafforzato CSP; rimosso codice morto; aggiunte icone SVG e materiale promozionale.
+• v3.0.3 · Accelerazione del rendering del primo fotogramma tramite CSSOM, rafforzamento della sicurezza CSP, pulizia del codice morto, aggiunta di icone SVG e materiale promozionale.
 
-• v3.0.2
-  • Sfondo adattivo per modalità scura, codice ristrutturato, barra inferiore multilingue.
+• v3.0.2 · Sfondo adattivo per la modalità scura, refactoring della struttura del codice, barra informativa multilingua in basso.
 
-• v3.0.1
-  • Passaggio a Chrome Search API per la conformità a scopo unico CWS.
+• v3.0.1 · Integrazione dell'API Chrome Search, superamento della verifica di conformità allo scopo unico del Chrome Web Store.
 
-• v3.0.0
-  • Riscrittura completa: architettura a doppio strato per rendering dello sfondo senza sfarfallio con sfondo di riserva. (Vedi V3_NOTE.md)
+• v3.0.0 · Riscrittura completa: architettura a due livelli che elimina il flash bianco della nuova scheda, aggiunto sfondo grigio di riserva.
 
-• v2.2.7
-  • Aggiunti README in 5 lingue, modalità di ricerca predefinita impostata su "sempre visibile".
+• v2.2.7 · Aggiunti README in inglese, giapponese, coreano, russo e cinese semplificato; modalità di ricerca predefinita cambiata in «mostra sempre».
 
-• v2.2.6
-  • Ottimizzato il caricamento dello sfondo e la cache delle miniature; pulite le costanti dell'API Bing.
+• v2.2.6 · Ottimizzazione della logica di caricamento degli sfondi e della cache delle anteprime, riordino delle costanti dell'API Bing.
 
-• v2.2.5
-  • Aggiunti precaricamento dello sfondo e ottimizzazione del primo fotogramma per eliminare il lampo bianco all'apertura di una nuova scheda.
+• v2.2.5 · Precaricamento degli sfondi e ottimizzazione del primo fotogramma, eliminazione dello schermo bianco della nuova scheda.
 
-• v2.2.4
-  • Migrato l'archiviazione dello sfondo da localStorage a IndexedDB.
+• v2.2.4 · Migrazione dell'archiviazione degli sfondi da localStorage a IndexedDB.
 
-• v2.2.3
-  • Aggiunto caricamento sfondo locale e migliorata l'esperienza di cambio motore di ricerca.
+• v2.2.3 · Caricamento di sfondi locali, miglioramento dell'esperienza di cambio motore di ricerca.
 
-• v1.2.0
-  • Rilascio iniziale: evoluto da una singola pagina HTML a un'estensione completa con sistema di sfondi, interfaccia in 16 lingue, localizzazione Chrome i18n e licenza MIT.
+• v1.2.0 · Prima uscita: sistema di sfondi, interfaccia in 16 lingue, localizzazione Chrome i18n, licenza MIT.
