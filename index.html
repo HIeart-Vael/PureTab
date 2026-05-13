@@ -38,13 +38,13 @@
     </button>
 
     <div class="settings-panel" id="settingsPanel">
-        <h3>Wallpaper</h3>
+        <h3 data-i18n="panelTitle">Wallpaper</h3>
         <p class="wp-info" id="wpInfo"></p>
-        <button class="panel-btn primary" id="uploadBtn">Choose local wallpaper</button>
+        <button class="panel-btn primary" id="uploadBtn" data-i18n="uploadBtn">Choose local wallpaper</button>
         <input type="file" id="fileInput" accept="image/*" multiple>
-        <button class="panel-btn" id="resetBtn">Reset to Bing daily</button>
+        <button class="panel-btn" id="resetBtn" data-i18n="resetBtn">Reset to Bing daily</button>
         <div class="adv-row">
-            <button class="panel-btn adv-toggle" id="advToggle">Advanced</button>
+            <button class="panel-btn adv-toggle" id="advToggle" data-i18n="advToggle">Advanced</button>
             <a class="gh-link" href="https://github.com/kaininx/PlainTab" target="_blank" rel="noopener" title="GitHub">
                 <svg viewBox="0 0 24 24">
                     <path
@@ -54,22 +54,22 @@
         </div>
         <div class="adv-section" id="advSection">
             <div class="setting-row">
-                <label>Search bar</label>
+                <label data-i18n="searchLabel">Search bar</label>
                 <select id="searchModeSel">
-                    <option value="hover">On hover</option>
-                    <option value="always" selected>Always</option>
-                    <option value="never">Hidden</option>
+                    <option value="hover" data-i18n="searchHover">On hover</option>
+                    <option value="always" selected data-i18n="searchAlways">Always</option>
+                    <option value="never" data-i18n="searchNever">Hidden</option>
                 </select>
             </div>
             <div class="setting-row">
-                <label>Icon opacity</label>
+                <label data-i18n="opacityLabel">Icon opacity</label>
                 <div class="opacity-row">
                     <input type="range" id="opacityRange" min="0" max="1" step="0.01" value="0.45">
                     <input type="number" id="opacityNum" min="0" max="1" step="0.01" value="0.45">
                 </div>
             </div>
             <div class="setting-row">
-                <label>Search engine</label>
+                <label data-i18n="engineLabel">Search engine</label>
                 <select id="engineSel">
                     <option value="google">Google</option>
                     <option value="bing">Bing</option>
@@ -78,19 +78,19 @@
                 </select>
             </div>
             <div class="setting-row">
-                <label>Command Palette</label>
+                <label data-i18n="cpHotkeyLabel">Command Palette</label>
                 <input type="text" id="cpHotkeyInput" value="Ctrl+K">
             </div>
             <div class="setting-row">
-                <label>Show recommendations</label>
+                <label data-i18n="cpRecommendLabel">Show recommendations</label>
                 <input type="checkbox" id="cpRecommendCheck" checked>
             </div>
-            <button class="panel-btn" id="resetAdvBtn">Reset defaults</button>
+            <button class="panel-btn" id="resetAdvBtn" data-i18n="resetAdv">Reset defaults</button>
         </div>
     </div>
 
     <div class="language-panel" id="langPanel">
-        <div class="lang-title">Language</div>
+        <div class="lang-title" data-i18n="langPanelTitle">Language</div>
         <div id="langOptions"></div>
     </div>
 
@@ -98,7 +98,7 @@
     <div class="cmd-palette-overlay" id="cmdOverlay">
         <div class="cmd-palette" id="cmdPalette">
             <div class="cp-pinned-bar" id="cpPinnedBar"></div>
-            <input class="cp-search-input" id="cpSearchInput" placeholder="搜索名称或网址..." autocomplete="off" spellcheck="false">
+            <input class="cp-search-input" id="cpSearchInput" placeholder="" autocomplete="off" spellcheck="false">
             <div class="cp-content" id="cpContent"></div>
         </div>
     </div>

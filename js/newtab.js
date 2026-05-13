@@ -61,6 +61,10 @@
 
     // ptab_img_thumbs 的内存缓存，避免每次 loadThumbs() 重新解析 300-420 KB 的 JSON
     var _thumbsCache = null;
+    var _shortcutsCache = null;
+    var _iconsCache = null;
+    var _recentsCache = null;
+    var _hiddenCache = null;
 
     /* ================================================================
        2. 运行环境
@@ -186,21 +190,18 @@
         engineIcon.setAttribute('title', t('engineTitle'));
         langBtn.setAttribute('title', t('langTitle'));
         settingsBtn.setAttribute('title', t('settingsTitle'));
-        document.querySelector('.settings-panel h3').textContent = t('panelTitle');
         if (currentMode === 'local') refreshLocalGallery();
         else wallpaperInfoEl.textContent = t('wpBing');
-        uploadBtn.textContent = t('uploadBtn');
-        resetBtn.textContent = t('resetBtn');
-        advancedToggleEl.textContent = t('advToggle');
-        var labels = document.querySelectorAll('.setting-row label');
-        if (labels.length >= 3) {
-            labels[0].textContent = t('searchLabel');
-            labels[1].textContent = t('opacityLabel');
-            labels[2].textContent = t('engineLabel');
-        }
-        var opts = searchModeSelect.options;
-        if (opts.length >= 3) { opts[0].textContent = t('searchHover'); opts[1].textContent = t('searchAlways'); opts[2].textContent = t('searchNever'); }
-        resetAdvancedBtn.textContent = t('resetAdv');
+        // 通过 data-i18n 属性更新所有标记了翻译 key 的元素
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            var key = el.getAttribute('data-i18n');
+            if (el.tagName === 'INPUT' && el.type === 'text') return;
+            el.textContent = t(key);
+        });
+        searchModeSelect.querySelectorAll('option[data-i18n]').forEach(function (opt) {
+            opt.textContent = t(opt.getAttribute('data-i18n'));
+        });
+        cpSearchInput.placeholder = t('cpSearchPlaceholder');
         renderLangPanel();
     }
 
@@ -1739,31 +1740,47 @@
          不使用时完全不可见。命令栏支持鼠标滚轮横向滚动。
        ================================================================ */
 
-    /** 数据层：读写快捷链接相关 localStorage */
+    /** 数据层：读写快捷链接相关 localStorage，带内存缓存避免热路径反复 JSON.parse */
     function loadShortcuts() {
-        try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUTS) || '[]'); } catch (e) { return []; }
+        if (_shortcutsCache !== null) return _shortcutsCache;
+        try { _shortcutsCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUTS) || '[]'); } catch (e) { _shortcutsCache = []; }
+        return _shortcutsCache;
     }
     function saveShortcuts(arr) {
+        _shortcutsCache = arr;
         try { localStorage.setItem(LS_KEY_SHORTCUTS, JSON.stringify(arr)); return true; } catch (e) { return false; }
     }
     function loadIcons() {
-        try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_ICONS) || '{}'); } catch (e) { return {}; }
+        if (_iconsCache !== null) return _iconsCache;
+        try { _iconsCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_ICONS) || '{}'); } catch (e) { _iconsCache = {}; }
+        return _iconsCache;
     }
     function saveIcons(obj) {
+        _iconsCache = obj;
         try { localStorage.setItem(LS_KEY_SHORTCUT_ICONS, JSON.stringify(obj)); return true; } catch (e) { return false; }
     }
     function loadRecents() {
-        try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_RECENTS) || '[]'); } catch (e) { return []; }
+        if (_recentsCache !== null) return _recentsCache;
+        try { _recentsCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_RECENTS) || '[]'); } catch (e) { _recentsCache = []; }
+        return _recentsCache;
     }
     function saveRecents(arr) {
+        _recentsCache = arr;
         try { localStorage.setItem(LS_KEY_SHORTCUT_RECENTS, JSON.stringify(arr)); return true; } catch (e) { return false; }
     }
     function loadHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HOTKEY) || 'ctrl+k'; }
     function saveHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HOTKEY, key); return true; } catch (e) { return false; } }
     function loadRecommend() { return localStorage.getItem(LS_KEY_SHORTCUT_RECOMMEND) !== 'false'; }
     function saveRecommend(bool) { try { localStorage.setItem(LS_KEY_SHORTCUT_RECOMMEND, bool ? 'true' : 'false'); } catch (e) {} }
-    function loadHidden() { try { return JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN) || '[]'); } catch (e) { return []; } }
-    function saveHidden(arr) { try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN, JSON.stringify(arr)); return true; } catch (e) { return false; } }
+    function loadHidden() {
+        if (_hiddenCache !== null) return _hiddenCache;
+        try { _hiddenCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN) || '[]'); } catch (e) { _hiddenCache = []; }
+        return _hiddenCache;
+    }
+    function saveHidden(arr) {
+        _hiddenCache = arr;
+        try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN, JSON.stringify(arr)); return true; } catch (e) { return false; }
+    }
     function loadHiddenHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN_HOTKEY) || 'ctrl+shift+k'; }
     function saveHiddenHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN_HOTKEY, key); return true; } catch (e) { return false; } }
 
@@ -1853,6 +1870,20 @@
     /** 渲染固定命令栏 */
     function renderPinnedBar() {
         cpPinnedBar.innerHTML = '';
+        var homeBtn = document.createElement('span');
+        homeBtn.className = 'cp-pinned-btn cp-home-btn';
+        homeBtn.title = '返回主列表';
+        homeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 5.5L7 1l5.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4.5V13h3.2V8.5h1.6V13H11V4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        homeBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            cpCurrentMode = 'list';
+            cpCurrentPage = 1;
+            cpKeyIndex = 0;
+            cpSearchInput.value = '';
+            cpSearchTerm = '';
+            renderShortcutList('');
+        });
+        cpPinnedBar.appendChild(homeBtn);
         var cmds = isHiddenMode ? CP_COMMANDS_HIDDEN : CP_COMMANDS_NORMAL;
         cmds.forEach(function (cmd) {
             var btn = document.createElement('span');
@@ -2008,9 +2039,7 @@
     }
 
     function escapeHTML(str) {
-        var div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     /** 应用图标样式：文字图标嵌套彩色内圆，img 错误/DDG 占位图回落内圆 */
@@ -2111,7 +2140,7 @@
         document.getElementById('cpFormFetchBtn').addEventListener('click', function () {
             handleFetchTitle();
         });
-        setTimeout(function () { document.getElementById('cpFormName').focus(); }, 50);
+        setTimeout(function () { document.getElementById('cpFormURL').focus(); }, 50);
     }
 
     /** 渲染 /delete 或 /edit（跟随视图模式，仅显示当前面板范围内的快捷链接） */
@@ -2356,8 +2385,6 @@
         isPaletteOpen = true;
         isHiddenMode = false;
         cmdOverlay.style.visibility = 'visible';
-        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
         renderPinnedBar();
         cpSearchInput.value = '';
         cpSearchTerm = '';
@@ -2365,7 +2392,9 @@
         cpCurrentPage = 1;
         cpKeyIndex = 0;
         renderShortcutList('');
-        setTimeout(function () { cpSearchInput.focus(); }, 100);
+        cpSearchInput.focus();
+        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
     }
 
     function openHiddenPalette() {
@@ -2377,14 +2406,14 @@
         isPaletteOpen = true;
         isHiddenMode = true;
         cmdOverlay.style.visibility = 'visible';
-        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
         renderPinnedBar();
         cpSearchInput.value = '';
         cpCurrentMode = 'list';
         cpCurrentPage = 1;
         renderShortcutList('');
-        setTimeout(function () { cpSearchInput.focus(); }, 100);
+        cpSearchInput.focus();
+        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
     }
 
     function closePalette() {
@@ -2457,8 +2486,8 @@
             cpCurrentMode = 'unhideGrid';
             renderUnhideGrid(1);
         } else if (cmd === 'reset') {
-            cpCurrentMode = 'reset';
             handleReset();
+            cpCurrentMode = 'list';
         } else if (cmd === 'import') {
             handleImport();
         } else if (cmd === 'export') {
@@ -2591,7 +2620,7 @@
             renderShortcutList('');
             cpSearchInput.value = '';
             cpSearchTerm = '';
-            setTimeout(function () { cpSearchInput.focus(); }, 50);
+            requestAnimationFrame(function () { requestAnimationFrame(function () { cpSearchInput.focus(); }); });
         } else {
             var id = generateId();
             var now = Date.now();
@@ -2975,14 +3004,14 @@
             renderShortcutList('');
             cpSearchInput.value = '';
             cpSearchTerm = '';
-            setTimeout(function () { cpSearchInput.focus(); }, 50);
+            requestAnimationFrame(function () { requestAnimationFrame(function () { cpSearchInput.focus(); }); });
         });
         document.getElementById('cpClearNo').addEventListener('click', function () {
             cpCurrentMode = 'list';
             renderShortcutList('');
             cpSearchInput.value = '';
             cpSearchTerm = '';
-            setTimeout(function () { cpSearchInput.focus(); }, 50);
+            requestAnimationFrame(function () { requestAnimationFrame(function () { cpSearchInput.focus(); }); });
         });
     }
 
@@ -2999,7 +3028,7 @@
                 cpSearchTerm = '';
                 cpCurrentPage = 1;
                 renderShortcutList('');
-                setTimeout(function () { cpSearchInput.focus(); }, 50);
+                requestAnimationFrame(function () { requestAnimationFrame(function () { cpSearchInput.focus(); }); });
                 return;
             }
             closePalette();
@@ -3035,21 +3064,22 @@
             e.preventDefault();
             var items = cpContent.querySelectorAll('.cp-item');
             if (items.length) {
+                var prevIdx = cpKeyIndex;
                 cpKeyIndex = Math.min(cpKeyIndex + 1, items.length - 1);
-                highlightItems(items);
+                highlightItems(prevIdx, cpKeyIndex, items);
             }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
+            var items = cpContent.querySelectorAll('.cp-item');
+            var prevIdx = cpKeyIndex;
             cpKeyIndex = Math.max(cpKeyIndex - 1, 0);
-            highlightItems(cpContent.querySelectorAll('.cp-item'));
+            highlightItems(prevIdx, cpKeyIndex, items);
         }
     }
 
-    function highlightItems(items) {
-        items.forEach(function (item, i) {
-            if (i === cpKeyIndex) item.classList.add('key-hover');
-            else item.classList.remove('key-hover');
-        });
+    function highlightItems(prevIdx, newIdx, items) {
+        if (items[prevIdx]) items[prevIdx].classList.remove('key-hover');
+        if (items[newIdx]) items[newIdx].classList.add('key-hover');
     }
 
     /* ================================================================
@@ -3092,8 +3122,8 @@
 
         // WHY rAF 节流：mousemove 可达 120+ Hz，rAF 限制到帧率（60 Hz），
         // 避免每像素移动都执行位置检查和 DOM 操作。
-        // 用模块变量缓存最新坐标，因为 rAF 回调时事件对象已被复用。
-        var _lastMouseX = 0, _lastMouseY = 0, _mouseRafPending = false;
+        // 仅在状态转换时触发显示/隐藏，而非每帧无谓地创建/清除计时器。
+        var _lastMouseX = 0, _lastMouseY = 0, _mouseRafPending = false, _wasInCorner = false, _wasInCenter = false;
         document.addEventListener('mousemove', function (e) {
             _lastMouseX = e.clientX;
             _lastMouseY = e.clientY;
@@ -3101,10 +3131,14 @@
             _mouseRafPending = true;
             requestAnimationFrame(function () {
                 _mouseRafPending = false;
-                if (isNearTopRight(_lastMouseX, _lastMouseY)) showCorners();
-                else if (!isMouseInCornerZone && !isSettingsPanelOpen && !isLangPanelOpen) hideCorners();
-                if (isInCenter(_lastMouseX, _lastMouseY)) showSearch();
-                else hideSearch();
+                var inCorner = isNearTopRight(_lastMouseX, _lastMouseY);
+                if (inCorner && !_wasInCorner) showCorners();
+                else if (!inCorner && _wasInCorner && !isMouseInCornerZone && !isSettingsPanelOpen && !isLangPanelOpen) hideCorners();
+                _wasInCorner = inCorner;
+                var inCenter = isInCenter(_lastMouseX, _lastMouseY);
+                if (inCenter && !_wasInCenter) showSearch();
+                else if (!inCenter && _wasInCenter) hideSearch();
+                _wasInCenter = inCenter;
             });
         });
 
