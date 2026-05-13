@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Giấy phép">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Dung_thu_truc_tuyen-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Dung_thu_truc_tuyen-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -186,7 +186,7 @@ Cùng một mã nguồn, tự động phát hiện môi trường khi chạy:
 | Phát hiện môi trường | `chrome.runtime.id` tồn tại | Mọi trường hợp khác |
 | Công cụ tìm kiếm | Mặc định của trình duyệt (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo có thể chọn |
 | Chuyển đổi công cụ | Không thể chuyển (kính lúp tĩnh) | Nhấp biểu tượng để xoay vòng |
-| Triển khai | Chrome Web Store / nhà phát triển tải lên | Netlify / GitHub Pages lưu trữ trực tiếp |
+| Triển khai | Chrome Web Store / nhà phát triển tải lên | Cloudflare Workers / GitHub Pages lưu trữ trực tiếp |
 | CSP | Khai báo trong `manifest.json` | Không cần CSP |
 
 ---
@@ -221,7 +221,7 @@ Bản dịch có lỗi hoặc muốn thêm ngôn ngữ mới? Tệp ngôn ngữ 
 PlainTab/
 ├── manifest.json            # Tệp kê khai tiện ích Chrome/Edge (Manifest V3)
 ├── index.html               # Trang HTML duy nhất (tab mới của tiện ích / trang chủ Web)
-├── 404.html                 # Trang dự phòng Netlify SPA
+├── 404.html                 # Trang dự phòng SPA
 ├── LICENSE                  # Giấy phép MIT
 │
 ├── css/

@@ -19,7 +19,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licenziia">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Poprobovat%20onlain-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Poprobovat%20onlain-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -187,7 +187,7 @@ Odin i tot zhe kod, avtomaticheskoe opredelenie sredy vypolneniia:
 | Opredelenie sredy | `chrome.runtime.id` sushchestvuet | Vse ostalnye sluchai |
 | Poiskovaia sistema | Po umolchaniiu v brauzere (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo na vybor |
 | Perekliuchenie dvizhka | Nedostupno (statichnaia lupa) | Perekliuchenie po kliku na ikonku |
-| Razvertyvanie | Chrome Web Store / zagruzka razrabotchikom | Netlify / GitHub Pages priamaia publikatsiia |
+| Razvertyvanie | Chrome Web Store / zagruzka razrabotchikom | Cloudflare Workers / GitHub Pages priamaia publikatsiia |
 | CSP | Ukazan v `manifest.json` | Bez CSP |
 
 ---
@@ -222,7 +222,7 @@ Perevod imeet netochnosti ili khotite dobavit novyi iazyk? Fail iazykov — eto 
 PlainTab/
 ├── manifest.json            # Manifest rasshireniia Chrome/Edge (Manifest V3)
 ├── index.html               # Edinstvennaia HTML-stranitsa (novaia vkladka rasshireniia / veb-glavnaia)
-├── 404.html                 # Stranitsa fallback SPA dlia Netlify
+├── 404.html                 # Stranitsa fallback SPA
 ├── LICENSE                  # Litsenziia MIT
 │
 ├── css/

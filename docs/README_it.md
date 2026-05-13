@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licenza">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Provalo_online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Provalo_online-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -186,7 +186,7 @@ Lo stesso codice, rilevamento automatico dell'ambiente in fase di esecuzione:
 | Rilevamento ambiente | `chrome.runtime.id` esiste | Tutti gli altri casi |
 | Motore di ricerca | Predefinito del browser (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo selezionabile |
 | Cambio motore | Non commutabile (lente di ingrandimento statica) | Rotazione cliccando sull'icona |
-| Distribuzione | Chrome Web Store / sviluppo locale | Netlify / GitHub Pages hosting diretto |
+| Distribuzione | Chrome Web Store / sviluppo locale | Cloudflare Workers / GitHub Pages hosting diretto |
 | CSP | Dichiarato in `manifest.json` | Nessun CSP necessario |
 
 ---
@@ -221,7 +221,7 @@ Traduzioni imperfette o vuoi aggiungere una nuova lingua? Il file delle lingue �
 PlainTab/
 ├── manifest.json            # Manifest dell'estensione Chrome/Edge (Manifest V3)
 ├── index.html               # Unica pagina HTML (nuova scheda dell'estensione / homepage Web)
-├── 404.html                 # Pagina di fallback SPA per Netlify
+├── 404.html                 # Pagina di fallback SPA
 ├── LICENSE                  # Licenza MIT
 │
 ├── css/

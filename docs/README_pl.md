@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licencja">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Wyprobuj_online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Wyprobuj_online-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -186,7 +186,7 @@ Ten sam kod, automatyczne wykrywanie środowiska w czasie wykonania:
 | Wykrywanie środowiska | `chrome.runtime.id` istnieje | Wszystkie inne przypadki |
 | Wyszukiwarka | Domyślna przeglądarki (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo do wyboru |
 | Przełączanie wyszukiwarki | Niemożliwe (statyczna lupa) | Kliknięcie ikony zmienia cyklicznie |
-| Wdrożenie | Chrome Web Store / ładowanie deweloperskie | Netlify / GitHub Pages bezpośrednie hostowanie |
+| Wdrożenie | Chrome Web Store / ładowanie deweloperskie | Cloudflare Workers / GitHub Pages bezpośrednie hostowanie |
 | CSP | Zadeklarowane w `manifest.json` | CSP nie jest potrzebne |
 
 ---
@@ -221,7 +221,7 @@ Niedoskonałe tłumaczenie lub chcesz dodać nowy język? Plik językowy to jede
 PlainTab/
 ├── manifest.json            # Manifest rozszerzenia Chrome/Edge (Manifest V3)
 ├── index.html               # Jedyna strona HTML (nowa karta rozszerzenia / strona główna Web)
-├── 404.html                 # Strona zapasowa SPA dla Netlify
+├── 404.html                 # Strona zapasowa SPA
 ├── LICENSE                  # Licencja MIT
 │
 ├── css/

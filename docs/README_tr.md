@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Lisans">
   </a>
   <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Cevrimici_Dene-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
+    <img src="https://img.shields.io/badge/Cevrimici_Dene-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
   </a>
 </p>
 
@@ -186,7 +186,7 @@ Aynı kod, çalışma zamanında ortamı otomatik algılama:
 | Ortam algılama | `chrome.runtime.id` mevcut | Diğer tüm durumlar |
 | Arama motoru | Tarayıcı varsayılanı (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo seçilebilir |
 | Motor değiştirme | Değiştirilemez (statik büyüteç) | Simgeye tıklayarak döndürme |
-| Dağıtım | Chrome Web Store / geliştirici yüklemesi | Netlify / GitHub Pages doğrudan barındırma |
+| Dağıtım | Chrome Web Store / geliştirici yüklemesi | Cloudflare Workers / GitHub Pages doğrudan barındırma |
 | CSP | `manifest.json` ile bildirilir | CSP gerekmez |
 
 ---
@@ -221,7 +221,7 @@ Bing API, `Promise.any` ile her iki uç noktayı aynı anda ateşler, 8 saniyeli
 PlainTab/
 ├── manifest.json            # Chrome/Edge uzantı manifestosu (Manifest V3)
 ├── index.html               # Tek HTML sayfası (uzantının yeni sekmesi / Web ana sayfası)
-├── 404.html                 # Netlify SPA geri dönüş sayfası
+├── 404.html                 # SPA geri dönüş sayfası
 ├── LICENSE                  # MIT Lisansı
 │
 ├── css/
