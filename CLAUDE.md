@@ -2,201 +2,115 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project overview
+## 项目概述
 
-PlainTab is a Chrome/Edge extension (Manifest V3) and standalone web page that replaces the browser's new tab page with a minimal, zero-flash wallpaper experience. Zero external dependencies, no build step — pure vanilla JS + CSS.
+PlainTab 是一个 Chrome/Edge 浏览器扩展（Manifest V3），用来替换浏览器的新标签页。核心体验是零闪白的极简壁纸页面。同时也能作为独立网页运行。零外部依赖，无构建步骤——纯原生 JS + CSS。
 
-## Architecture
+## 开发命令
 
-### Dual-layer wallpaper system (zero-flash)
+没有构建、没有 lint、没有测试、没有 `package.json`。
 
-Two stacked `<div>` layers in `index.html`:
+- **加载为扩展**：打开 `chrome://extensions` → 开启「开发者模式」→「加载已解压的扩展程序」→ 选择此目录 → 打开新标签页测试
+- **作为网页测试**：直接在浏览器中打开 `index.html`
 
-- **`#wallpaperBack`** (z-index: 0) — always holds a visible image. `preload.js` synchronously writes the pre-formatted thumbnail via `back.style.backgroundImage` before the browser's first paint, so the user never sees a blank/gray background.
-- **`#wallpaperFront`** (z-index: 1, `opacity: 0`) — used for fade-in transitions. New full-res images are preloaded in memory (`img.decode()`), set as `background-image` on the front layer, then faded in via CSS `opacity` transition. After the transition completes (~550ms), the image is "stabilized" onto the back layer (direct `back.style.backgroundImage` assignment) and the front layer resets to transparent.
+## 架构
 
-This ensures at least one layer always holds a rendered image — no frame is ever blank.
+### 模块总览（8 个独立逻辑单元）
 
-### JS file loading order (critical)
+每个模块的详细功能需求见 [.claude/rules/](.claude/rules/) 目录。改动某个模块前，先读对应的需求文档。
 
-1. **`js/preload.js`** — synchronous IIFE, runs before anything else. Reads `localStorage.ptab_mode` then either `ptab_img_order[idx]` → `ptab_img_thumbs[id]` (local) or `ptab_bing_thumb` (Bing). Must be in `<head>` or immediately after `#wallpaperBack` in the DOM.
-2. **`js/languages.js`** — defines `window.I18N` (16 locales) and `window.LanguageList`. Must load before `newtab.js`.
-3. **`js/newtab.js`** — the main application (~945 lines). IIFE with clear sections: Constants, Environment detection, DOM refs, State, Utils, i18n, IndexedDB storage, Wallpaper (Bing fetch, local multi-image upload with rotation, dual-layer apply), UI (panels, corner buttons, search bar, local gallery), Extension mode override, Bootstrap.
+| 模块 | 需求文档 | 一句话职责 |
+|------|---------|-----------|
+| 数据存储 | [data-storage-spec.md](.claude/rules/data-storage-spec.md) | 21 个 localStorage key + 2 个 IndexedDB key，崩溃安全的读写顺序，版本迁移 |
+| 语言系统 | [language-system-spec.md](.claude/rules/language-system-spec.md) | 16 种语言翻译，两级匹配检测，`t()` 四级回退链 |
+| 壁纸系统 | [wallpaper-system-spec.md](.claude/rules/wallpaper-system-spec.md) | 双层零闪白显示，Bing 双端点竞速 + 缓存，本地最多 12 张轮换 |
+| 搜索栏 | [search-bar-spec.md](.claude/rules/search-bar-spec.md) | 三种显隐模式，四种搜索引擎，扩展/网页双模式 |
+| 设置面板 | [settings-panel-spec.md](.claude/rules/settings-panel-spec.md) | 壁纸/搜索/透明度/快捷键的配置 UI，面板互斥 |
+| 本地图库 | [local-gallery-spec.md](.claude/rules/local-gallery-spec.md) | 上传/删除/拖拽排序，崩溃安全的写入顺序，Blob URL 生命周期 |
+| 命令面板 | [command-palette-spec.md](.claude/rules/command-palette-spec.md) | Normal/Hidden 双面板快捷链接管理，10 个命令，列表/图标视图 |
+| 全局交互 | [global-interaction-spec.md](.claude/rules/global-interaction-spec.md) | 启动流程、键盘优先级路由、鼠标热区追踪、面板协调 |
 
-### Two runtime modes
+跨模块依赖、时序流程、数据流向图：[module-interactions.md](.claude/rules/module-interactions.md)。
 
-`newtab.js` detects its environment at init via `typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id`:
+### 文件加载顺序（绝对不可变）
 
-- **Extension mode** (`chrome.runtime.id` exists): uses `chrome.search.query()` for CWS single-purpose compliance. The engine selector UI row is hidden and the engine icon becomes a static magnifying glass. Search uses the browser's built-in default search engine.
-- **Web mode** (Cloudflare Workers / GitHub Pages): full engine selector (Google → Bing → Baidu → DuckDuckGo). Search opens `window.open(url, '_self')`.
+```
+index.html:
+  1. <div id="wallpaperBack">         ← 必须在 preload.js 之前存在于 DOM
+  2. <script src="js/preload.js">    ← 同步 IIFE，浏览器首帧绘制前写入缩略图
+  3. <div id="wallpaperFront">
+  4. ...其余所有 DOM 元素...
+  5. <script src="js/languages.js">  ← 设置 window.I18N + window.LanguageList
+  6. <script src="js/newtab.js">     ← 主程序 IIFE：检测环境 → 检测语言 → 加载设置 → 加载壁纸 → 绑定事件
+```
 
-### Storage
+顺序不可调换。`preload.js` 在 `#wallpaperBack` 之后、首帧绘制之前执行，是零闪白的前提。
 
-- **IndexedDB** (`PlainTab`, v1, store `wallpaper`): stores raw image blobs.
-  - `ptab_bing_blob` — single Blob for the Bing daily wallpaper
-  - `ptab_img_<id>` — per-image blob entries: `{blob, mime, name}` for each user-uploaded wallpaper (max 12). Each image is its own IDB key, allowing single-key read/write/delete without touching other images
-- **localStorage**:
-  - `ptab_version` — data schema version (`2`), for future migration detection
-  - `ptab_bing_thumb` — single thumbnail data URL (CSS-ready `url(data:...)`), written by `applyWallpaper()` only in Bing mode, read by `preload.js`
-  - `ptab_img_order` — JSON array of image IDs `["id1","id2",...]`, determines rotation order. Single source of truth for which images exist
-  - `ptab_img_thumbs` — JSON object `{id1: "url(data:...)", id2: ...}`, id→thumb map. Lookup via `thumbs[order[idx]]`, never by array index
-  - `ptab_local_index` — rotation index for local wallpapers, incremented each new tab, modulo order.length
-  - `ptab_bing_meta` — `{src, date, provider}` for Bing image dedup and freshness checks. `src` doubles as the dedup key
-  - `ptab_mode` — `'bing'` or `'local'`
-  - `ptab_lang`, `ptab_search_mode`, `ptab_icon_opacity`, `ptab_search_engine` — UI preferences
+### 双层壁纸系统（零闪白原理）
 
-**Crash consistency design (v2):**
-- **Upload**: write blob to IDB first (`ptab_img_<id>`), then update order + thumbs in localStorage. If crash before order update, blob is orphaned and safely ignored
-- **Delete**: remove id from order first, then delete thumb from map, finally delete IDB blob. If crash after order change, blob is unreachable but harmless
-- **Gallery**: reads all `ptab_img_<id>` in parallel via `Promise.all`, fallback to blob URL only if thumb is missing
+- `#wallpaperBack`（z-index:0）— 始终持有一张可见图片。`preload.js` 在浏览器首次绘制前同步把缩略图写到这里。
+- `#wallpaperFront`（z-index:1，`opacity:0`）— 只做淡入过渡。新图先预加载（`img.decode()` 确保解码完成），设到 front 层，然后 CSS opacity 过渡淡入。550ms 后把新图「稳定」到 back 层（`back.style.backgroundImage = url`），front 清空归零。
 
-**Version bump rules:**
-- **localStorage keys added, removed, or renamed** → increment `LS_VERSION` in `newtab.js` and write migration logic
-- **IDB store schema changed** (new/removed store, index changes) → increment `DB_VERSION` in `newtab.js`
-- **IDB key name changed** (same store, just the key string) → no version bump needed; IDB keys are opaque strings
-- `ptab_version` itself must never be renamed or removed
+任何时候至少有一层持有已渲染的图片——永远不会出现空白帧。
 
-### Multi-image local wallpaper
+### 两种运行模式
 
-Users can upload up to 12 local wallpapers. Each new tab rotates to the next image via `ptab_local_index` modulo `ptab_img_order.length`.
+启动时通过 `typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id` 判定：
 
-**Upload flow**: `saveLocalImage(file, show)` generates thumbnail via canvas, writes blob to IDB as `ptab_img_<id>` (single key), then appends id to `ptab_img_order` and thumb to `ptab_img_thumbs[id]`. Blob is written first — if crash before order update, orphan blob is safely ignored.
+- **扩展模式**：使用 `chrome.search.query()` 满足 Chrome 商店单一用途政策。引擎选择器隐藏，图标变为静态放大镜。`Ctrl+Shift+W` 切换设置面板。
+- **网页模式**：完整引擎选择器（Google→Bing→Baidu→DuckDuckGo）。搜索用 `window.open(url, '_self')` 跳转。
 
-**Batch upload**: File input has `multiple` attribute. Change handler reads `ptab_img_order.length`, calculates `slots = 12 - N`, then serializes all files via Promise chain. Only the first successfully saved image is shown as wallpaper; the rest are saved silently.
+### 存储
 
-**Gallery** (`renderLocalGallery`): loads all `ptab_img_<id>` in parallel via `Promise.all`, renders 3×4 grid using `ptab_img_thumbs[id]` (base64). Falls back to `URL.createObjectURL` only if thumb is missing. Blob URLs tracked in `_galleryUrls` and revoked on close.
+- **IndexedDB**（`PlainTab`，版本 1，store `wallpaper`）：存图片原图 Blob。Key：`ptab_bing_blob`（单张 Bing）、`ptab_img_<id>`（每张本地图 `{blob, mime, name}`）。
+- **localStorage**：存其余所有——设置、缩略图（base64 data URL）、元数据、快捷链接数据。完整 21 key 清单见 [data-storage-spec.md](.claude/rules/data-storage-spec.md)。
 
-**Deletion**: `deleteLocalImage(id)` removes id from `ptab_img_order` first (unreachable), then deletes `ptab_img_thumbs[id]`, finally `idbDelete(ptab_img_<id>)`. No splice or index alignment needed.
+### 崩溃安全（黄金法则）
 
-**Reset to Bing**: `resetToBing()` deletes each `ptab_img_<id>` from IDB sequentially, clears `ptab_img_order`/`ptab_img_thumbs`/`ptab_bing_thumb`/`ptab_local_index`, switches mode to `'bing'`.
+**先落重数据，再写轻引用。先断引用，再删重数据。**
 
-### CSS architecture
+- 保存：`idbPut(blob)` → `saveOrder(order)` + `saveThumbs(thumbs)`
+- 删除：`saveOrder(newOrder)` → `delete thumbs/meta` → `idbDelete(blob)`
+- 保存中途崩溃：blob 已入库但 order 不引用 → 孤儿 blob，安全忽略
+- 删除中途崩溃：blob 还在但 order 已移除引用 → 不可达，安全忽略
 
-**Design tokens** — CSS custom properties on `:root` define the visual language:
+### 已知坑点
 
-- `--glass-bg` / `--glass-border` / `--glass-shadow` — glass-morphism panels (settings, language, search bar)
-- `--text-primary` / `--text-secondary` — text hierarchy
-- `--icon-opacity` (default `0.45`) — corner button transparency, updated at runtime via `applyOpacity()`
-- `--transition` — `0.35s cubic-bezier(0.4, 0, 0.2, 1)`, used consistently for button fades
-- `--fallback-start/mid/end` — gradient that shows briefly if no wallpaper is set (should never be visible in normal operation)
+- **IDB 取回 Blob 时 MIME 丢失**：从 IndexedDB 取出的 Blob 可能丢失 MIME 类型。务必检查 `blob.type`，为空则用存的 `mime` 重建：`new Blob([blob], {type: storedMime})`。
+- **preview_thumb 竞态**：本地轮换模式下，`ptab_local_index` 递增后必须在异步的 `applyWallpaper()` 调用之前**同步**写入 `ptab_preview_thumb`。若异步写入，快速连续开新标签页会读到过期的预览数据。
+- **图库 Blob URL 生命周期**：`renderLocalGallery()` 在缩略图缺失时会创建 Blob URL 做回退。所有创建的 URL 必须追踪，图库关闭时通过 `revokeGalleryUrls()` 全部释放。务必在清空图库 DOM 前调用 `revokeGalleryUrls()`。
+- **`_uploadKeepOpen` 竞态**：批量上传时，`_uploadKeepOpen` 在 `fileInput.click()` 前设置、在 Promise 链完成后读取。多次快速点击图库「＋」按钮理论上可能竞态，但 UI 上很难触发。
+- **面板互斥**：设置面板 ↔ 语言面板互斥（打开一个自动关闭另一个）。命令面板是覆盖层，叠在两者之上。关闭函数是幂等的——对已关闭的面板再调一次关闭也安全。
 
-**Dark/light mode**: Dark-first with `@media (prefers-color-scheme: light)` override. The `<meta name="darkreader-lock" content="light">` tag prevents Dark Reader from breaking wallpaper colors.
+### CSP 约束
 
-**Responsive**: Single breakpoint at `480px` — shrinks corner buttons and panels, widens search bar to `90vw`.
+来自 [manifest.json](manifest.json)：
+```
+script-src 'self'; object-src 'self';
+img-src 'self' https://www.bing.com https://cn.bing.com https://icons.duckduckgo.com data: blob:;
+style-src 'self'
+```
 
-### i18n
+**禁止**：HTML 内联 `style="..."`、内联 `onclick`/`onerror`、`<style>` 标签、`eval()`。
+**允许**：CSS class + JS 中 `element.style.xxx` 动态样式、`addEventListener` 绑定事件、从 `icons.duckduckgo.com` 加载网站图标。
 
-Two parallel i18n systems:
-- **Chrome `_locales/`** (16 language dirs, each with `messages.json`) — used for the extension manifest (`extName`, `extDesc`). Only two keys per locale.
-- **`js/languages.js`** — `window.I18N` object with all UI strings for all 16 languages. Language detection: Chrome `i18n.getUILanguage()` in extension mode, `navigator.language` in web mode. The `t()` function in `newtab.js` tries `chrome.i18n.getMessage()` first, falls back to `I18N[currentLang]`, then English, then the raw key.
+### 提交规范
 
-### Bing API endpoints
+约定式提交（Conventional Commits）：`feat:`、`fix:`、`chore:`、`docs:`、`refactor:`、`style:`、`perf:`。
 
-Two hardcoded JSONP→JSON proxies, fired simultaneously by `fetchBingUrl()` via `Promise.any` — the fastest response wins. Each request has an 8-second `AbortController` timeout for clean teardown.
+### 文件清单
 
-- `https://bing.biturl.top/?resolution=1920x1080&format=json&index=0&mkt={mkt}`
-- `https://bing.kaininx.workers.dev/?resolution=1920x1080&format=json&index=0&mkt={mkt}`
-
-Market codes are derived from the current UI language via `bingMkt()`. Both endpoints return `{url, ...}` — the `url` field is the full-res image direct link (CORS-enabled for IDB storage).
-
-### Known pitfalls
-
-- **Blob MIME loss in IDB**: Blobs retrieved from IndexedDB may lose their MIME type. `loadWallpaper()` recovers it: if `blob.type` is empty and `img.mime` was stored, a new `Blob([blob], {type: img.mime})` is created. Always store `mime` alongside blobs.
-- **Non-atomic blob/order write**: `saveLocalImage()` writes blob to IDB first, then updates `ptab_img_order` + `ptab_img_thumbs` in localStorage. If the page crashes before order update, the blob is orphaned in IDB but safely excluded from rotation (order doesn't reference it). The self-healing logic in `loadWallpaper()` only repairs when `thumbs.length === localImages.length`, so a length mismatch prevents repair and the missing thumbnail is permanent until that index is rotated to and regenerated.
-- **`_uploadKeepOpen` is module-scoped**: In the batch upload handler, `_uploadKeepOpen` is set before `fileInput.click()` and read after the promise chain. Multiple rapid clicks on the gallery "+" button could theoretically cause a race, though the UI makes this very hard to trigger.
-- **Gallery blob URL lifecycle**: `renderLocalGallery()` only creates blob URLs as a fallback when a thumbnail is missing. All created blob URLs are tracked in `_galleryUrls` and revoked on gallery close via `revokeGalleryUrls()`. Always call `revokeGalleryUrls()` before clearing gallery DOM.
-
-### File inventory
-
-| File | Purpose |
-|------|---------|
-| `manifest.json` | Extension manifest (MV3). Permission: `search`. CSP: `img-src` restricted to `'self' https://www.bing.com https://cn.bing.com data: blob:` |
-| `index.html` | Single HTML page — the new tab |
-| `css/newtab.css` | All styles (~614 lines), glass-morphism design, dark-first + light override, 480px responsive |
-| `js/preload.js` | Synchronous thumbnail injection with rotation support (~14 lines) |
-| `js/languages.js` | 16-language string table (~37 lines) |
-| `js/newtab.js` | All application logic (~945 lines) |
-| `404.html` | SPA fallback (plain HTML, no JS needed) |
-| `_locales/*/messages.json` | Chrome i18n for manifest metadata only |
-| `icon/` | Extension icons (16/48/128/2048) |
-| `imgs/` | Screenshots for README |
-| `docs/` | All documentation: translated READMEs (16), changelog.md, release-note.md, requirements.md, architecture.md |
-| `docs/changelog-i18n/` | Per-language changelog files (16 languages) |
-| `docs/store-listing/` | Per-language Chrome Web Store listing descriptions (16 languages) |
-
-## Development
-
-No build step. Load the extension unpacked:
-
-1. Open `chrome://extensions` (or `edge://extensions`)
-2. Enable "Developer mode"
-3. Click "Load unpacked" → select this directory
-4. Open a new tab to test
-
-For the web version, open `index.html` directly in a browser. The `404.html` deployment uses `404.html` as a catch-all.
-
-There are no tests, no linter config, no CI, no `package.json`.
-
-### CWS compliance note
-
-Per Chrome Web Store single-purpose policy, the extension version uses `chrome.search.query()` with `disposition: 'CURRENT_TAB'` and hides the engine selector. The `search` permission in `manifest.json` is required for this API. The web version is not bound by this restriction.
-
-## Commit style
-
-Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `style:`. See `git log` for examples.
-
-## Function index (newtab.js)
-
-| Line | Function | Purpose |
-|------|----------|---------|
-| 91 | `t(key)` | i18n lookup: chrome.i18n → I18N table → English → raw key |
-| 100 | `detectLang()` | Browser language detection, returns best matching locale code |
-| 112 | `updateLangUI()` | Refresh all DOM text after language change |
-| 137 | `renderLangPanel()` | Render language selector button list |
-| 162 | `openDB()` | Get or create cached IndexedDB connection |
-| 179 | `idbPut(key, value)` | Write key-value to IDB |
-| 191 | `idbGet(key)` | Read key from IDB |
-| 203 | `idbDelete(key)` | Delete key from IDB |
-| 219 | `preloadImage(url)` | Preload image into memory, returns promise |
-| 231 | `applyWallpaper(url, mode)` | Full display pipeline: preload → front layer fade-in → stabilize to back → generate thumbnail. Returns thumb value |
-| 255 | `generateThumbnail(url)` | Canvas-resize image to 640px wide JPEG, save to `ptab_bing_thumb`. Returns thumb value or null |
-| 276 | `loadThumbs()` | Parse `ptab_img_thumbs` JSON object from localStorage |
-| 280 | `saveThumbs(thumbs)` | Serialize thumbs object to `ptab_img_thumbs` in localStorage |
-| 290 | `bingMkt(lang)` | Language code → Bing market code mapping |
-| 296 | `fetchBingUrl()` | Fetch Bing JSON API (Promise.any race, 8s timeout), returns `{url, api}` |
-| 315 | `downloadBingBlob(url)` | CORS-fetch image URL as Blob |
-| 323 | `loadBingMeta()` | Read `ptab_bing_meta` JSON from localStorage |
-| 331 | `saveBingMeta(meta)` | Write `ptab_bing_meta` JSON to localStorage |
-| 339 | `cacheBingBlob(url, provider, today)` | Download blob, dedup by URL, store to IDB + update meta. Skips download if same URL + blob exists |
-| 371 | `cacheBingInBackground()` | Silent background Bing fetch for local mode pre-caching |
-| 389 | `loadWallpaper()` | Main wallpaper loading flow: local rotation → Bing cache → network fetch |
-| 466 | `generateId()` | Generate unique ID string for local images |
-| 471 | `saveLocalImage(file, show)` | Core: dedup check → generate thumb → save blob (IDB) + thumb (localStorage) atomically. show=true displays wallpaper |
-| 502 | `setLocalWallpaper(file, keepOpen)` | Thin wrapper for gallery "+" button single upload |
-| 511 | `deleteLocalImage(id)` | Remove image from IDB array + splice thumb at same index |
-| 541 | `resetToBing()` | Clear all local data, switch to Bing mode |
-| 569 | `openSettings()` | Show settings panel, refresh gallery if local mode |
-| 582 | `closeSettings()` | Hide settings panel, revoke gallery blob URLs |
-| 591 | `openLangPanel()` | Show language selector panel |
-| 600 | `closeLangPanel()` | Hide language selector panel |
-| 607 | `closeAll()` | Close both panels |
-| 613 | `revokeGalleryUrls()` | Revoke all tracked blob URLs |
-| 618 | `removeLocalGallery()` | Hide gallery DOM, restore upload/reset buttons |
-| 626 | `refreshLocalGallery()` | Load images from IDB → render gallery |
-| 633 | `renderLocalGallery(images, thumbs)` | Build 3×4 gallery grid from thumbnails (base64 preferred, blob fallback) |
-| 697 | `showCorners()` | Fade in corner buttons |
-| 703 | `hideCorners()` | Fade out corner buttons (debounced) |
-| 715 | `isNearTopRight(x, y)` | Hit test for corner button zone |
-| 718 | `isInCenter(x, y)` | Hit test for search bar zone |
-| 724 | `showSearch()` | Show search bar |
-| 732 | `hideSearch()` | Hide search bar (debounced) |
-| 746 | `applySearchMode(mode)` | Set search bar visibility mode |
-| 752 | `applyOpacity(val)` | Set icon opacity |
-| 760 | `applyEngine(engine)` | Switch search engine |
-| 769 | `nextEngine()` | Cycle to next search engine (web mode) |
-| 775 | `saveSettings()` | Persist all search UI settings |
-| 782 | `loadSettings()` | Restore all search UI settings from localStorage |
-| 817 | `setupExtensionMode()` | Extension-only: hide engine UI, bind chrome.search.query |
-| 934 | `init()` | Bootstrap: detect lang → load settings → load wallpaper → bind events |
-
-Event bindings and global initialization run at the bottom of the IIFE (after `init()`).
+| 文件 | 作用 |
+|------|------|
+| `manifest.json` | 扩展清单（MV3），权限：`search` |
+| `index.html` | 唯一 HTML 页面——即新标签页 |
+| `css/newtab.css` | 全部样式（~1267 行） |
+| `js/preload.js` | 同步写入缩略图（~27 行） |
+| `js/languages.js` | 16 语言翻译表 + 语言列表（~503 行） |
+| `js/newtab.js` | 全部应用逻辑（~3127 行） |
+| `404.html` | SPA 回退页（纯 HTML，无 JS） |
+| `_locales/*/messages.json` | Chrome 扩展清单元数据翻译（16 种语言） |
+| `icon/` | 扩展图标（16/48/128px） |
+| `imgs/` | README 截图 |
+| `docs/` | 文档：翻译版 README、更新日志、发布说明、架构说明 |
+| `.claude/rules/` | 详细功能需求文档（8 个模块 + 模块联动总览） |
