@@ -6,7 +6,6 @@
     --icon-opacity: 0.45;
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --glass-bg: rgba(18, 18, 22, 0.82);
-    --glass-bg-heavy: rgba(18, 18, 22, 0.96);
     --glass-border: 1px solid rgba(255, 255, 255, 0.08);
     --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
     --text-primary: rgba(255, 255, 255, 0.9);
@@ -751,8 +750,8 @@ input[type="text"]#cpHotkeyInput:hover {
     max-width: 94vw;
     max-height: 64vh;
     background: linear-gradient(180deg, rgba(32,34,42,0.92) 0%, rgba(24,26,34,0.94) 100%);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow:
