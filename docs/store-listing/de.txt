@@ -24,11 +24,11 @@ Warum PlainTab?
 
 • 【Open Source, transparent】
 • Vollständig quelloffen: https://github.com/kaininx/PlainTab
-• Online-Demo: https://plaintab.netlify.app
+• Online-Demo: https://plaintab.kaininx.workers.dev
 
 ✨ Empfohlene Kombination (vom Entwickler):
 • 📌 Neuer Tab: Installieren Sie die Erweiterung und legen Sie bis zu 12 verschiedene Wandbilder beliebiger Größe fest.
-• 📌 Startseite: Setzen Sie die Startseite des Browsers auf https://plaintab.netlify.app , um den täglichen Bing-Modus zu nutzen.
+• 📌 Startseite: Setzen Sie die Startseite des Browsers auf https://plaintab.kaininx.workers.dev , um den täglichen Bing-Modus zu nutzen.
 • 📌 Home-Button: Setzen Sie ihn auf https://kaininx.github.io/PlainTab/ — das GitHub Pages dieser Erweiterung, mit zusätzlichen eigenen Wandbildern.
 
 PlainTab ist genau richtig, wenn Sie genug haben von:

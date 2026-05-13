@@ -24,11 +24,11 @@ PlainTab を選ぶ理由：
 
 • 【オープンソースで透明】
 • コードは完全にオープンソース：https://github.com/kaininx/PlainTab
-• オンラインで試す：https://plaintab.netlify.app
+• オンラインで試す：https://plaintab.kaininx.workers.dev
 
 ✨ 組み合わせて使う（開発者おすすめ）：
 • 📌 新しいタブ：本拡張機能をインストール。最大 12 枚の異なる壁紙を設定可能、サイズ制限なし。
-• 📌 起動ページ：ブラウザのホームページを https://plaintab.netlify.app に設定。デフォルトの Bing 日替わり壁紙モードを維持。
+• 📌 起動ページ：ブラウザのホームページを https://plaintab.kaininx.workers.dev に設定。デフォルトの Bing 日替わり壁紙モードを維持。
 • 📌 ホームボタン：https://kaininx.github.io/PlainTab/ に設定。これは本プロジェクトの GitHub Pages で、お好みの壁紙を追加で設定可能。
 
 PlainTab はこんな方におすすめ：

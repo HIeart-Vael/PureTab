@@ -18,7 +18,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licencia">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Pruebalo en linea-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -43,7 +43,7 @@
 ---
 Abrir una nueva pestana es una accion instantanea: pulsas `Ctrl+T` y esperas que tu fondo de pantalla ya este ahi. Para lograr esto, todo el diseno de PlainTab gira en torno a un objetivo: **mostrar el fondo de pantalla en pantalla lo mas rapido posible**, sin ningun proceso de carga visible. Arquitectura de doble capa, precarga sincrona, pipeline de miniaturas con Canvas, estrategia de almacenamiento hibrido: todas las decisiones tecnicas convergen en una misma cosa: mas rapido, mas fluido, mas imperceptible.
 
-PlainTab es simultaneamente una extension de navegador Manifest V3 y una pagina web independiente. Cero dependencias externas, sin paso de compilacion, vanilla JS + CSS puro. El modo extension y el modo web comparten el mismo codigo base, detectando automaticamente el entorno en tiempo de ejecucion para adaptar su comportamiento. [Pruebalo en linea](https://plaintab.netlify.app).
+PlainTab es simultaneamente una extension de navegador Manifest V3 y una pagina web independiente. Cero dependencias externas, sin paso de compilacion, vanilla JS + CSS puro. El modo extension y el modo web comparten el mismo codigo base, detectando automaticamente el entorno en tiempo de ejecucion para adaptar su comportamiento. [Pruebalo en linea](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -51,7 +51,7 @@ PlainTab es simultaneamente una extension de navegador Manifest V3 y una pagina 
 
 **Extension de navegador**: Instalalo desde [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Pagina de inicio en linea**: Visita [plaintab.netlify.app](https://plaintab.netlify.app) y configuralo como pagina de inicio en los ajustes de tu navegador.
+**Pagina de inicio en linea**: Visita [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) y configuralo como pagina de inicio en los ajustes de tu navegador.
 
 **Ejecucion local**:
 

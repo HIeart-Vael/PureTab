@@ -18,7 +18,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licenca">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Experimente%20online-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -43,7 +43,7 @@
 ---
 Abrir uma nova guia e um gesto instantaneo — voce aperta `Ctrl+T` e espera que o papel de parede ja esteja la. Para fazer isso direito, todo o design do PlainTab gira em torno de um objetivo: **fazer o papel de parede aparecer na tela o mais rapido possivel**, sem nenhum processo de carregamento visivel. Arquitetura de camada dupla, pre-carregamento sincrono, pipeline de miniaturas via Canvas, estrategia de armazenamento hibrida — toda decisao tecnica leva a mesma coisa: mais rapido, mais suave, mais imperceptivel.
 
-O PlainTab e ao mesmo tempo uma extensao de navegador Manifest V3 e uma pagina web independente. Zero dependencias externas, sem etapa de build, vanilla JS + CSS puro. O modo extensao e o modo web compartilham o mesmo codigo, com deteccao automatica de ambiente em tempo de execucao. [Experimente online](https://plaintab.netlify.app).
+O PlainTab e ao mesmo tempo uma extensao de navegador Manifest V3 e uma pagina web independente. Zero dependencias externas, sem etapa de build, vanilla JS + CSS puro. O modo extensao e o modo web compartilham o mesmo codigo, com deteccao automatica de ambiente em tempo de execucao. [Experimente online](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -51,7 +51,7 @@ O PlainTab e ao mesmo tempo uma extensao de navegador Manifest V3 e uma pagina w
 
 **Extensao de navegador**: instale pela [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Pagina inicial online**: acesse [plaintab.netlify.app](https://plaintab.netlify.app) e defina-a como pagina inicial nas configuracoes do seu navegador.
+**Pagina inicial online**: acesse [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) e defina-a como pagina inicial nas configuracoes do seu navegador.
 
 **Execucao local**:
 

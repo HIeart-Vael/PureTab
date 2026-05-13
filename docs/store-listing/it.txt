@@ -24,11 +24,11 @@ Perché scegliere PlainTab?
 
 • 【Open source trasparente】
 • Codice sorgente completamente aperto: https://github.com/kaininx/PlainTab
-• Demo online: https://plaintab.netlify.app
+• Demo online: https://plaintab.kaininx.workers.dev
 
 ✨ Combinazione consigliata (dallo sviluppatore):
 • 📌 Nuova scheda: installa l'estensione e imposta fino a 12 sfondi diversi, senza limiti di dimensione.
-• 📌 Pagina iniziale: imposta il browser su https://plaintab.netlify.app , mantenendo la modalità Bing predefinita.
+• 📌 Pagina iniziale: imposta il browser su https://plaintab.kaininx.workers.dev , mantenendo la modalità Bing predefinita.
 • 📌 Pulsante Home: imposta su https://kaininx.github.io/PlainTab/ — è la pagina GitHub Pages del progetto, con sfondi aggiuntivi a tua scelta.
 
 PlainTab fa per te se sei stanco:

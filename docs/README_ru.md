@@ -18,7 +18,7 @@
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Licenziia">
   </a>
-  <a href="https://plaintab.netlify.app">
+  <a href="https://plaintab.kaininx.workers.dev">
     <img src="https://img.shields.io/badge/Poprobovat%20onlain-Netlify-00c7b7?style=flat-square&logo=netlify" alt="Netlify">
   </a>
 </p>
@@ -43,7 +43,7 @@
 ---
 Otkrytie novoi vkladki — mgnovennoe deistvie: vy nazhimaete `Ctrl+T` i ozhidaete, chto vash fon uzhe tam. Chtoby sdelat eto pravilno, ves dizain PlainTab postroen vokrug odnoi tseli: **pokazat oboi na ekrane kak mozhno bystree**, bez kakogo-libo vidimogo protsessa zagruzki. Dvukhsloinaia arkhitektura, sinkhronnaia predzagruzka, konveier miniatiur cherez Canvas, gibridnaia strategiia khraneniia — kazhdoe tekhnicheskoe reshenie vedet k odnomu i tomu zhe: bystree, plavnee, nezametnee.
 
-PlainTab — eto odnovremenno rasshirenie dlia brauzera na Manifest V3 i nezavisimaia veb-stranitsa. Nol vneshnikh zavisimostei, bez etapa sborki, chistyi vanilla JS + CSS. Rezhim rasshireniia i veb-rezhim ispolzuiut odin i tot zhe kod s avtomaticheskim opredeleniem sredy vypolneniia. [Poprobuitte onlain](https://plaintab.netlify.app).
+PlainTab — eto odnovremenno rasshirenie dlia brauzera na Manifest V3 i nezavisimaia veb-stranitsa. Nol vneshnikh zavisimostei, bez etapa sborki, chistyi vanilla JS + CSS. Rezhim rasshireniia i veb-rezhim ispolzuiut odin i tot zhe kod s avtomaticheskim opredeleniem sredy vypolneniia. [Poprobuitte onlain](https://plaintab.kaininx.workers.dev).
 
 ---
 
@@ -51,7 +51,7 @@ PlainTab — eto odnovremenno rasshirenie dlia brauzera na Manifest V3 i nezavis
 
 **Rasshirenie dlia brauzera**: ustanovite iz [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
 
-**Onlain-stranitsa**: pereidite na [plaintab.netlify.app](https://plaintab.netlify.app) i ustanovite ee kak domashniuiu stranitsu v nastroikakh brauzera.
+**Onlain-stranitsa**: pereidite na [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) i ustanovite ee kak domashniuiu stranitsu v nastroikakh brauzera.
 
 **Lokalnyi zapusk**:
 

@@ -24,11 +24,11 @@ Neden PlainTab?
 
 • 【Açık Kaynak, Şeffaf】
 • Kod tamamen açık kaynak: https://github.com/kaininx/PlainTab
-• Çevrimiçi deneyin: https://plaintab.netlify.app
+• Çevrimiçi deneyin: https://plaintab.kaininx.workers.dev
 
 ✨ Önerilen Kullanım (Geliştirici Tavsiyesi):
 • 📌 Yeni Sekme: Bu eklentiyi yükleyin, boyut sınırlaması olmaksızın en fazla 12 farklı duvar kağıdı ayarlayın.
-• 📌 Başlangıç Sayfası: Tarayıcınızı https://plaintab.netlify.app olarak ayarlayın, varsayılan günlük duvar kağıdı modunu kullanın.
+• 📌 Başlangıç Sayfası: Tarayıcınızı https://plaintab.kaininx.workers.dev olarak ayarlayın, varsayılan günlük duvar kağıdı modunu kullanın.
 • 📌 Ana Sayfa Düğmesi: https://kaininx.github.io/PlainTab/ olarak ayarlayın — bu, projenin GitHub Pages sürümüdür; ek olarak sevdiğiniz duvar kağıtlarını da belirleyebilirsiniz.
 
 PlainTab tam size göre, eğer şunlardan bıktıysanız:
