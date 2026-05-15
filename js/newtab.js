@@ -378,80 +378,82 @@
     }
 
     /**
-     * 应用壁纸并执行双层交叉淡入淡出过渡。
-     *
-     * WHY 使用 front/back 双层结构：
-     *   浏览器对 background-image 的切换没有原生过渡动画，
-     *   所以用两层 div 叠放：front 层淡入新壁纸，过渡完成后
-     *   将新壁纸同步到 back 层，再清空 front——视觉上形成平滑切换。
-     *
-     * WHY Blob URL 在过渡完成后才 revoke：
-     *   过渡期间 back 层可能仍在显示旧 URL 对应的图片。
-     *   过渡完成后，back 层已持有新 URL，front 层已清空，
-     *   旧 URL 不再被任何 DOM 元素引用，此时释放才是安全的。
-     *   此外，preloadImage 已将图片解码为位图，Image 对象
-     *   的内部数据不依赖 blob URL 字符串，revoke 不影响
-     *   后续 generateThumbnail 对同一 Image 的复用。
-     *
-     * @param {string} url  - 壁纸图片 URL（可以是 https:// 或 blob:）
-     * @param {string} mode - 壁纸来源模式：'bing' | 'local'
-     * @returns {Promise<string|null>} 缩略图 data URL 或 null
-     */
-    function applyWallpaper(url, mode) {
-        var preloadedImg = null;
+    * 应用壁纸并执行双层交叉淡入过渡。
+    *
+    * ┌─────────────────────────────────────────────────────────────────────────┐
+    * │ 设计原理：front/back 双层结构                                           │
+    * └─────────────────────────────────────────────────────────────────────────┘
+    * 浏览器对 background-image 的切换没有原生过渡动画，因此使用两个重叠 div：
+    *   - back 层：始终显示当前稳定壁纸
+    *   - front 层：负责下一张壁纸的淡入动画
+    *
+    * 流程：
+    *   1. 新壁纸加载解码到 front 层
+    *   2. front 层 opacity 从 0 淡入到 1
+    *   3. 动画结束后将新壁纸同步到 back 层
+    *   4. 清空 front 层，恢复 opacity:0 等待下次切换
+    *
+    * 优势：平滑切换、无闪烁、无白屏、无硬切换、避免长期合成变暗
+    *
+    * ┌─────────────────────────────────────────────────────────────────────────┐
+    * │ 关键实现说明                                                            │
+    * └─────────────────────────────────────────────────────────────────────────┘
+    *
+    * preloadImage 先加载解码 → 确保动画时图片已是可绘制位图，避免模糊/闪烁
+    * transitionend 精确检测动画结束 → 避免 setTimeout 的时间误差
+    * 强制回流（offsetWidth）→ 防止浏览器合并帧导致 transition 不触发
+    * 动画完成后才 revoke Blob URL → 确保旧壁纸不再被引用时安全释放
+    *
+    * ┌─────────────────────────────────────────────────────────────────────────┐
+    * │ @param {string} url - 壁纸 URL（支持 https:// 或 blob:）                │
+    * │ @param {number} transitionMs - front 层淡入动画时长（毫秒）             │
+    * │ @returns {Promise<void>} 壁纸切换完成后的 Promise                       │
+    * └─────────────────────────────────────────────────────────────────────────┘
+    */
+    function applyWallpaper(url, transitionMs = 200) {
         var isBlobUrl = url.indexOf('blob:') === 0;
 
-        return preloadImage(url).then(function (img) {
-            preloadedImg = img;
+        return preloadImage(url).then(function () {
+            // front 放入新图
             wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
+
+            // 强制回流：确保浏览器在 opacity:0 状态渲染新背景
+            void wallpaperFrontEl.offsetWidth;
+
+            // 触发 0 → 1 淡入
+            wallpaperFrontEl.style.transition = 'opacity ' + transitionMs + 'ms ease-out';
+            wallpaperFrontEl.classList.add('active');
+
             return new Promise(function (resolve) {
-                requestAnimationFrame(function () {
-                    requestAnimationFrame(function () {
-                        wallpaperFrontEl.classList.add('active');
-                        setTimeout(function () {
-                            wallpaperBackEl.style.backgroundImage = 'url(' + url + ')';
-                            wallpaperFrontEl.classList.remove('active');
-                            wallpaperFrontEl.style.backgroundImage = '';
-                            resolve();
-                        }, TRANSITION_MS + 50);
-                    });
-                });
+                function onTransitionEnd(e) {
+                    if (e.propertyName !== 'opacity') return;
+
+                    // 同步到 back，front 归零等待下一次动画
+                    wallpaperBackEl.style.backgroundImage = wallpaperFrontEl.style.backgroundImage;
+                    wallpaperFrontEl.classList.remove('active');
+                    wallpaperFrontEl.style.backgroundImage = '';
+
+                    wallpaperFrontEl.removeEventListener('transitionend', onTransitionEnd);
+                    resolve();
+                }
+                wallpaperFrontEl.addEventListener('transitionend', onTransitionEnd);
             });
         }).then(function () {
-            // ── Blob URL 生命周期管理 ──
-            // 过渡完成：back 层已持有新 URL，front 层已清空，
-            // 旧 URL 不再被 DOM 引用，可以安全释放。
             if (isBlobUrl) {
                 var oldUrl = _currentWallpaperBlobUrl;
                 _currentWallpaperBlobUrl = url;
                 if (oldUrl && oldUrl !== url) {
-                    try { URL.revokeObjectURL(oldUrl); } catch (e) { /* already revoked */ }
+                    try { URL.revokeObjectURL(oldUrl); } catch (e) { }
                 }
             } else {
-                // 非 Blob URL 切入时，若之前持有 Blob URL 也需释放
                 if (_currentWallpaperBlobUrl) {
-                    try { URL.revokeObjectURL(_currentWallpaperBlobUrl); } catch (e) { /* already revoked */ }
+                    try { URL.revokeObjectURL(_currentWallpaperBlobUrl); } catch (e) { }
                     _currentWallpaperBlobUrl = null;
                 }
             }
-
-            currentMode = mode;
-            wallpaperInfoEl.textContent = mode === 'local' ? t('wpLocal') : t('wpBing');
-
-            // ★ 复用 preloadImage 已加载的 Image 对象，避免二次加载 + 二次解码
-            return generateThumbnail(preloadedImg).then(function (thumb) {
-                if (thumb) {
-                    // WHY: bing 模式写入预计算缓存，让 preload.js 一次 getItem 即可命中
-                    //      local 模式由 tryLoadLocalWallpaper 同步写入，不在此处异步覆盖（避免竞态错位）
-                    if (mode === 'bing') {
-                        try { localStorage.setItem(LS_KEY_PREVIEW_THUMB, thumb); } catch (e) { /* quota */ }
-                        try { localStorage.setItem(LS_KEY_BING_THUMB, thumb); } catch (e) { /* quota */ }
-                    }
-                }
-                return thumb;
-            });
         });
     }
+
     /**
      * 生成缩略图（纯计算，不写 localStorage）。
      * 调用方根据 mode 决定是否持久化到 ptab_bing_thumb。
@@ -1374,9 +1376,9 @@
                     var phRect = dragState.placeholder.getBoundingClientRect();
                     // cubic-bezier(0.34, 1.3, 0.64, 1) 过冲 30%，回弹可见但不夸张
                     var spring = 'left 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
-                                 'top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
-                                 'opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
-                                 'box-shadow 0.25s';
+                        'top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
+                        'opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
+                        'box-shadow 0.25s';
                     dragState.card.style.transition = spring;
                     dragState.card.style.left = phRect.left + 'px';
                     dragState.card.style.top = phRect.top + 'px';
@@ -1771,7 +1773,7 @@
     function loadHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HOTKEY) || 'ctrl+k'; }
     function saveHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HOTKEY, key); return true; } catch (e) { return false; } }
     function loadRecommend() { return localStorage.getItem(LS_KEY_SHORTCUT_RECOMMEND) !== 'false'; }
-    function saveRecommend(bool) { try { localStorage.setItem(LS_KEY_SHORTCUT_RECOMMEND, bool ? 'true' : 'false'); } catch (e) {} }
+    function saveRecommend(bool) { try { localStorage.setItem(LS_KEY_SHORTCUT_RECOMMEND, bool ? 'true' : 'false'); } catch (e) { } }
     function loadHidden() {
         if (_hiddenCache !== null) return _hiddenCache;
         try { _hiddenCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN) || '[]'); } catch (e) { _hiddenCache = []; }
@@ -1811,8 +1813,8 @@
 
     /** 首字母颜色（hash 保证同一字母颜色一致） */
     function letterColor(letter) {
-        var colors = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#34495e',
-                      '#c0392b','#d35400','#27ae60','#2980b9','#8e44ad','#16a085','#f39c12','#2c3e50'];
+        var colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#34495e',
+            '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#16a085', '#f39c12', '#2c3e50'];
         var idx = (letter || 'A').toUpperCase().charCodeAt(0) % colors.length;
         return colors[idx];
     }
@@ -2311,7 +2313,7 @@
                 fbIcon.appendChild(imgEl);
             }
         };
-        img.onerror = function () {};
+        img.onerror = function () { };
         img.src = favUrl;
     }
 
