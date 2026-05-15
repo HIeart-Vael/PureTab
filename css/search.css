@@ -1,0 +1,69 @@
+/* ========== 搜索栏 ========== */
+.search-bar {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 560px;
+    max-width: 88vw;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 22px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.search-bar.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.search-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    padding: 12px 0;
+    caret-color: rgba(255, 255, 255, 0.8);
+}
+
+.search-bar input:focus-visible {
+    outline: none;
+}
+
+.search-bar input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.search-engine-icon {
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-engine-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.search-engine-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: #fff;
+}
