@@ -1,116 +1,266 @@
+```md
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文件用于指导 Claude Code（claude.ai/code）在本仓库中进行代码理解、修改与架构决策。
 
-## 项目概述
+---
 
-PlainTab 是一个 Chrome/Edge 浏览器扩展（Manifest V3），用来替换浏览器的新标签页。核心体验是零闪白的极简壁纸页面。同时也能作为独立网页运行。零外部依赖，无构建步骤——纯原生 JS + CSS。
+## 📌 项目概述
 
-## 开发命令
+PlainTab 是一个 Chrome/Edge 浏览器扩展（Manifest V3），用于替换新标签页。
 
-没有构建、没有 lint、没有测试、没有 `package.json`。
+核心特性：
+- 零闪白极简壁纸体验
+- 双层壁纸渲染系统（Back / Front）
+- 首帧即渲染的性能优先设计
+- 可作为独立网页运行
+- 零外部依赖，无构建流程（纯原生 JS + CSS）
 
-- **加载为扩展**：打开 `chrome://extensions` → 开启「开发者模式」→「加载已解压的扩展程序」→ 选择此目录 → 打开新标签页测试
-- **作为网页测试**：直接在浏览器中打开 `index.html`
+---
 
-## 架构
+## 🚫 开发约束（硬性）
 
-### 模块总览（8 个独立逻辑单元）
+本项目禁止引入以下内容：
 
-每个模块的详细功能需求见 [.claude/rules/](.claude/rules/) 目录。改动某个模块前，先读对应的需求文档。
+- 构建工具（Webpack / Vite / Rollup 等）
+- npm / package.json
+- 前端框架（React / Vue / Svelte 等）
+- lint / test 框架
+- 运行时大型依赖
 
-| 模块 | 需求文档 | 一句话职责 |
-|------|---------|-----------|
-| 数据存储 | [data-storage-spec.md](.claude/rules/data-storage-spec.md) | 21 个 localStorage key + 2 个 IndexedDB key，崩溃安全的读写顺序，版本迁移 |
-| 语言系统 | [language-system-spec.md](.claude/rules/language-system-spec.md) | 16 种语言翻译，两级匹配检测，`t()` 四级回退链 |
-| 壁纸系统 | [wallpaper-system-spec.md](.claude/rules/wallpaper-system-spec.md) | 双层零闪白显示，Bing 双端点竞速 + 缓存，本地最多 12 张轮换 |
-| 搜索栏 | [search-bar-spec.md](.claude/rules/search-bar-spec.md) | 三种显隐模式，四种搜索引擎，扩展/网页双模式 |
-| 设置面板 | [settings-panel-spec.md](.claude/rules/settings-panel-spec.md) | 壁纸/搜索/透明度/快捷键的配置 UI，面板互斥 |
-| 本地图库 | [local-gallery-spec.md](.claude/rules/local-gallery-spec.md) | 上传/删除/拖拽排序，崩溃安全的写入顺序，Blob URL 生命周期 |
-| 命令面板 | [command-palette-spec.md](.claude/rules/command-palette-spec.md) | Normal/Hidden 双面板快捷链接管理，10 个命令，列表/图标视图 |
-| 全局交互 | [global-interaction-spec.md](.claude/rules/global-interaction-spec.md) | 启动流程、键盘优先级路由、鼠标热区追踪、面板协调 |
+技术栈限制：
+- Vanilla JavaScript（原生 JS）
+- 原生 CSS
+- ES Modules（允许）
 
-跨模块依赖、时序流程、数据流向图：[module-interactions.md](.claude/rules/module-interactions.md)。
+---
 
-### 文件加载顺序（绝对不可变）
+## ▶️ 运行方式
 
-```
-index.html:
-  1. <div id="wallpaperBack">         ← 必须在 preload.js 之前存在于 DOM
-  2. <script src="js/preload.js">    ← 同步 IIFE，浏览器首帧绘制前写入缩略图
-  3. <div id="wallpaperFront">
-  4. ...其余所有 DOM 元素...
-  5. <script src="js/languages.js">  ← 设置 window.I18N + window.LanguageList
-  6. <script src="js/newtab.js">     ← 主程序 IIFE：检测环境 → 检测语言 → 加载设置 → 加载壁纸 → 绑定事件
-```
+### 扩展模式（Chrome / Edge）
+1. 打开 `chrome://extensions`
+2. 开启开发者模式
+3. 加载“已解压扩展”
+4. 选择本项目目录
 
-顺序不可调换。`preload.js` 在 `#wallpaperBack` 之后、首帧绘制之前执行，是零闪白的前提。
+### 网页模式（调试）
+- 直接打开 `index.html`
 
-### 双层壁纸系统（零闪白原理）
+---
 
-- `#wallpaperBack`（z-index:0）— 始终持有一张可见图片。`preload.js` 在浏览器首次绘制前同步把缩略图写到这里。
-- `#wallpaperFront`（z-index:1，`opacity:0`）— 只做淡入过渡。新图先预加载（`img.decode()` 确保解码完成），设到 front 层，然后 CSS opacity 过渡淡入。550ms 后把新图「稳定」到 back 层（`back.style.backgroundImage = url`），front 清空归零。
+## 🧠 规则系统（非常重要）
 
-任何时候至少有一层持有已渲染的图片——永远不会出现空白帧。
+本项目存在三层规则体系：
 
-### 两种运行模式
+---
 
-启动时通过 `typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id` 判定：
+### 🟥 1. 系统级规则（最高优先级，必须严格遵守）
 
-- **扩展模式**：使用 `chrome.search.query()` 满足 Chrome 商店单一用途政策。引擎选择器隐藏，图标变为静态放大镜。`Ctrl+Shift+W` 切换设置面板。
-- **网页模式**：完整引擎选择器（Google→Bing→Baidu→DuckDuckGo）。搜索用 `window.open(url, '_self')` 跳转。
-
-### 存储
-
-- **IndexedDB**（`PlainTab`，版本 1，store `wallpaper`）：存图片原图 Blob。Key：`ptab_bing_blob`（单张 Bing）、`ptab_img_<id>`（每张本地图 `{blob, mime, name}`）。
-- **localStorage**：存其余所有——设置、缩略图（base64 data URL）、元数据、快捷链接数据。完整 21 key 清单见 [data-storage-spec.md](.claude/rules/data-storage-spec.md)。
-
-### 崩溃安全（黄金法则）
-
-**先落重数据，再写轻引用。先断引用，再删重数据。**
-
-- 保存：`idbPut(blob)` → `saveOrder(order)` + `saveThumbs(thumbs)`
-- 删除：`saveOrder(newOrder)` → `delete thumbs/meta` → `idbDelete(blob)`
-- 保存中途崩溃：blob 已入库但 order 不引用 → 孤儿 blob，安全忽略
-- 删除中途崩溃：blob 还在但 order 已移除引用 → 不可达，安全忽略
-
-### 已知坑点
-
-- **IDB 取回 Blob 时 MIME 丢失**：从 IndexedDB 取出的 Blob 可能丢失 MIME 类型。务必检查 `blob.type`，为空则用存的 `mime` 重建：`new Blob([blob], {type: storedMime})`。
-- **preview_thumb 竞态**：本地轮换模式下，`ptab_local_index` 递增后必须在异步的 `applyWallpaper()` 调用之前**同步**写入 `ptab_preview_thumb`。若异步写入，快速连续开新标签页会读到过期的预览数据。
-- **图库 Blob URL 生命周期**：`renderLocalGallery()` 在缩略图缺失时会创建 Blob URL 做回退。所有创建的 URL 必须追踪，图库关闭时通过 `revokeGalleryUrls()` 全部释放。务必在清空图库 DOM 前调用 `revokeGalleryUrls()`。
-- **`_uploadKeepOpen` 竞态**：批量上传时，`_uploadKeepOpen` 在 `fileInput.click()` 前设置、在 Promise 链完成后读取。多次快速点击图库「＋」按钮理论上可能竞态，但 UI 上很难触发。
-- **面板互斥**：设置面板 ↔ 语言面板互斥（打开一个自动关闭另一个）。命令面板是覆盖层，叠在两者之上。关闭函数是幂等的——对已关闭的面板再调一次关闭也安全。
-
-### CSP 约束
-
-来自 [manifest.json](manifest.json)：
-```
-script-src 'self'; object-src 'self';
-img-src 'self' https://www.bing.com https://cn.bing.com https://icons.duckduckgo.com data: blob:;
-style-src 'self'
+路径：
 ```
 
-**禁止**：HTML 内联 `style="..."`、内联 `onclick`/`onerror`、`<style>` 标签、`eval()`。
-**允许**：CSS class + JS 中 `element.style.xxx` 动态样式、`addEventListener` 绑定事件、从 `icons.duckduckgo.com` 加载网站图标。
+.claude/rules/
 
-### 提交规范
+```
 
-约定式提交（Conventional Commits）：`feat:`、`fix:`、`chore:`、`docs:`、`refactor:`、`style:`、`perf:`。
+定义内容：
+- 系统架构
+- 数据一致性规则
+- 崩溃安全机制
+- 运行时行为逻辑
+- 模块边界与依赖关系
 
-### 文件清单
+👉 任何功能实现前必须读取相关规则文件  
+👉 不得违反其中任何约束
 
-| 文件 | 作用 |
-|------|------|
-| `manifest.json` | 扩展清单（MV3），权限：`search` |
-| `index.html` | 唯一 HTML 页面——即新标签页 |
-| `css/newtab.css` | 全部样式（~1267 行） |
-| `js/preload.js` | 同步写入缩略图（~27 行） |
-| `js/languages.js` | 16 语言翻译表 + 语言列表（~503 行） |
-| `js/newtab.js` | 全部应用逻辑（~3127 行） |
-| `404.html` | SPA 回退页（纯 HTML，无 JS） |
-| `_locales/*/messages.json` | Chrome 扩展清单元数据翻译（16 种语言） |
-| `icon/` | 扩展图标（16/48/128px） |
-| `imgs/` | README 截图 |
-| `docs/` | 文档：翻译版 README、更新日志、发布说明、架构说明 |
-| `.claude/rules/` | 详细功能需求文档（8 个模块 + 模块联动总览） |
+---
+
+### 🟨 2. 项目级行为规则（本文件）
+
+本文件（CLAUDE.md）定义：
+
+- 项目结构说明
+- 模块划分方式
+- 开发流程与约束
+- 文件加载顺序
+- 系统运行机制概览
+
+👉 用于“任务理解与执行方式”，不是底层规则
+
+---
+
+### 🟦 3. AI 开发规范（参考约束）
+
+路径：
+```
+
+AGENTS.md
+
+```
+
+定义内容：
+- 性能优化原则
+- UI 设计约束
+- DOM 操作规范
+- anti-overengineering 原则
+- 调试方法规范
+
+👉 在不违反 `.claude/rules/` 的前提下应当遵守  
+👉 用于指导实现方式，不具备系统级优先级
+
+---
+
+## 📊 规则优先级（关键）
+
+1. `.claude/rules/core-rules.md`（绝对最高优先级）
+2. `.claude/rules/` 其他所有文件
+3. `CLAUDE.md`（本文件）
+4. `AGENTS.md`（软约束）
+
+---
+
+## 🧱 架构总览（8 大模块）
+
+系统由以下模块构成：
+
+- data-storage-spec.md → 数据存储 / IndexedDB / localStorage 一致性
+- language-system-spec.md → 多语言系统 + fallback 机制
+- wallpaper-system-spec.md → 双层壁纸 + 零闪白渲染
+- search-bar-spec.md → 搜索栏 + 多引擎切换
+- settings-panel-spec.md → 设置面板 UI 与状态管理
+- local-gallery-spec.md → 本地图片管理 + Blob 生命周期
+- command-palette-spec.md → 命令面板系统
+- runtime-interaction-spec.md → 启动流程 + 全局交互调度
+
+---
+
+## ⚡ 文件加载顺序（强约束）
+
+index.html 执行顺序必须保持：
+
+1. `#wallpaperBack` 必须先存在
+2. `preload.js`（首帧前同步执行）
+3. `#wallpaperFront`
+4. 其他 DOM 元素
+5. `languages.js`
+6. `newtab.js`
+
+👉 preload.js 是“零闪白机制核心”，禁止调整顺序
+
+---
+
+## 🖼 双层壁纸系统（核心机制）
+
+### Back 层（稳定层）
+- 永久持有当前壁纸
+- 用于首帧直接渲染
+
+### Front 层（过渡层）
+- 用于新壁纸加载
+- decode 完成后淡入
+- 550ms 后同步回 Back
+
+### 核心原则：
+> 永远保证至少一层已有可渲染内容，禁止空白帧
+
+---
+
+## 🔄 运行模式
+
+### 扩展模式
+- 使用 `chrome.search.query()`
+- UI 简化
+- 无搜索引擎选择器
+
+### 网页模式
+- 使用 `window.open`
+- 支持完整搜索引擎切换
+
+---
+
+## 💾 存储系统
+
+### IndexedDB
+- DB：PlainTab
+- Store：wallpaper
+- 存储内容：图片 Blob
+
+### localStorage
+- 设置项
+- 缩略图（base64）
+- 元数据
+
+---
+
+## 🛡 崩溃安全原则（非常重要）
+
+核心规则：
+
+> 先写数据，再写引用  
+> 先断引用，再删除数据
+
+用于避免：
+- 半写入状态
+- 数据丢失
+- 孤儿 Blob
+- 状态不一致
+
+---
+
+## ⚠️ 已知关键问题（必须注意）
+
+- IndexedDB Blob 可能丢失 MIME 类型（需手动修复）
+- preview_thumb 存在竞态写入问题（必须同步更新）
+- Blob URL 必须显式 revoke，否则内存泄漏
+- UI 面板存在互斥关系，关闭操作必须幂等
+
+---
+
+## 🚫 CSP 安全约束
+
+禁止：
+- inline style
+- inline script
+- eval()
+- 动态脚本注入
+
+允许：
+- addEventListener
+- class / style 操作
+- 静态资源加载
+
+---
+
+## 📦 提交规范
+
+使用 Conventional Commits：
+
+- feat:
+- fix:
+- perf:
+- refactor:
+- chore:
+- docs:
+
+---
+
+## 📁 项目结构
+
+- index.html → 新标签页入口
+- js/preload.js → 首帧壁纸渲染
+- js/newtab.js → 主逻辑
+- js/languages.js → 多语言系统
+- css/newtab.css → 样式系统
+- .claude/rules/ → 系统级规则（核心）
+- AGENTS.md → AI 行为规范（软约束）
+
+---
+
+## 🧠 关键设计原则总结
+
+- 性能优先于结构
+- 首帧优先于完整性
+- DOM 直接操作优于抽象封装
+- 渲染连续性优于状态一致性（在可控范围内）
+- 禁止过度工程化
+```
