@@ -42,11 +42,12 @@
     </button>
 
     <div class="settings-panel" id="settingsPanel">
-        <h3 data-i18n="panelTitle">Wallpaper</h3>
-        <p class="wp-info" id="wpInfo"></p>
-        <button class="panel-btn primary" id="uploadBtn" data-i18n="uploadBtn">Choose local wallpaper</button>
+        <div class="wp-mode-row">
+            <span class="wp-mode-chip bing" id="wpModeChip">Bing daily wallpaper</span>
+        </div>
+        <span id="galleryAnchor" hidden></span>
+        <button class="panel-btn primary gallery-add-btn" id="uploadBtn" title="Add wallpaper" aria-label="Add wallpaper">+</button>
         <input type="file" id="fileInput" accept="image/*" multiple>
-        <button class="panel-btn" id="resetBtn" data-i18n="resetBtn">Reset to Bing daily</button>
         <div class="l1-bottom">
             <button class="l1-adv-btn" id="advSettingsBtn" data-i18n="advToggle">高级设置</button>
             <a class="l1-gh-btn" href="https://github.com/kaininx/PlainTab" target="_blank" rel="noopener" title="GitHub">

@@ -15,7 +15,7 @@
     box-shadow:
         0 18px 56px rgba(0, 0, 0, 0.36),
         0 1px 0 rgba(var(--on-surface-rgb), 0.04) inset;
-    padding: 16px;
+    padding: 22px 16px 16px;
     z-index: 99;
     contain: paint;
     opacity: 0;
@@ -31,41 +31,87 @@
     transform: translateY(0);
 }
 
-.settings-panel h3 {
-    color: var(--text-primary);
-    font-size: 15px;
-    line-height: 1.2;
-    font-weight: 700;
-    text-align: left;
-    margin: 0;
-    padding: 0 0 12px;
-    letter-spacing: 0;
-    border-bottom: 1px solid rgba(var(--stroke-rgb), 0.56);
-}
-
-/* Wallpaper info line */
-.wp-info {
-    color: var(--text-secondary);
-    font-size: 12px;
-    text-align: left;
-    line-height: 1.45;
-    margin: 0;
-    padding: 12px 0;
-    letter-spacing: 0;
+.wp-mode-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    min-height: 42px;
-    border-bottom: 1px solid rgba(var(--stroke-rgb), 0.46);
-    background: transparent;
-    box-shadow: none;
+    justify-content: flex-start;
+    position: relative;
+    margin: -12px 0 14px;
+    min-height: 20px;
 }
 
-.wp-info-icon {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    opacity: 0.5;
+.wp-mode-chip {
+    --chip-rgb: var(--accent-rgb);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 20px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 0;
+    background:
+        radial-gradient(circle at 18px 50%, rgba(var(--chip-rgb), 0.28), transparent 16px),
+        linear-gradient(90deg, rgba(var(--chip-rgb), 0.18), transparent 58%),
+        linear-gradient(180deg, rgba(var(--on-surface-rgb), 0.055), rgba(var(--surface-elevated-rgb), 0.10));
+    color: rgba(var(--on-surface-rgb), 0.72);
+    box-shadow: 0 1px 0 rgba(var(--on-surface-rgb), 0.045) inset;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+    isolation: isolate;
+    text-transform: none;
+}
+
+.wp-mode-chip::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgb(var(--chip-rgb));
+    box-shadow:
+        0 0 0 3px rgba(var(--chip-rgb), 0.10),
+        0 0 12px rgba(var(--chip-rgb), 0.58);
+    flex: 0 0 auto;
+}
+
+.wp-mode-chip::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background:
+        linear-gradient(90deg, rgb(var(--chip-rgb)), rgba(var(--chip-rgb), 0.38) 30%, transparent 78%);
+    box-shadow: 0 0 12px rgba(var(--chip-rgb), 0.42);
+    opacity: 0.86;
+}
+
+.wp-mode-chip.bing {
+    --chip-rgb: 59, 130, 246;
+}
+
+.wp-mode-chip.upload {
+    --chip-rgb: 34, 197, 94;
+}
+
+.wp-mode-chip.folder {
+    --chip-rgb: 234, 179, 8;
+}
+
+.wp-mode-chip.rss {
+    --chip-rgb: 249, 115, 22;
+}
+
+.wp-mode-chip.api {
+    --chip-rgb: 168, 85, 247;
 }
 
 /* L1 buttons */
@@ -116,9 +162,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(var(--stroke-rgb), 0.56);
+    margin-top: 14px;
+    padding-top: 13px;
+    border-top: 1px solid rgba(var(--stroke-rgb), 0.42);
     gap: 8px;
 }
 
@@ -128,8 +174,8 @@
     padding: 9px 12px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--control-border);
-    background: rgba(var(--surface-elevated-rgb), 0.50);
-    color: var(--text-primary);
+    background: rgba(var(--surface-elevated-rgb), 0.32);
+    color: var(--text-secondary);
     font-size: 12px;
     font-weight: 600;
     font-family: inherit;
@@ -139,7 +185,7 @@
 }
 
 .l1-adv-btn:hover {
-    background: rgba(var(--tint-rgb), 0.18);
+    background: rgba(var(--surface-elevated-rgb), 0.52);
     border-color: var(--control-border-hover);
     color: var(--text-primary);
 }
@@ -180,65 +226,74 @@
     letter-spacing: 0;
 }
 
-/* ========== L1 本地画廊（保留原始逻辑，仅 hover/drag 保留 scale） ========== */
-.local-gallery {
-    margin: 12px 0 0;
-    padding: 12px 0 0;
+/* ========== L1 统一画廊 ========== */
+.wallpaper-gallery {
+    margin: 0;
+    padding: 0;
     border-radius: 0;
     border: 0;
-    border-top: 1px solid rgba(var(--stroke-rgb), 0.46);
     background: transparent;
     box-shadow: none;
 }
 
-.local-gallery-grid {
+.wallpaper-gallery-grid {
     display: grid;
-    gap: 7px;
-    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    grid-template-columns: repeat(var(--gallery-cols, 3), minmax(0, 1fr));
+    align-items: start;
 }
 
-.local-gallery-grid:has(.local-thumb:nth-child(4):last-child) {
-    grid-template-columns: 1fr 1fr;
-}
-
-.local-thumb {
+.wallpaper-thumb {
     aspect-ratio: 16 / 9;
-    border-radius: 6px;
+    border-radius: 8px;
     background-size: cover;
     background-position: center;
-    cursor: pointer;
+    cursor: default;
     position: relative;
     border: 1px solid rgba(var(--stroke-rgb), 0.52);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s;
+    background-color: rgba(var(--surface-elevated-rgb), 0.34);
+    box-shadow:
+        0 9px 20px rgba(0, 0, 0, 0.20),
+        0 1px 0 rgba(var(--on-surface-rgb), 0.05) inset;
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s, opacity 0.18s ease;
 }
 
-.local-thumb:hover {
+.wallpaper-thumb:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
+    box-shadow:
+        0 14px 30px rgba(0, 0, 0, 0.32),
+        0 0 0 1px rgba(var(--accent-rgb), 0.16);
     border-color: rgba(var(--accent-rgb), 0.34);
     z-index: 2;
 }
 
-.local-thumb.dragging {
+.wallpaper-thumb[data-source="upload"] {
+    cursor: grab;
+}
+
+.wallpaper-thumb.dragging {
     z-index: 1000;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: grabbing;
     pointer-events: none;
     transform: scale(1.08);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-    border-color: rgba(var(--border-rgb), 0.24);
+    box-shadow:
+        0 22px 48px rgba(0, 0, 0, 0.52),
+        0 0 0 1px rgba(var(--accent-rgb), 0.26);
+    border-color: rgba(var(--accent-rgb), 0.36);
 }
 
-.local-thumb.drag-placeholder {
-    opacity: 0.25;
-    border: 1px dashed rgba(var(--border-rgb), 0.20);
-    background: rgba(var(--surface-soft-rgb), 0.18);
+.wallpaper-thumb.drag-placeholder {
+    opacity: 0.34;
+    border: 1px dashed rgba(var(--accent-rgb), 0.34);
+    background: rgba(var(--surface-elevated-rgb), 0.20);
     cursor: default;
     pointer-events: none;
+    box-shadow: none;
 }
 
-.local-thumb-del {
+.wallpaper-thumb-del {
     position: absolute;
     top: 4px;
     right: 4px;
@@ -258,13 +313,56 @@
     justify-content: center;
 }
 
-.local-thumb:hover .local-thumb-del {
+.wallpaper-thumb-del::before,
+.wallpaper-thumb-del::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 1.5px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.wallpaper-thumb-del::before {
+    transform: rotate(45deg);
+}
+
+.wallpaper-thumb-del::after {
+    transform: rotate(-45deg);
+}
+
+.wallpaper-thumb:hover .wallpaper-thumb-del {
     opacity: 1;
 }
 
-/* Upload button inside gallery */
-.local-gallery > .panel-btn.primary {
-    margin-top: 10px;
+.wallpaper-thumb-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    background:
+        linear-gradient(135deg, rgba(var(--surface-elevated-rgb), 0.48), rgba(var(--surface-base-rgb), 0.28));
+}
+
+.gallery-add-btn {
+    min-height: 28px;
+    margin-top: 9px;
+    padding: 3px 12px 5px;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(var(--surface-elevated-rgb), 0.28);
+}
+
+.gallery-add-btn:hover {
+    color: var(--text-primary);
+    background: rgba(var(--surface-elevated-rgb), 0.48);
 }
 
 /* ========== 文件输入隐藏 ========== */
@@ -1101,7 +1199,7 @@ input[type="file"] {
     .modal-overlay,
     .modal-window,
     .source-drawer-body,
-    .local-thumb {
+    .wallpaper-thumb {
         transition-duration: 0.01ms !important;
     }
 }

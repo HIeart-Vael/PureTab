@@ -62,7 +62,7 @@
     // DOM 元素
     // ================================================================
     var settingsBtn, langBtn, settingsPanel, langPanel, langOptions;
-    var wallpaperInfoEl, uploadBtn, fileInput, resetBtn;
+    var modeChipEl, galleryAnchorEl, uploadBtn, fileInput;
     var searchBar, engineIcon;
     // Modal
     var modalOverlay, modalWindow, modalContent;
@@ -73,10 +73,10 @@
         settingsPanel = document.getElementById('settingsPanel');
         langPanel = document.getElementById('langPanel');
         langOptions = document.getElementById('langOptions');
-        wallpaperInfoEl = document.getElementById('wpInfo');
+        modeChipEl = document.getElementById('wpModeChip');
+        galleryAnchorEl = document.getElementById('galleryAnchor');
         uploadBtn = document.getElementById('uploadBtn');
         fileInput = document.getElementById('fileInput');
-        resetBtn = document.getElementById('resetBtn');
         searchBar = document.getElementById('searchBar');
         engineIcon = document.getElementById('searchEngineIcon');
         // Modal
@@ -107,6 +107,7 @@
     var langBtns = null;
     var activeTab = 'appearance';
     var isRecording = null;
+    var _keepGalleryOpen = false;
 
     // ================================================================
     // 语言面板
@@ -118,8 +119,7 @@
         if (engineIcon) engineIcon.setAttribute('title', t('engineTitle'));
         langBtn.setAttribute('title', t('langTitle'));
         settingsBtn.setAttribute('title', t('settingsTitle'));
-        if (currentMode === 'local') refreshLocalGallery();
-        else wallpaperInfoEl.textContent = t('wpBing');
+        refreshGallery();
         document.querySelectorAll('[data-i18n]').forEach(function (el) {
             var key = el.getAttribute('data-i18n');
             if (el.tagName === 'INPUT' && el.type === 'text') return;
@@ -165,16 +165,34 @@
         settingsPanel.classList.add('active');
         settingsBtn.classList.add('panel-open');
         clearTimeout(cornerHideTimer);
-        if (currentMode === 'local') refreshLocalGallery();
-        else { uploadBtn.style.display = ''; resetBtn.style.display = ''; }
+        refreshGallery();
     }
 
-    function closeSettings() {
+    function hasLocalUploadWallpapers() {
+        return D && D.loadOrder && D.loadOrder().length > 0;
+    }
+
+    function shouldPromptEmptyLocalUpload() {
+        if (!D || !D.getActiveSource || !D.compatMode) return false;
+        return currentMode === 'local' &&
+            D.compatMode(D.getActiveSource()) === 'local' &&
+            !hasLocalUploadWallpapers();
+    }
+
+    function maybePromptEmptyLocalUpload(options) {
+        if (options && options.skipEmptyLocalPicker) return;
+        if (!fileInput || !shouldPromptEmptyLocalUpload()) return;
+        _keepGalleryOpen = false;
+        fileInput.click();
+    }
+
+    function closeSettings(options) {
         if (!isOpen) return;
         isOpen = false;
         settingsPanel.classList.remove('active');
         settingsBtn.classList.remove('panel-open');
         revokeGalleryUrls();
+        maybePromptEmptyLocalUpload(options);
     }
 
     function toggleSettings() {
@@ -185,7 +203,7 @@
     // 语言面板 开/关
     // ================================================================
     function openLangPanel() {
-        if (isOpen) closeSettings();
+        if (isOpen) closeSettings({ skipEmptyLocalPicker: true });
         if (isLangPanelOpen) return;
         isLangPanelOpen = true;
         langPanel.classList.add('active');
@@ -205,16 +223,17 @@
     // ================================================================
     function openModal() {
         if (isModalOpen) return;
-        if (isOpen) closeSettings();
+        if (isOpen) closeSettings({ skipEmptyLocalPicker: true });
         isModalOpen = true;
         renderTabContent();
         modalOverlay.classList.add('active');
     }
 
-    function closeModal() {
+    function closeModal(options) {
         if (!isModalOpen) return;
         isModalOpen = false;
         modalOverlay.classList.remove('active');
+        maybePromptEmptyLocalUpload(options);
     }
 
     // ================================================================
@@ -448,10 +467,6 @@
                         drawer.classList.add('active');
                         return;
                     }
-                    if (nextMode === 'local' && !D.loadOrder().length) {
-                        drawer.classList.add('active');
-                        return;
-                    }
                     if (nextMode === 'bing' && currentMode === 'local' && D.loadOrder().length) {
                         drawer.classList.add('active');
                         resetToBing();
@@ -462,6 +477,8 @@
                         D.setActiveSource(nextMode);
                     }
                     drawer.classList.add('active');
+                    refreshGallery();
+                    if (nextMode === 'local' && !D.loadOrder().length) return;
                     if (window.reloadWallpaper) window.reloadWallpaper();
                 } else {
                     drawer.classList.add('active');
@@ -768,7 +785,7 @@
     }
 
     // ================================================================
-    // 本地画廊（保持原有逻辑，仅样式升级）
+    // 一级面板统一画廊
     // ================================================================
     var _galleryBlobUrls = [];
 
@@ -777,24 +794,141 @@
         _galleryBlobUrls = [];
     }
 
-    function removeLocalGallery() {
-        revokeGalleryUrls();
-        var gallery = document.getElementById('localGallery');
-        if (gallery) gallery.style.display = 'none';
-        uploadBtn.style.display = '';
-        resetBtn.style.display = '';
+    function galleryColumnCount(count) {
+        if (count <= 1) return 1;
+        if (count === 2) return 2;
+        if (count === 4) return 2;
+        return 3;
     }
 
-    function refreshLocalGallery() {
-        if (currentMode !== 'local') return;
+    function nextGalleryIndexAfterDisplayed(displayedIndex, count) {
+        if (count <= 1) return 0;
+        return (displayedIndex + 1) % count;
+    }
+
+    function nextGalleryIndexAfterDisplayedId(order, displayedId) {
+        if (!order || order.length <= 1) return 0;
+        var displayedIndex = order.indexOf(displayedId);
+        if (displayedIndex < 0) displayedIndex = 0;
+        return nextGalleryIndexAfterDisplayed(displayedIndex, order.length);
+    }
+
+    function saveNextPreviewFromOrder(order, thumbs) {
+        if (!order || !order.length) {
+            D.savePreview(null);
+            return;
+        }
+        var nextId = order[D.getActiveIndex() % order.length];
+        if (thumbs[nextId]) D.savePreview(thumbs[nextId]);
+        else D.savePreview(null);
+    }
+
+    function syncNextUploadPosition(displayedId) {
         var order = D.loadOrder();
-        if (!order.length) return;
+        if (!displayedId || !order.length) return;
+
+        currentMode = 'local';
+        D.saveActiveIndex(nextGalleryIndexAfterDisplayedId(order, displayedId));
+        saveNextPreviewFromOrder(order, D.loadThumbs());
+    }
+
+    function displayMode() {
+        return currentMode === 'local' ? 'upload' : currentMode;
+    }
+
+    function updateModeChip() {
+        if (!modeChipEl) return;
+        var source = displayMode();
+        modeChipEl.textContent = getSourceLabel(source);
+        modeChipEl.className = 'wp-mode-chip ' + source;
+    }
+
+    function removeGallery() {
+        revokeGalleryUrls();
+        var gallery = document.getElementById('wallpaperGallery');
+        if (gallery) gallery.style.display = 'none';
+        if (uploadBtn) uploadBtn.style.display = 'none';
+    }
+
+    function currentWallpaperThumb(source) {
+        var thumbs = D.loadThumbs();
+        if (source === 'bing') return thumbs.bing || D.loadPreview();
+        if (source === 'api') return thumbs.api || D.loadPreview();
+        return D.loadPreview();
+    }
+
+    function singleGalleryItems(source) {
+        var thumb = currentWallpaperThumb(source);
+        return [{
+            id: source,
+            source: source,
+            title: getSourceLabel(source),
+            bg: thumb || '',
+            deletable: false,
+            draggable: false
+        }];
+    }
+
+    function folderGalleryItems() {
+        var order = D.loadWallpaper().cache.order || [];
+        var thumbs = D.loadThumbs();
+        var visible = order.filter(function (id) { return id !== 'bing' && id !== 'api'; }).slice(0, 12);
+        if (!visible.length) return singleGalleryItems('folder');
+        return visible.map(function (id) {
+            return {
+                id: id,
+                source: 'folder',
+                title: id,
+                bg: thumbs[id] || '',
+                deletable: false,
+                draggable: false
+            };
+        });
+    }
+
+    function rssGalleryItems() {
+        var order = D.loadWallpaper().cache.order || [];
+        var thumbs = D.loadThumbs();
+        var visible = order.filter(function (id) { return id && id.indexOf('rss_') === 0; }).slice(0, 12);
+        if (!visible.length) return singleGalleryItems('rss');
+        return visible.map(function (id) {
+            return {
+                id: id,
+                source: 'rss',
+                title: id,
+                bg: thumbs[id] || '',
+                deletable: false,
+                draggable: false
+            };
+        });
+    }
+
+    function refreshGallery() {
+        updateModeChip();
+
+        if (!isOpen) return;
+        if (currentMode === 'local' || currentMode === 'upload') return refreshUploadGallery();
+
+        if (uploadBtn) uploadBtn.style.display = 'none';
+
+        if (currentMode === 'folder') return renderGallery(folderGalleryItems(), { source: 'folder' });
+        if (currentMode === 'rss') return renderGallery(rssGalleryItems(), { source: 'rss' });
+        if (currentMode === 'api') return renderGallery(singleGalleryItems('api'), { source: 'api' });
+        return renderGallery(singleGalleryItems('bing'), { source: 'bing' });
+    }
+
+    function refreshUploadGallery() {
+        var order = D.loadOrder();
+        if (!order.length) {
+            renderGallery([], { source: 'upload', canAdd: true });
+            return;
+        }
         var thumbs = D.loadThumbs();
         var meta = D.loadMeta();
 
         var allCached = order.every(function (id) { return meta[id] && thumbs[id]; });
         if (allCached) {
-            renderLocalGallery(order, order.map(function (id) { return meta[id]; }), thumbs);
+            renderUploadGallery(order, order.map(function (id) { return meta[id]; }), thumbs);
             return;
         }
 
@@ -810,55 +944,84 @@
                 }
             });
             if (changed) D.saveMeta(m);
-            renderLocalGallery(order, images, thumbs);
+            renderUploadGallery(order, images, thumbs);
         }).catch(function (err) {
-            console.error('PlainTab: IDB read failed in refreshLocalGallery, falling back to localStorage', err);
+            console.error('PlainTab: IDB read failed in refreshUploadGallery, falling back to localStorage', err);
             if (!isOpen) return;
-            renderLocalGallery(order, order.map(function (id) { return meta[id] || { name: '', size: 0 }; }), thumbs);
+            renderUploadGallery(order, order.map(function (id) { return meta[id] || { name: '', size: 0 }; }), thumbs);
         });
     }
 
     function ensureGalleryContainer() {
-        var gallery = document.getElementById('localGallery');
+        var gallery = document.getElementById('wallpaperGallery');
         if (!gallery) {
             gallery = document.createElement('div');
-            gallery.id = 'localGallery';
-            gallery.className = 'local-gallery';
-            wallpaperInfoEl.parentNode.insertBefore(gallery, uploadBtn);
+            gallery.id = 'wallpaperGallery';
+            gallery.className = 'wallpaper-gallery';
+            var anchor = galleryAnchorEl || uploadBtn;
+            anchor.parentNode.insertBefore(gallery, anchor);
         }
         gallery.replaceChildren();
         gallery.style.display = 'block';
         return gallery;
     }
 
-    function buildGalleryGrid(order, images, thumbs) {
-        var grid = document.createElement('div');
-        grid.className = 'local-gallery-grid';
-
-        order.forEach(function (id, i) {
-            var card = document.createElement('div');
-            card.className = 'local-thumb';
-            card.setAttribute('data-id', id);
-            card.setAttribute('draggable', 'false');
-
-            var bg = thumbs[id];
+    function buildUploadItems(order, images, thumbs) {
+        return order.slice(0, 12).map(function (id, i) {
             var imgMeta = images[i];
+            var bg = thumbs[id];
             if (!bg && imgMeta && imgMeta.blob && imgMeta.blob.size > 0) {
                 var url = URL.createObjectURL(imgMeta.blob);
                 _galleryBlobUrls.push(url);
                 bg = 'url(' + url + ')';
             }
-            if (bg) card.style.backgroundImage = bg;
+            return {
+                id: id,
+                source: 'upload',
+                title: imgMeta && imgMeta.name ? imgMeta.name : id,
+                bg: bg || '',
+                deletable: true,
+                draggable: true
+            };
+        });
+    }
 
-            var delBtn = document.createElement('button');
-            delBtn.className = 'local-thumb-del';
-            delBtn.title = t('deleteImage') + (imgMeta && imgMeta.name ? ': ' + imgMeta.name : '');
-            delBtn.setAttribute('data-id', id);
-            delBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                deleteLocalImage(this.dataset.id);
-            });
-            card.appendChild(delBtn);
+    function buildGalleryGrid(items, options) {
+        options = options || {};
+        var grid = document.createElement('div');
+        grid.className = 'wallpaper-gallery-grid';
+        grid.style.setProperty('--gallery-cols', galleryColumnCount(items.length));
+
+        items.forEach(function (item) {
+            var card = document.createElement('div');
+            card.className = 'wallpaper-thumb';
+            card.setAttribute('data-id', item.id);
+            card.setAttribute('data-source', item.source || options.source || '');
+            card.setAttribute('draggable', 'false');
+            if (item.title) card.title = item.title;
+
+            if (item.bg) {
+                card.style.backgroundImage = item.bg;
+            } else {
+                card.classList.add('is-empty');
+                var fallback = document.createElement('span');
+                fallback.className = 'wallpaper-thumb-fallback';
+                fallback.textContent = (item.title || item.id || '?').charAt(0).toUpperCase();
+                card.appendChild(fallback);
+            }
+
+            if (item.deletable) {
+                var delBtn = document.createElement('button');
+                delBtn.className = 'wallpaper-thumb-del';
+                delBtn.title = t('deleteImage') + (item.title ? ': ' + item.title : '');
+                delBtn.setAttribute('data-id', item.id);
+                delBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    deleteLocalImage(this.dataset.id);
+                });
+                card.appendChild(delBtn);
+            }
+
             grid.appendChild(card);
         });
 
@@ -866,13 +1029,14 @@
     }
 
     function setupGalleryDrag(grid) {
+        if (!grid || grid.children.length < 2) return;
         var pressTimer = null;
         grid.style.touchAction = 'none';
 
         function getCard(e) {
             var el = e.target;
             while (el && el !== grid) {
-                if (el.classList && el.classList.contains('local-thumb')) return el;
+                if (el.classList && el.classList.contains('wallpaper-thumb')) return el;
                 el = el.parentNode;
             }
             return null;
@@ -881,7 +1045,7 @@
         function onPointerDown(e) {
             if (e.button !== 0) return;
             var card = getCard(e);
-            if (!card || e.target.classList.contains('local-thumb-del')) return;
+            if (!card || e.target.classList.contains('wallpaper-thumb-del')) return;
 
             var startX = e.clientX, startY = e.clientY;
 
@@ -891,7 +1055,7 @@
                 try { card.setPointerCapture(e.pointerId); } catch (ex) {}
 
                 var placeholder = document.createElement('div');
-                placeholder.className = 'local-thumb drag-placeholder';
+                placeholder.className = 'wallpaper-thumb drag-placeholder';
                 placeholder.style.height = card.offsetHeight + 'px';
                 card.parentNode.insertBefore(placeholder, card);
 
@@ -977,9 +1141,9 @@
 
                 function onUp() {
                     var phRect = dragState.placeholder.getBoundingClientRect();
-                    var spring = 'left 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
-                        'top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
-                        'opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), ' +
+                    var spring = 'left 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), ' +
+                        'top 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), ' +
+                        'opacity 0.2s, transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), ' +
                         'box-shadow 0.25s';
                     dragState.card.style.transition = spring;
                     dragState.card.style.left = phRect.left + 'px';
@@ -998,14 +1162,14 @@
                         grid.insertBefore(dragState.card, dragState.placeholder);
                         grid.removeChild(dragState.placeholder);
 
-                        var allCards = grid.querySelectorAll('.local-thumb');
+                        var allCards = grid.querySelectorAll('.wallpaper-thumb');
                         for (var ci = 0; ci < allCards.length; ci++) {
                             allCards[ci].style.transition = '';
                             allCards[ci].style.transform = '';
                         }
 
                         var newOrder = [];
-                        Array.prototype.forEach.call(grid.querySelectorAll('.local-thumb[data-id]'), function (c) {
+                        Array.prototype.forEach.call(grid.querySelectorAll('.wallpaper-thumb[data-id]'), function (c) {
                             newOrder.push(c.dataset.id);
                         });
                         var oldOrder = D.loadOrder();
@@ -1019,7 +1183,7 @@
                                 D.savePreview(thumbs[nextId]);
                             }
                         }
-                    }, 300);
+                    }, 240);
 
                     document.removeEventListener('pointermove', onMove);
                     document.removeEventListener('pointerup', onUp);
@@ -1051,29 +1215,24 @@
         grid.addEventListener('pointerdown', onPointerDown);
     }
 
-    function renderLocalGallery(order, images, thumbs) {
+    function renderGallery(items, options) {
+        options = options || {};
         revokeGalleryUrls();
         var gallery = ensureGalleryContainer();
 
-        wallpaperInfoEl.textContent = t('wpLocal') + ' · ' + order.length + ' ' + t('imageCount');
-
-        var grid = buildGalleryGrid(order, images, thumbs);
+        var grid = buildGalleryGrid(items, options);
         gallery.appendChild(grid);
-        setupGalleryDrag(grid);
 
-        if (order.length < 12) {
-            var addBtn = document.createElement('button');
-            addBtn.className = 'panel-btn primary';
-            addBtn.textContent = '+ ' + t('addImage');
-            addBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                _keepGalleryOpen = true;
-                fileInput.click();
-            });
-            gallery.appendChild(addBtn);
-        }
+        if (options.draggable) setupGalleryDrag(grid);
+        if (uploadBtn) uploadBtn.style.display = options.canAdd ? '' : 'none';
+    }
 
-        uploadBtn.style.display = 'none';
+    function renderUploadGallery(order, images, thumbs) {
+        renderGallery(buildUploadItems(order, images, thumbs), {
+            source: 'upload',
+            canAdd: order.length < 12,
+            draggable: order.length > 1
+        });
     }
 
     // ================================================================
@@ -1107,18 +1266,9 @@
                 meta[id] = { name: file.name || '', size: file.size || 0 };
                 D.saveMeta(meta);
 
-                if (show && order.length) {
-                    currentMode = 'local';
-                    var curIdx = D.getActiveIndex() % order.length;
-                    var nextId = order[curIdx];
-                    if (thumbs[nextId]) {
-                        D.savePreview(thumbs[nextId]);
-                    }
-                }
-
-                return true;
+                return { id: id, shown: show };
             });
-        }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return false; });
+        }).catch(function (e) { warn('Local', 'save failed: ' + e.message); return null; });
     }
 
     function deleteLocalImage(id) {
@@ -1141,8 +1291,8 @@
             D.savePreview(null);
             D.setActiveSource('bing');
             currentMode = 'bing';
-            wallpaperInfoEl.textContent = t('wpBing');
-            removeLocalGallery();
+            updateModeChip();
+            removeGallery();
             return D.idbDelete(D.imgKey(id)).then(function () {
                 if (window.reloadWallpaper) window.reloadWallpaper();
             }).catch(function () {});
@@ -1156,7 +1306,7 @@
         }
 
         return D.idbDelete(D.imgKey(id)).then(function () {
-            refreshLocalGallery();
+            refreshGallery();
         }).catch(function (e) { warn('Local', 'delete blob failed: ' + (e && e.message)); });
     }
 
@@ -1166,7 +1316,7 @@
         if (count > 1 && !confirm(t('resetConfirm'))) return;
 
         currentMode = 'bing';
-        removeLocalGallery();
+        removeGallery();
         D.savePreview(null);
         D.saveThumbs({});
         D.clearCaches();
@@ -1178,7 +1328,6 @@
         return D.idbDeleteMany(order.map(function (id) { return D.imgKey(id); })).then(function () {
             if (window.reloadWallpaper) window.reloadWallpaper();
         }).then(function () {
-            wallpaperInfoEl.textContent = t('wpBing');
             closeSettings();
         }).catch(function () { closeSettings(); });
     }
@@ -1219,8 +1368,6 @@
     // ================================================================
     // 事件绑定
     // ================================================================
-    var _keepGalleryOpen = false;
-
     function bindEvents() {
         // L1 面板 — 齿轮按钮
         settingsBtn.addEventListener('click', function (e) {
@@ -1240,7 +1387,7 @@
 
         // L1 面板鼠标事件
         settingsPanel.addEventListener('mouseenter', function () { clearTimeout(cornerHideTimer); isMouseInCornerZone = true; });
-        settingsPanel.addEventListener('mouseleave', function () { isMouseInCornerZone = false; cornerHideTimer = setTimeout(function () { closeSettings(); hideCorners(); }, 500); });
+        settingsPanel.addEventListener('mouseleave', function () { isMouseInCornerZone = false; cornerHideTimer = setTimeout(function () { closeSettings({ skipEmptyLocalPicker: true }); hideCorners(); }, 500); });
         settingsPanel.addEventListener('click', function (e) { e.stopPropagation(); });
 
         // 语言面板鼠标事件
@@ -1279,27 +1426,30 @@
 
                 if (!deduped.length) {
                     log('Local', 'all ' + files.length + ' file(s) were duplicates, nothing to add');
-                    if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
+                    if (_keepGalleryOpen) refreshGallery(); else closeSettings();
                     return;
                 }
 
                 var saved = 0;
+                var displayedUploadId = null;
                 var chain = Promise.resolve();
                 deduped.forEach(function (file) {
                     chain = chain.then(function () {
                         var show = saved === 0;
-                        return saveLocalImage(file, show).then(function (ok) { if (ok) saved++; });
+                        return saveLocalImage(file, show).then(function (result) {
+                            if (!result) return;
+                            saved++;
+                            if (result.shown) displayedUploadId = result.id;
+                            syncNextUploadPosition(displayedUploadId);
+                        });
                     });
                 });
                 return chain.then(function () {
                     log('Local', 'saved ' + saved + ' of ' + files.length + ' selected (' + (files.length - deduped.length) + ' duplicates skipped)');
-                    if (_keepGalleryOpen) refreshLocalGallery(); else closeSettings();
+                    if (_keepGalleryOpen) refreshGallery(); else closeSettings();
                 });
             });
         });
-
-        // L1 重置按钮
-        resetBtn.addEventListener('click', function (e) { e.stopPropagation(); resetToBing(); });
 
         // L1 高级设置按钮 → 打开模态窗口
         var advSettingsBtn = document.getElementById('advSettingsBtn');
@@ -1366,14 +1516,14 @@
         getCurrentMode: function () { return currentMode; },
         setCurrentMode: function (m) { currentMode = m; },
         getCurrentLang: function () { return currentLang; },
-        setWallpaperInfo: function (text) { wallpaperInfoEl.textContent = text; },
+        setWallpaperInfo: refreshGallery,
         getEngineIndex: function () { return engineIndex; },
         setEngineIndex: function (i) { engineIndex = i; },
         isNearTopRight: isNearTopRight,
         showCorners: showCorners,
         hideCorners: hideCorners,
         isExtension: IS_EXTENSION,
-        refresh: refreshLocalGallery
+        refresh: refreshGallery
     };
 
     // 导出 t() 给全局
