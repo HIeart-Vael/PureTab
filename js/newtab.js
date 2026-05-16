@@ -58,6 +58,7 @@
 
     var isMouseInSearchZone = false;
     var searchHideTimer = null;
+    var paletteLoadPromise = null;
 
     // ================================================================
     // 壁纸 — 主加载流程（编排层）
@@ -228,6 +229,65 @@
             String(e.key || '').toLowerCase() === key;
     }
 
+    function loadShortcutSettings() {
+        if (D && D.loadShortcutsModel) return D.loadShortcutsModel().settings || {};
+        return {};
+    }
+
+    function loadPaletteHotkey() {
+        return loadShortcutSettings().primaryHotkey || 'ctrl+k';
+    }
+
+    function loadPaletteHiddenHotkey() {
+        return loadShortcutSettings().hiddenHotkey || 'ctrl+shift+k';
+    }
+
+    function ensureStylesheet(href) {
+        var existing = document.querySelector('link[href="' + href + '"]');
+        if (existing) return Promise.resolve();
+        return new Promise(function (resolve) {
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            link.onload = function () { resolve(); };
+            link.onerror = function () { resolve(); };
+            document.head.appendChild(link);
+        });
+    }
+
+    function ensureScript(src) {
+        var existing = document.querySelector('script[src="' + src + '"]');
+        if (existing) return Promise.resolve();
+        return new Promise(function (resolve, reject) {
+            var script = document.createElement('script');
+            script.src = src;
+            script.onload = function () { resolve(); };
+            script.onerror = function () { reject(new Error('failed to load ' + src)); };
+            document.body.appendChild(script);
+        });
+    }
+
+    function ensurePalette() {
+        if (window.Palette) return Promise.resolve(window.Palette);
+        if (!paletteLoadPromise) {
+            paletteLoadPromise = Promise.all([
+                ensureStylesheet('css/palette.css'),
+                ensureScript('js/palette.js')
+            ]).then(function () { return window.Palette; });
+        }
+        return paletteLoadPromise;
+    }
+
+    function openPalette(hidden) {
+        ensurePalette().then(function (palette) {
+            if (!palette) return;
+            if (hidden) palette.openHidden();
+            else palette.open();
+        }).catch(function (e) {
+            warn('Palette', e.message || 'failed to load command palette');
+        });
+    }
+
     function bindGlobalEvents() {
         // --- 全局鼠标跟踪 ---
 
@@ -270,8 +330,8 @@
                 if (e.key !== 'Escape') return;
             }
             if (e.key === 'Escape') { SP.closeAll(); SP.hideCorners(); }
-            if (window.Palette && eventMatchesHotkey(e, window.Palette.loadHotkey())) { e.preventDefault(); window.Palette.open(); return; }
-            if (window.Palette && eventMatchesHotkey(e, window.Palette.loadHiddenHotkey())) { e.preventDefault(); window.Palette.openHidden(); return; }
+            if (eventMatchesHotkey(e, window.Palette ? window.Palette.loadHotkey() : loadPaletteHotkey())) { e.preventDefault(); openPalette(false); return; }
+            if (eventMatchesHotkey(e, window.Palette ? window.Palette.loadHiddenHotkey() : loadPaletteHiddenHotkey())) { e.preventDefault(); openPalette(true); return; }
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); if (SP.isModalOpen && SP.isModalOpen()) SP.closeModal(); else SP.openModal(); return; }
             if (e.key === 'Enter' && document.activeElement === searchInput) { doSearch(searchInput.value); return; }
         });
@@ -281,14 +341,14 @@
         document.addEventListener('dblclick', function (e) {
             if (window.Palette && window.Palette.isOpen) return;
             if (e.target.closest('button, input, select, .settings-panel, .language-panel')) return;
-            if (window.Palette) window.Palette.open();
+            openPalette(false);
         });
 
         document.addEventListener('auxclick', function (e) {
             if (e.button !== 1) return;
             if (window.Palette && window.Palette.isOpen) return;
             e.preventDefault();
-            if (window.Palette) window.Palette.openHidden();
+            openPalette(true);
         });
 
         // --- 全局点击关闭 / 搜索聚焦 ---

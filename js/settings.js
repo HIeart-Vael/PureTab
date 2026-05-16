@@ -126,6 +126,7 @@
     var langBtns = null;
     var activeTab = 'appearance';
     var isRecording = null;
+    var isHydratingSettings = false;
     var _keepGalleryOpen = false;
     var wallpaperBlurApplyTimer = null;
     var wallpaperBlurSaveTimer = null;
@@ -315,6 +316,41 @@
     function tr(key, fallback) {
         var value = t(key);
         return value && value !== key ? value : fallback;
+    }
+
+    function loadShortcutSettings() {
+        return D.loadShortcutsModel().settings || {};
+    }
+
+    function updateShortcutSettings(mutator) {
+        var model = D.loadShortcutsModel();
+        if (!model.settings) model.settings = {};
+        mutator(model.settings);
+        D.saveShortcutsModel(model);
+    }
+
+    function loadPaletteHotkey() {
+        return loadShortcutSettings().primaryHotkey || 'ctrl+k';
+    }
+
+    function savePaletteHotkey(key) {
+        updateShortcutSettings(function (settings) { settings.primaryHotkey = key; });
+    }
+
+    function loadPaletteHiddenHotkey() {
+        return loadShortcutSettings().hiddenHotkey || 'ctrl+shift+k';
+    }
+
+    function savePaletteHiddenHotkey(key) {
+        updateShortcutSettings(function (settings) { settings.hiddenHotkey = key; });
+    }
+
+    function loadPaletteRecommend() {
+        return loadShortcutSettings().recommendEnabled !== false;
+    }
+
+    function savePaletteRecommend(value) {
+        updateShortcutSettings(function (settings) { settings.recommendEnabled = !!value; });
     }
 
     function buildPageShell(title, subtitle, body) {
@@ -741,9 +777,9 @@
     }
 
     function buildShortcutsHTML() {
-        var hkNormal = window.Palette ? window.Palette.loadHotkey() : 'ctrl+k';
-        var hkHidden = window.Palette ? window.Palette.loadHiddenHotkey() : 'ctrl+shift+k';
-        var checked = (!window.Palette || window.Palette.loadRecommend()) ? ' checked' : '';
+        var hkNormal = loadPaletteHotkey();
+        var hkHidden = loadPaletteHiddenHotkey();
+        var checked = loadPaletteRecommend() ? ' checked' : '';
 
         var body = '<div class="setting-stack">' +
             settingItem(t('cpHotkeyLabel') || '命令面板快捷键', modalCopy('modalDescHotkey', '打开命令面板与快捷入口。'), '<input type="text" class="hotkey-input" id="hkNormal" value="' + hkNormal + '" readonly>') +
@@ -762,7 +798,7 @@
         if (hkNormalEl) hkNormalEl.addEventListener('click', function () { startRecording('normal', hkNormalEl); });
         if (hkHiddenEl) hkHiddenEl.addEventListener('click', function () { startRecording('hidden', hkHiddenEl); });
         if (cpRec) cpRec.addEventListener('change', function () {
-            if (window.Palette) window.Palette.saveRecommend(cpRec.checked);
+            savePaletteRecommend(cpRec.checked);
         });
     }
 
@@ -1072,6 +1108,7 @@
     }
 
     function saveAllSettings() {
+        if (isHydratingSettings) return true;
         var ui = D.loadUI();
         if (!ui.search) ui.search = {};
         if (!ui.wallpaper) ui.wallpaper = {};
@@ -1125,22 +1162,27 @@
         themeEnabled = wallpaper.themeEnabled === true;
         currentEngine = search.engine || DEFAULT_ENGINE;
 
-        applySearchMode(searchMode);
-        applySearchPosition(searchPosition);
-        applySearchIconPosition(searchIconPosition);
-        applySearchWidth(searchWidth);
-        applySearchBackgroundOpacity(searchBackgroundOpacity);
-        applySearchBlur(searchBlur);
-        applySearchRadius(searchRadius);
-        applyOpacity(currentOpacity);
-        applyWallpaperFit(wallpaperFit);
-        applyWallpaperPosition(wallpaperPosition);
-        applyWallpaperBlur(wallpaperBlur);
-        applyOverlayOpacity(overlayOpacity);
-        applyPanelOpacity(panelOpacity);
-        applyUiRadius(uiRadius);
-        applyThemeMode(themeEnabled);
-        if (!IS_EXTENSION) applyEngine(currentEngine);
+        isHydratingSettings = true;
+        try {
+            applySearchMode(searchMode);
+            applySearchPosition(searchPosition);
+            applySearchIconPosition(searchIconPosition);
+            applySearchWidth(searchWidth);
+            applySearchBackgroundOpacity(searchBackgroundOpacity);
+            applySearchBlur(searchBlur);
+            applySearchRadius(searchRadius);
+            applyOpacity(currentOpacity);
+            applyWallpaperFit(wallpaperFit);
+            applyWallpaperPosition(wallpaperPosition);
+            applyWallpaperBlur(wallpaperBlur);
+            applyOverlayOpacity(overlayOpacity);
+            applyPanelOpacity(panelOpacity);
+            applyUiRadius(uiRadius);
+            applyThemeMode(themeEnabled);
+            if (!IS_EXTENSION) applyEngine(currentEngine);
+        } finally {
+            isHydratingSettings = false;
+        }
     }
 
     function resetAppearanceDefaults() {
@@ -1208,8 +1250,8 @@
         if (el) {
             el.classList.remove('recording');
             el.value = isRecording === 'normal'
-                ? (window.Palette ? window.Palette.loadHotkey() : 'ctrl+k')
-                : (window.Palette ? window.Palette.loadHiddenHotkey() : 'ctrl+shift+k');
+                ? loadPaletteHotkey()
+                : loadPaletteHiddenHotkey();
         }
         isRecording = null;
     }
@@ -1248,10 +1290,8 @@
             el.value = combo;
             el.classList.remove('recording');
 
-            if (window.Palette) {
-                if (isRecording === 'normal') window.Palette.saveHotkey(combo);
-                else window.Palette.saveHiddenHotkey(combo);
-            }
+            if (isRecording === 'normal') savePaletteHotkey(combo);
+            else savePaletteHiddenHotkey(combo);
 
             isRecording = null;
         } else {
