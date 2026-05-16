@@ -43,6 +43,13 @@
         var isBlobUrl = url.indexOf('blob:') === 0;
 
         return preloadImage(url).then(function (img) {
+            // 提取壁纸主题色（纯内存），开关开启时应用
+            if (img && window.WallpaperTheme) {
+                window.WallpaperTheme.extract(img);
+                if (localStorage.getItem('ptab_wp_theme_enabled') === 'true') {
+                    window.WallpaperTheme.applyCurrent();
+                }
+            }
             wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
             void wallpaperFrontEl.offsetWidth;
             wallpaperFrontEl.style.transition = 'opacity ' + transitionMs + 'ms ease-out';

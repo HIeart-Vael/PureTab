@@ -1,17 +1,59 @@
 :root {
-    --fallback-start: #1a1a2e;
-    --fallback-mid: #16213e;
-    --fallback-end: #0f3460;
+    --fallback-start: #0b0d12;
+    --fallback-mid: #10131a;
+    --fallback-end: #161a22;
     color-scheme: dark;
     --icon-opacity: 0.45;
-    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --glass-bg: rgba(18, 18, 22, 0.82);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-    --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
-    --text-primary: rgba(255, 255, 255, 0.9);
-    --text-secondary: rgba(255, 255, 255, 0.5);
-    --text-muted: rgba(255, 255, 255, 0.35);
-    --accent-rgb: 99, 128, 255;
+    --panel-opacity: 0.88;
+    --transition: 0.18s ease;
+    --surface-base-rgb: 18, 20, 27;
+    --surface-elevated-rgb: 28, 31, 40;
+    --tint-rgb: 64, 70, 92;
+    --stroke-rgb: 54, 61, 78;
+    --on-surface-rgb: 244, 247, 251;
+    --on-surface-muted-rgb: 166, 176, 193;
+    --surface-base: rgb(var(--surface-base-rgb));
+    --surface-elevated: rgb(var(--surface-elevated-rgb));
+    --tint: rgb(var(--tint-rgb));
+    --stroke: rgb(var(--stroke-rgb));
+    --on-surface: rgb(var(--on-surface-rgb));
+    --on-surface-muted: rgb(var(--on-surface-muted-rgb));
+    --accent: rgb(var(--accent-rgb));
+    --theme-surface-base-rgb: 18, 20, 27;
+    --theme-surface-elevated-rgb: 28, 31, 40;
+    --theme-tint-rgb: 64, 70, 92;
+    --theme-stroke-rgb: 54, 61, 78;
+    --theme-on-surface-rgb: 244, 247, 251;
+    --theme-on-surface-muted-rgb: 166, 176, 193;
+    --theme-accent-rgb: 99, 102, 241;
+    --theme-accent-contrast-rgb: 255, 255, 255;
+    --surface-rgb: var(--surface-base-rgb);
+    --surface-soft-rgb: var(--surface-elevated-rgb);
+    --surface-strong-rgb: var(--surface-base-rgb);
+    --border-rgb: var(--stroke-rgb);
+    --text-primary-rgb: var(--on-surface-rgb);
+    --text-secondary-rgb: var(--on-surface-muted-rgb);
+    --text-muted-rgb: var(--on-surface-muted-rgb);
+    --glass-rgb: var(--surface-base-rgb);
+    --glass-bg: rgba(var(--surface-base-rgb), var(--panel-opacity));
+    --glass-tint: linear-gradient(180deg, rgba(var(--tint-rgb), 0.20), rgba(var(--surface-elevated-rgb), 0.08));
+    --glass-border: 1px solid rgba(var(--stroke-rgb), 0.72);
+    --glass-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    --glass-highlight: 0 1px 0 rgba(var(--on-surface-rgb), 0.05) inset;
+    --text-primary: rgba(var(--on-surface-rgb), 0.94);
+    --text-secondary: rgba(var(--on-surface-muted-rgb), 0.78);
+    --text-muted: rgba(var(--on-surface-muted-rgb), 0.58);
+    --accent-rgb: 99, 102, 241;
+    --accent-contrast-rgb: 255, 255, 255;
+    --divider: rgba(var(--stroke-rgb), 0.70);
+    --control-bg: rgba(var(--surface-elevated-rgb), 0.58);
+    --control-bg-hover: rgba(var(--tint-rgb), 0.34);
+    --control-border: rgba(var(--stroke-rgb), 0.74);
+    --control-border-hover: rgba(var(--stroke-rgb), 0.98);
+    --field-bg: rgba(var(--surface-base-rgb), 0.42);
+    --field-bg-hover: rgba(var(--surface-elevated-rgb), 0.72);
+    --accent-soft: rgba(var(--accent-rgb), 0.14);
+    --accent-border: rgba(var(--accent-rgb), 0.32);
     --danger-rgb: 220, 53, 69;
     --success-rgb: 46, 204, 113;
     --warning-rgb: 255, 152, 0;
@@ -19,7 +61,7 @@
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
-    --press-scale: 0.92;
+    --press-scale: 0.97;
 }
 
 * {
@@ -56,11 +98,9 @@ body {
     justify-content: center;
     cursor: pointer;
     z-index: 100;
-    background: rgba(28, 28, 30, 0.35);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: opacity var(--transition), background var(--transition), transform var(--transition);
+    background: var(--glass-tint), var(--glass-bg);
+    border: var(--glass-border);
+    transition: opacity var(--transition), background var(--transition), transform var(--transition), border-color var(--transition);
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     color: inherit;
@@ -69,7 +109,7 @@ body {
 .corner-btn svg {
     width: 18px;
     height: 18px;
-    fill: rgba(255, 255, 255, 0.85);
+    fill: var(--text-primary);
     pointer-events: none;
 }
 
@@ -97,8 +137,8 @@ body {
 .settings-btn.visible,
 .settings-btn:hover {
     opacity: 1;
-    background: rgba(28, 28, 30, 0.6);
-    border-color: rgba(255, 255, 255, 0.22);
+    background: var(--control-bg-hover);
+    border-color: var(--control-border-hover);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
@@ -108,8 +148,8 @@ body {
 
 .settings-btn.panel-open {
     opacity: 1;
-    background: rgba(28, 28, 30, 0.65);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: var(--control-bg-hover);
+    border-color: var(--accent-border);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     transform: rotate(60deg);
 }
@@ -133,26 +173,25 @@ body {
     position: fixed;
     top: 78px;
     right: 76px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: var(--glass-tint), var(--glass-bg);
     border-radius: var(--radius-lg);
+    contain: paint;
     padding: 8px 0;
     min-width: 170px;
-    box-shadow: var(--glass-shadow), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
     border: var(--glass-border);
     z-index: 99;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-8px) scale(0.95);
-    transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+    transform: translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
     user-select: none;
 }
 
 .language-panel.active {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
 }
 
 .lang-title {
@@ -163,7 +202,7 @@ body {
     margin-bottom: 6px;
     padding: 0 18px 8px;
     letter-spacing: -0.01em;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--divider);
 }
 
 .lang-option {
@@ -172,7 +211,7 @@ body {
     padding: 9px 18px;
     background: transparent;
     border: none;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 13px;
     text-align: left;
     cursor: pointer;
@@ -182,13 +221,14 @@ body {
 }
 
 .lang-option:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--control-bg);
+    color: var(--text-primary);
 }
 
 .lang-option.current {
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 600;
-    background: rgba(var(--accent-rgb), 0.12);
+    background: var(--accent-soft);
 }
 
 /* ========== 响应式 ========== */

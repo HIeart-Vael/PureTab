@@ -257,7 +257,7 @@
             if (e.key === 'Escape') { SP.closeAll(); SP.hideCorners(); }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) { e.preventDefault(); if (window.Palette) window.Palette.open(); return; }
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'k') { e.preventDefault(); if (window.Palette) window.Palette.openHidden(); return; }
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); SP.isOpen() ? SP.close() : SP.open(); return; }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); if (SP.isModalOpen && SP.isModalOpen()) SP.closeModal(); else SP.openModal(); return; }
             if (e.key === 'Enter' && document.activeElement === searchInput) { doSearch(searchInput.value); return; }
         });
 

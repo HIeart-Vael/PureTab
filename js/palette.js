@@ -663,6 +663,8 @@
         isPaletteOpen = true;
         isHiddenMode = false;
         cmdOverlay.style.visibility = 'visible';
+        cmdPalette.classList.remove('hidden-mode');
+        cmdPalette.classList.add('normal-mode');
         renderPinnedBar();
         cpSearchInput.value = '';
         cpSearchTerm = '';
@@ -672,7 +674,7 @@
         renderShortcutList('');
         cpSearchInput.focus();
         cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
     }
 
     function openHiddenPalette() {
@@ -684,6 +686,8 @@
         isPaletteOpen = true;
         isHiddenMode = true;
         cmdOverlay.style.visibility = 'visible';
+        cmdPalette.classList.remove('normal-mode');
+        cmdPalette.classList.add('hidden-mode');
         renderPinnedBar();
         cpSearchInput.value = '';
         cpSearchTerm = '';
@@ -693,7 +697,7 @@
         renderShortcutList('');
         cpSearchInput.focus();
         cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px) scale(0.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], { duration: 220, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
     }
 
     function closePalette() {
@@ -707,6 +711,7 @@
         cpCurrentPage = 1;
         cpCurrentMode = 'list';
         cpEditTarget = null;
+        cmdPalette.classList.remove('normal-mode', 'hidden-mode');
     }
 
     function handleSearchInput(e) {
