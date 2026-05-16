@@ -1,0 +1,16 @@
+# Agent Skills
+
+This directory contains the canonical shared skills for PlainTab.
+
+## Ownership
+
+- `.agents/skills/` is the source of truth for reusable project skills.
+- `.claude/skills/` contains thin Claude Code adapters only.
+- If a workflow changes, edit `.agents/skills/<skill>/SKILL.md` first.
+- Keep adapters short and point them back to the canonical skill.
+
+## Current Skills
+
+- `bump-version`: updates the PlainTab version across manifest, README badges, changelogs, store listings, release notes, and project docs.
+
+These files should be committed to git so Codex and other agents can use the project immediately after checkout.

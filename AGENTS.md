@@ -1,238 +1,134 @@
-```md
-# CLAUDE.md
+# AGENTS.md
 
-本文件用于指导 Claude Code（claude.ai/code）在本仓库中进行代码理解、修改与架构决策。
+Shared instructions for AI agents working on PlainTab.
 
----
+PlainTab is a Chrome/Edge Manifest V3 new-tab extension. It is also able to run as a standalone web page by opening `index.html` directly.
 
-## 项目概述
+## Rule Priority
 
-PlainTab 是一个 Chrome/Edge 浏览器扩展（Manifest V3），用于替换新标签页。
+Use this order when instructions conflict:
 
-核心特性：
-- 零闪白极简壁纸体验
-- 双层壁纸渲染（Back / Front）
-- 首帧即渲染的性能优先设计
-- 可作为独立网页运行
-- 零外部依赖，无构建流程（纯原生 JS + CSS）
+1. `.claude/rules/00-core.md`
+2. The matching file under `.claude/rules/`
+3. This `AGENTS.md`
+4. Tool-specific adapters such as `CLAUDE.md`
+5. Reference docs and task notes
 
----
+Before changing core behavior, read `00-core.md` and the relevant module rule. Use `.claude/rules/README.md` as the rule map.
 
-## 开发约束
+## Project Constraints
 
-本项目不使用：
+Do not introduce:
 
-- 构建工具
-- npm / package.json
-- 前端框架（React / Vue / Svelte）
-- lint / test 工具
+- Build tools
+- `npm` or `package.json`
+- Frontend frameworks
+- Lint or test frameworks
+- Large runtime dependencies
 
-技术栈：
-- 原生 JavaScript
-- 原生 CSS
-- ES Modules（允许）
+Use vanilla JavaScript, native CSS, and static browser extension assets.
 
----
+## Required Rule Files
 
-## 运行方式
+- Rule map: `.claude/rules/README.md`
+- Core behavior: `.claude/rules/00-core.md`
+- Storage, IndexedDB, localStorage, migrations: `.claude/rules/10-storage.md`
+- Wallpaper rendering, first paint, image lifecycle: `.claude/rules/20-wallpaper.md`
+- Language detection and fallback: `.claude/rules/30-language.md`
+- Startup flow and global interactions: `.claude/rules/40-runtime.md`
+- Search behavior: `.claude/rules/50-search.md`
+- Settings panel UI and state: `.claude/rules/60-settings.md`
+- Command palette: `.claude/rules/70-command-palette.md`
 
-### 扩展模式
-- chrome://extensions
-- 开启开发者模式
-- 加载已解压扩展
-- 选择项目目录
+## Startup Invariants
 
-### 网页模式
-- 直接打开 index.html
+`index.html` loading order is part of the zero-white-flash design:
 
----
+1. `#wallpaperBack` exists first
+2. `js/preload.js` runs synchronously
+3. `#wallpaperFront` exists
+4. Other DOM follows
+5. `js/languages.js`
+6. Main runtime scripts
 
-## 规则系统（非常重要）
+Do not move `preload.js`, make it async, or add network work to the first-paint path.
 
-本项目存在三层规则体系：
+## Wallpaper And Storage Safety
 
----
+The wallpaper system uses a stable back layer and a transition front layer. At least one layer must always have visible content.
 
-### 1. 系统级规则（最高优先级）
+Storage safety rules:
 
-路径：`.claude/rules/`
+- Write large data before writing references
+- Remove references before deleting large data
+- Access IndexedDB through the storage module, not from unrelated UI code
+- Revoke Blob URLs when they are no longer needed
+- Preserve localStorage key compatibility unless a migration exists
 
-说明：
-- 定义系统架构
-- 定义数据一致性与存储规则
-- 定义运行时行为
-- 定义不可违反的核心约束
+## Performance And UI Rules
 
-👉 修改任何核心功能前必须阅读对应规则文件
+- First paint has priority over structural elegance
+- Startup code must avoid long main-thread work
+- Use `requestIdleCallback` for non-critical follow-up work where appropriate
+- Batch DOM writes and avoid layout thrashing
+- Animate only `opacity` and `transform`
+- Keep UI quiet, minimal, and content-first
+- Do not use heavy glassmorphism, overshoot easing, or large-area scale animations
+- Prefer CSS class changes over dynamic transition/transform style writes in JavaScript
+- Keep shared visual tokens centralized in CSS variables
 
----
+## Scope Discipline
 
-### 2. 项目级规则（本文件 CLAUDE.md）
+- Make the smallest change that solves the task
+- Do not rewrite stable modules for style or architecture alone
+- Do not add abstractions unless they remove real duplicated complexity
+- In fix tasks: fix the bug, do not redesign the system
+- Preserve unrelated user changes in the working tree
 
-说明：
-- 项目结构说明
-- 模块划分方式
-- 开发流程与约束
-- 系统运行机制概览
+## AI Documentation Layout
 
-👉 用于任务理解与执行方式，不是底层规则
+There is no root `ai/` directory. Do not recreate it.
 
----
+Use these locations instead:
 
-### 3. AI 行为规范（参考）
+- `AGENTS.md`: shared AI entry point
+- `CLAUDE.md`: Claude Code adapter only
+- `.claude/rules/`: canonical project rules
+- `.agents/skills/`: canonical shared skills for Codex and generic agents
+- `.claude/skills/`: thin Claude adapters that point to `.agents/skills/`
+- `docs/ai-tasks/`: task plans, review notes, and temporary AI work records
 
-路径：`AGENTS.md`
+Tool caches such as `.superpowers/` and `.playwright-mcp/` are not project documentation.
 
-说明：
-- 性能优化原则
-- UI 约束
-- DOM 操作规范
-- anti-overengineering 指导
-- 调试规范
+## Skill Ownership
 
-👉 在不违反 `.claude/rules/` 的前提下应当遵守
+Keep reusable project skills under `.agents/skills/` and commit them to git. Claude-specific copies under `.claude/skills/` should be adapters only, so the long workflow has one source of truth.
 
----
+When changing a shared skill:
 
-## 规则优先级（关键）
+1. Edit `.agents/skills/<skill>/SKILL.md`.
+2. Keep `.claude/skills/<skill>/SKILL.md` as a short adapter.
+3. Update `.agents/README.md` if ownership rules change.
 
-1. `.claude/rules/core-rules.md`（最高优先级）
-2. `.claude/rules/` 其他文件
-3. `CLAUDE.md`
-4. `AGENTS.md`
+## Running The Project
 
----
+Extension mode:
 
-## 架构总览（8 个模块）
+- Open `chrome://extensions`
+- Enable developer mode
+- Load this directory as an unpacked extension
 
-- data-storage-spec.md → 数据存储与一致性
-- language-system-spec.md → 多语言系统与 fallback
-- wallpaper-system-spec.md → 双层壁纸渲染
-- search-bar-spec.md → 搜索栏与引擎切换
-- settings-panel-spec.md → 设置面板 UI
-- local-gallery-spec.md → 本地图库与 Blob 生命周期
-- command-palette-spec.md → 命令面板系统
-- runtime-interaction-spec.md → 全局交互与启动流程
+Web mode:
 
----
+- Open `index.html` directly in a browser
 
-## 文件加载顺序（关键）
+## Commits
 
-index.html：
+Use Conventional Commits:
 
-1. #wallpaperBack 必须先存在
-2. preload.js（首帧同步执行）
-3. #wallpaperFront
-4. 其他 DOM
-5. languages.js
-6. newtab.js
-
-👉 preload.js 是零闪白核心，不可调整顺序
-
----
-
-## 双层壁纸系统
-
-Back 层：
-- 当前稳定壁纸
-- 保证首帧可见
-
-Front 层：
-- 新壁纸过渡层
-- decode 完成后淡入
-- 550ms 后同步回 Back
-
-原则：
-> 永远不能出现空白帧
-
----
-
-## 运行模式
-
-### 扩展模式
-- chrome.search.query()
-- UI 简化
-- 无引擎选择器
-
-### 网页模式
-- window.open 跳转
-- 完整搜索引擎支持
-
----
-
-## 存储系统
-
-IndexedDB：
-- DB：PlainTab
-- Store：wallpaper
-- 存储图片 Blob
-
-localStorage：
-- 设置
-- 缩略图
-- 元数据
-
----
-
-## 崩溃安全原则
-
-核心原则：
-
-先写数据，再写引用  
-先断引用，再删数据
-
-用于避免：
-- 半写入状态
-- 数据丢失
-- 孤儿 Blob
-- 状态不一致
-
----
-
-## 已知关键问题
-
-- IndexedDB Blob 可能丢失 MIME 类型
-- preview_thumb 存在竞态写入问题
-- Blob URL 必须显式 revoke
-- 面板互斥逻辑必须幂等
-
----
-
-## CSP 约束
-
-禁止：
-- inline style
-- inline script
-- eval()
-- 动态脚本注入
-
-允许：
-- addEventListener
-- class / style 操作
-- 静态资源加载
-
----
-
-## 提交规范
-
-Conventional Commits：
-
-feat:
-fix:
-perf:
-refactor:
-chore:
-docs:
-
----
-
-## 项目结构
-
-- index.html → 新标签页入口
-- js/preload.js → 首帧壁纸渲染
-- js/newtab.js → 主逻辑
-- js/languages.js → 多语言系统
-- css/newtab.css → 样式系统
-- .claude/rules/ → 系统级规则
-- AGENTS.md → AI 行为规范
-```
+- `feat:`
+- `fix:`
+- `perf:`
+- `refactor:`
+- `chore:`
+- `docs:`

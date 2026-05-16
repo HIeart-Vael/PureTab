@@ -23,7 +23,8 @@
 - Never use placeholder or guessed parameters
 
 ## Memory Resilience
-- When updating CLAUDE-*.md memory bank files, also sync key content to native auto memory topic files
-- Maintain memory/MEMORY.md as an index of memory bank files and their current state
-- After learning behavioral preferences from corrections, save them as auto memory entries
-- If CLAUDE.md is reset or wiped, check auto memory via `/memory` to recover project context
+- Keep `AGENTS.md` as the shared AI entry point. `CLAUDE.md` is only a Claude Code adapter
+- Do not recreate the removed root `ai/` directory. Put temporary AI task notes under `docs/ai-tasks/`
+- Keep shared skills canonical in `.agents/skills/`; `.claude/skills/` should contain thin Claude adapters
+- When updating tool-specific memory files, sync durable project guidance back to `AGENTS.md` or `.claude/rules/`
+- If `AGENTS.md` or `CLAUDE.md` is reset, recover project context from `.claude/rules/` before editing
