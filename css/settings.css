@@ -164,65 +164,73 @@
     justify-content: space-between;
     margin-top: 14px;
     padding-top: 13px;
-    border-top: 1px solid rgba(var(--stroke-rgb), 0.42);
-    gap: 8px;
+    border-top: 1px solid rgba(var(--stroke-rgb), 0.32);
+    gap: 14px;
 }
 
 .l1-adv-btn {
-    flex: 1;
-    min-height: 36px;
-    padding: 9px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--control-border);
-    background: rgba(var(--surface-elevated-rgb), 0.32);
-    color: var(--text-secondary);
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(var(--on-surface-muted-rgb), 0.82);
     font-size: 12px;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    text-align: center;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    text-align: left;
+    transition: color 0.15s ease, transform 0.15s ease;
 }
 
 .l1-adv-btn:hover {
-    background: rgba(var(--surface-elevated-rgb), 0.52);
-    border-color: var(--control-border-hover);
     color: var(--text-primary);
+    transform: translateX(1px);
 }
 
 .l1-gh-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--control-border);
-    background: rgba(var(--surface-elevated-rgb), 0.34);
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    gap: 6px;
+    color: rgba(var(--on-surface-muted-rgb), 0.74);
+    transition: color 0.15s ease;
     text-decoration: none;
     flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
 }
 
 .l1-gh-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     opacity: 0.74;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.l1-gh-btn span {
+    line-height: 1;
 }
 
 .l1-gh-btn:hover {
-    background: rgba(var(--surface-elevated-rgb), 0.52);
-    border-color: var(--control-border-hover);
     color: var(--text-primary);
+}
+
+.l1-gh-btn:hover svg {
+    opacity: 0.94;
+    transform: translateY(-1px);
 }
 
 .l1-version {
     text-align: center;
     font-size: 10px;
     color: var(--text-muted);
-    margin-top: 9px;
+    margin-top: 6px;
     letter-spacing: 0;
 }
 
