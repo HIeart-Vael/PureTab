@@ -12,7 +12,8 @@ function count(haystack, needle) {
 const index = read('index.html');
 const preload = read('js/preload.js');
 const data = read('js/wallpaper/data.js');
-const settings = read('js/settings.js');
+const settingsBootstrap = read('js/settings.js');
+const settingsFull = read('js/settings-full.js');
 const show = read('js/wallpaper/show.js');
 
 function testStorageStartsAtV320Baseline() {
@@ -50,42 +51,57 @@ function testColdPaletteIsNotLoadedByIndex() {
 }
 
 function testSettingsShortcutTabUsesDataModelWithoutPaletteScript() {
-  assert.strictEqual(settings.includes('window.Palette ? window.Palette.loadHotkey()'), false, 'settings should not need palette.js to read normal hotkey');
-  assert.strictEqual(settings.includes('window.Palette ? window.Palette.loadHiddenHotkey()'), false, 'settings should not need palette.js to read hidden hotkey');
-  assert.strictEqual(settings.includes('window.Palette.saveHotkey'), false, 'settings should not need palette.js to save normal hotkey');
-  assert.strictEqual(settings.includes('window.Palette.saveHiddenHotkey'), false, 'settings should not need palette.js to save hidden hotkey');
-  assert.strictEqual(settings.includes('window.Palette.saveRecommend'), false, 'settings should not need palette.js to save recommendation preference');
-  assert.ok(settings.includes('function loadPaletteHotkey()'), 'settings should read hotkeys through the shortcut model');
-  assert.ok(settings.includes('function savePaletteRecommend'), 'settings should write palette settings through the shortcut model');
+  assert.strictEqual(settingsFull.includes('window.Palette ? window.Palette.loadHotkey()'), false, 'settings should not need palette.js to read normal hotkey');
+  assert.strictEqual(settingsFull.includes('window.Palette ? window.Palette.loadHiddenHotkey()'), false, 'settings should not need palette.js to read hidden hotkey');
+  assert.strictEqual(settingsFull.includes('window.Palette.saveHotkey'), false, 'settings should not need palette.js to save normal hotkey');
+  assert.strictEqual(settingsFull.includes('window.Palette.saveHiddenHotkey'), false, 'settings should not need palette.js to save hidden hotkey');
+  assert.strictEqual(settingsFull.includes('window.Palette.saveRecommend'), false, 'settings should not need palette.js to save recommendation preference');
+  assert.ok(settingsFull.includes('function loadPaletteHotkey()'), 'settings should read hotkeys through the shortcut model');
+  assert.ok(settingsFull.includes('function savePaletteRecommend'), 'settings should write palette settings through the shortcut model');
 }
 
 function testSettingsLoadDoesNotPersistDuringHydration() {
-  assert.ok(settings.includes('isHydratingSettings'), 'settings hydration should be tracked');
-  const loadStart = settings.indexOf('function loadSettings()');
-  const resetStart = settings.indexOf('function resetAppearanceDefaults()', loadStart);
+  assert.ok(settingsFull.includes('isHydratingSettings'), 'settings hydration should be tracked');
+  const loadStart = settingsFull.indexOf('function loadSettings()');
+  const resetStart = settingsFull.indexOf('function resetAppearanceDefaults()', loadStart);
   assert.ok(loadStart >= 0 && resetStart > loadStart, 'loadSettings should exist before resetAppearanceDefaults');
-  const body = settings.slice(loadStart, resetStart);
+  const body = settingsFull.slice(loadStart, resetStart);
   assert.ok(body.includes('isHydratingSettings = true'), 'loadSettings should suppress persistence before applying values');
   assert.ok(body.includes('isHydratingSettings = false'), 'loadSettings should re-enable persistence after applying values');
-  assert.ok(settings.includes('if (isHydratingSettings) return true;'), 'saveAllSettings should skip startup writes');
+  assert.ok(settingsFull.includes('if (isHydratingSettings) return true;'), 'saveAllSettings should skip startup writes');
+}
+
+function testFullSettingsIsLoadedOnDemand() {
+  assert.ok(index.includes('js/settings.js'), 'settings bootstrap should stay in the startup path');
+  assert.strictEqual(index.includes('js/settings-full.js'), false, 'full settings should be loaded on demand');
+  assert.ok(settingsBootstrap.includes('function ensureFullSettings()'), 'settings bootstrap should expose a lazy full-settings loader');
+  assert.ok(settingsBootstrap.includes("script.src = 'js/settings-full.js'"), 'settings bootstrap should load the full module lazily');
+  assert.ok(settingsBootstrap.includes('window.SettingsPanel = {'), 'settings bootstrap should own window.SettingsPanel');
+  assert.ok(settingsFull.includes('window.SettingsPanelFull = {'), 'full settings should export a secondary API');
+  assert.strictEqual(settingsFull.includes('window.SettingsPanel = {'), false, 'full settings must not replace the startup SettingsPanel facade');
 }
 
 function testWallpaperThemeExtractionIsGatedBeforeCanvasWork() {
+  assert.strictEqual(index.includes('js/wallpaper/theme.js'), false, 'wallpaper theme extraction should be loaded on demand');
   const applyStart = show.indexOf('function applyWallpaper');
   const thumbStart = show.indexOf('function generateThumbnail', applyStart);
   assert.ok(applyStart >= 0 && thumbStart > applyStart, 'applyWallpaper should exist');
   const body = show.slice(applyStart, thumbStart);
   const loadUiIndex = body.indexOf('WallpaperData.loadUI');
-  const extractIndex = body.indexOf('WallpaperTheme.extract');
+  const extractIndex = body.indexOf('theme.extract');
   assert.ok(loadUiIndex >= 0, 'applyWallpaper should read theme setting before extracting colors');
   assert.ok(extractIndex >= 0, 'theme extraction should still exist for enabled theme mode');
   assert.ok(loadUiIndex < extractIndex, 'theme setting should be checked before canvas color extraction');
+  assert.ok(show.includes('function ensureThemeModule()'), 'WallpaperShow should expose a lazy theme loader');
+  assert.ok(show.includes("script.src = 'js/wallpaper/theme.js'"), 'theme module should be loaded only when needed');
+  assert.ok(show.includes('ensureTheme: ensureThemeModule'), 'settings should be able to request the theme module lazily');
 }
 
 function run() {
   testStorageStartsAtV320Baseline();
   testPreloadUsesSingleCurrentPreviewKey();
   testColdPaletteIsNotLoadedByIndex();
+  testFullSettingsIsLoadedOnDemand();
   testSettingsShortcutTabUsesDataModelWithoutPaletteScript();
   testSettingsLoadDoesNotPersistDuringHydration();
   testWallpaperThemeExtractionIsGatedBeforeCanvasWork();

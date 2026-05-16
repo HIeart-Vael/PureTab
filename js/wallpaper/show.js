@@ -11,6 +11,7 @@
 
     // 追踪当前壁纸的 blob URL，用于在切换壁纸时 revoke 旧 URL 释放内存
     var _currentWallpaperBlobUrl = null;
+    var _themeLoadPromise = null;
 
     // DOM 元素（在脚本加载时获取一次）
     var wallpaperBackEl = document.getElementById('wallpaperBack');
@@ -35,6 +36,26 @@
         });
     }
 
+    function ensureThemeModule() {
+        if (window.WallpaperTheme) return Promise.resolve(window.WallpaperTheme);
+        if (!_themeLoadPromise) {
+            _themeLoadPromise = new Promise(function (resolve, reject) {
+                var existing = document.querySelector('script[src="js/wallpaper/theme.js"]');
+                if (existing) {
+                    existing.addEventListener('load', function () { resolve(window.WallpaperTheme); }, { once: true });
+                    existing.addEventListener('error', function () { reject(new Error('failed to load wallpaper theme')); }, { once: true });
+                    return;
+                }
+                var script = document.createElement('script');
+                script.src = 'js/wallpaper/theme.js';
+                script.onload = function () { resolve(window.WallpaperTheme); };
+                script.onerror = function () { reject(new Error('failed to load wallpaper theme')); };
+                document.body.appendChild(script);
+            });
+        }
+        return _themeLoadPromise;
+    }
+
     /**
      * 应用壁纸并执行双层交叉淡入过渡。
      */
@@ -47,11 +68,12 @@
             if (window.WallpaperData && window.WallpaperData.loadUI) {
                 themeEnabled = window.WallpaperData.loadUI().wallpaper.themeEnabled === true;
             }
-            if (img && themeEnabled && window.WallpaperTheme) {
-                window.WallpaperTheme.extract(img);
-                if (window.WallpaperTheme.hasCurrent()) {
-                    window.WallpaperTheme.applyCurrent();
-                }
+            if (img && themeEnabled) {
+                ensureThemeModule().then(function (theme) {
+                    if (!theme) return;
+                    theme.extract(img);
+                    if (theme.hasCurrent()) theme.applyCurrent();
+                }).catch(function () { });
             }
             wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
             void wallpaperFrontEl.offsetWidth;
@@ -143,6 +165,7 @@
         applyAndSavePreview: applyAndSavePreview,
         thumbnail: generateThumbnail,
         preloadImage: preloadImage,
+        ensureTheme: ensureThemeModule,
 
         get currentBlobUrl() { return _currentWallpaperBlobUrl; },
         set currentBlobUrl(v) { _currentWallpaperBlobUrl = v; },
