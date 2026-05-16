@@ -46,7 +46,11 @@
             // 提取壁纸主题色（纯内存），开关开启时应用
             if (img && window.WallpaperTheme) {
                 window.WallpaperTheme.extract(img);
-                if (localStorage.getItem('ptab_wp_theme_enabled') === 'true') {
+                var themeEnabled = false;
+                if (window.WallpaperData && window.WallpaperData.loadUI) {
+                    themeEnabled = window.WallpaperData.loadUI().wallpaper.themeEnabled === true;
+                }
+                if (themeEnabled) {
                     window.WallpaperTheme.applyCurrent();
                 }
             }
@@ -122,8 +126,11 @@
             if (!img) return;
             return generateThumbnail(img).then(function (thumb) {
                 if (thumb) {
-                    try { localStorage.setItem('ptab_preview_thumb', thumb); } catch (e) { }
-                    try { localStorage.setItem('ptab_bing_thumb', thumb); } catch (e) { }
+                    if (window.WallpaperData && window.WallpaperData.savePreview) {
+                        window.WallpaperData.savePreview(thumb);
+                    } else {
+                        try { localStorage.setItem('ptab_wallpaper_preview', thumb); } catch (e) { }
+                    }
                 }
             });
         });

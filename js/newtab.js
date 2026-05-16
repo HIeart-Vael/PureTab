@@ -81,7 +81,7 @@
 
         SP.setCurrentMode('local');
 
-        var idx = (parseInt(localStorage.getItem(D.KEYS.LOCAL_INDEX)) || 0) % order.length;
+        var idx = D.getActiveIndex() % order.length;
         var id = order[idx];
 
         return D.idbGet(D.imgKey(id)).then(function (img) {
@@ -92,15 +92,15 @@
                 try { blob = new Blob([blob], { type: img.mime }); } catch (e) { }
             }
 
-            localStorage.setItem(D.KEYS.LOCAL_INDEX, (idx + 1) % order.length);
+            D.saveActiveIndex((idx + 1) % order.length);
 
             var nextIdx = (idx + 1) % order.length;
             var nextId = order[nextIdx];
             var previewThumbs = D.loadThumbs();
             if (previewThumbs[nextId]) {
-                try { localStorage.setItem(D.KEYS.PREVIEW_THUMB, previewThumbs[nextId]); } catch (e) { /* quota */ }
+                D.savePreview(previewThumbs[nextId]);
             } else {
-                try { localStorage.removeItem(D.KEYS.PREVIEW_THUMB); } catch (e) { }
+                D.savePreview(null);
             }
 
             log('Local', 'image ' + (idx + 1) + '/' + order.length + (img.name ? '  ·  ' + img.name : ''));
@@ -121,6 +121,7 @@
 
     function loadBingFromNetwork(meta, today) {
         SP.setCurrentMode('bing');
+        D.setActiveSource('bing');
         SP.setWallpaperInfo(t('wpBing'));
         log('Bing', meta.date ? 'wallpaper is old (cache: ' + meta.date + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
 
@@ -146,12 +147,13 @@
     }
 
     function loadWallpaper() {
-        var lastMode = localStorage.getItem(D.KEYS.MODE) || 'bing';
+        var lastMode = D.compatMode(D.getActiveSource());
         var meta = D.loadBingMeta();
         var today = new Date().toDateString();
         var order = D.loadOrder();
 
-        return D.idbGet(D.DB.BING_BLOB).then(function (bingBlob) {
+        return D.idbGet(D.DB.BING_BLOB).then(function (bingRecord) {
+            var bingBlob = D.imageBlob(bingRecord);
             if (lastMode === 'local') {
                 return tryLoadLocalWallpaper(order).then(function (loaded) {
                     if (loaded) return;
@@ -309,13 +311,11 @@
     function init() {
         SP = window.SettingsPanel;
 
-        // 1. 初始化设置面板（DOM 缓存 / 事件绑定 / 语言 / 扩展模式）
-        SP.init();
-
-        // 2. 数据迁移 → 壁纸加载
+        // 数据迁移必须先于设置面板读取配置。
         D.migrate().catch(function (e) {
             warn('Init', 'migration failed, continuing: ' + e.message);
         }).then(function () {
+            SP.init();
             log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + SP.getCurrentLang());
             loadWallpaper();
             bindGlobalEvents();

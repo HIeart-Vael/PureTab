@@ -21,17 +21,6 @@
     // ================================================================
     // 常量
     // ================================================================
-    var LS_KEY_LANG = 'ptab_lang';
-    var LS_KEY_SEARCH_MODE = 'ptab_search_mode';
-    var LS_KEY_ICON_OPACITY = 'ptab_icon_opacity';
-    var LS_KEY_SEARCH_ENGINE = 'ptab_search_engine';
-    var LS_KEY_SEARCH_POSITION = 'ptab_search_position';
-    var LS_KEY_OVERLAY_OPACITY = 'ptab_overlay_opacity';
-    var LS_KEY_SEARCH_RADIUS = 'ptab_search_radius';
-    var LS_KEY_PANEL_OPACITY = 'ptab_panel_opacity';
-    var LS_KEY_THEME_ENABLED = 'ptab_wp_theme_enabled';
-    var LS_KEY_THEME_DATA = 'ptab_wp_theme';
-
     var DEFAULT_SEARCH_MODE = 'always';
     var DEFAULT_OPACITY = 0.45;
     var DEFAULT_ENGINE = 'google';
@@ -149,7 +138,7 @@
                 btn.className = 'lang-option';
                 btn.addEventListener('click', function () {
                     if (lang.code !== currentLang) {
-                        localStorage.setItem(LS_KEY_LANG, lang.code);
+                        D.saveLocale(lang.code);
                         currentLang = lang.code;
                         updateLangUI();
                         if (window.onLangChange) window.onLangChange(lang.code);
@@ -455,9 +444,22 @@
                 var nextMode = clickedSource === 'upload' ? 'local' : clickedSource;
 
                 if (nextMode !== currentMode) {
+                    if (nextMode !== 'bing' && nextMode !== 'local') {
+                        drawer.classList.add('active');
+                        return;
+                    }
+                    if (nextMode === 'local' && !D.loadOrder().length) {
+                        drawer.classList.add('active');
+                        return;
+                    }
+                    if (nextMode === 'bing' && currentMode === 'local' && D.loadOrder().length) {
+                        drawer.classList.add('active');
+                        resetToBing();
+                        return;
+                    }
                     currentMode = nextMode;
-                    if (D && D.KEYS && (nextMode === 'bing' || nextMode === 'local')) {
-                        localStorage.setItem(D.KEYS.MODE, nextMode);
+                    if (D && (nextMode === 'bing' || nextMode === 'local')) {
+                        D.setActiveSource(nextMode);
                     }
                     drawer.classList.add('active');
                     if (window.reloadWallpaper) window.reloadWallpaper();
@@ -469,10 +471,9 @@
     }
 
     function buildShortcutsHTML() {
-        var hkNormal = localStorage.getItem('ptab_shortcut_hotkey') || 'ctrl+k';
-        var hkHidden = localStorage.getItem('ptab_shortcut_hidden_hotkey') || 'ctrl+shift+k';
-        var recommend = localStorage.getItem('ptab_shortcut_recommend');
-        var checked = recommend === null ? ' checked' : (recommend === 'true' ? ' checked' : '');
+        var hkNormal = window.Palette ? window.Palette.loadHotkey() : 'ctrl+k';
+        var hkHidden = window.Palette ? window.Palette.loadHiddenHotkey() : 'ctrl+shift+k';
+        var checked = (!window.Palette || window.Palette.loadRecommend()) ? ' checked' : '';
 
         var body = '<div class="setting-stack">' +
             settingItem(t('cpHotkeyLabel') || '命令面板快捷键', modalCopy('modalDescHotkey', '打开命令面板与快捷入口。'), '<input type="text" class="hotkey-input" id="hkNormal" value="' + hkNormal + '" readonly>') +
@@ -491,7 +492,7 @@
         if (hkNormalEl) hkNormalEl.addEventListener('click', function () { startRecording('normal', hkNormalEl); });
         if (hkHiddenEl) hkHiddenEl.addEventListener('click', function () { startRecording('hidden', hkHiddenEl); });
         if (cpRec) cpRec.addEventListener('change', function () {
-            localStorage.setItem('ptab_shortcut_recommend', cpRec.checked ? 'true' : 'false');
+            if (window.Palette) window.Palette.saveRecommend(cpRec.checked);
         });
     }
 
@@ -579,7 +580,6 @@
 
     function applyThemeMode(on) {
         themeEnabled = on;
-        localStorage.setItem(LS_KEY_THEME_ENABLED, on ? 'true' : 'false');
         var root = document.documentElement.style;
         document.documentElement.setAttribute('data-wallpaper-theme', on ? 'on' : 'off');
         if (on) {
@@ -636,28 +636,28 @@
     }
 
     function saveAllSettings() {
-        localStorage.setItem(LS_KEY_SEARCH_MODE, searchMode);
-        localStorage.setItem(LS_KEY_ICON_OPACITY, currentOpacity);
-        localStorage.setItem(LS_KEY_SEARCH_ENGINE, currentEngine);
-        localStorage.setItem(LS_KEY_SEARCH_POSITION, searchPosition);
-        localStorage.setItem(LS_KEY_OVERLAY_OPACITY, overlayOpacity);
-        localStorage.setItem(LS_KEY_SEARCH_RADIUS, searchRadius);
-        localStorage.setItem(LS_KEY_PANEL_OPACITY, panelOpacity);
+        var ui = D.loadUI();
+        ui.search.visibility = searchMode;
+        ui.search.engine = currentEngine;
+        ui.search.position = searchPosition;
+        ui.search.radius = searchRadius;
+        ui.wallpaper.overlayOpacity = overlayOpacity;
+        ui.wallpaper.themeEnabled = themeEnabled;
+        ui.icon.opacity = currentOpacity;
+        ui.panel.opacity = panelOpacity;
+        D.saveUI(ui);
     }
 
     function loadSettings() {
-        searchMode = localStorage.getItem(LS_KEY_SEARCH_MODE) || DEFAULT_SEARCH_MODE;
-        searchPosition = localStorage.getItem(LS_KEY_SEARCH_POSITION) || DEFAULT_SEARCH_POSITION;
-        searchRadius = localStorage.getItem(LS_KEY_SEARCH_RADIUS) || DEFAULT_SEARCH_RADIUS;
-
-        var storedOpacity = localStorage.getItem(LS_KEY_ICON_OPACITY);
-        currentOpacity = storedOpacity !== null ? parseFloat(storedOpacity) : DEFAULT_OPACITY;
-
-        overlayOpacity = parseFloat(localStorage.getItem(LS_KEY_OVERLAY_OPACITY)) || DEFAULT_OVERLAY_OPACITY;
-        panelOpacity = parseFloat(localStorage.getItem(LS_KEY_PANEL_OPACITY)) || DEFAULT_PANEL_OPACITY;
-        themeEnabled = localStorage.getItem(LS_KEY_THEME_ENABLED) === 'true';
-
-        currentEngine = localStorage.getItem(LS_KEY_SEARCH_ENGINE) || DEFAULT_ENGINE;
+        var ui = D.loadUI();
+        searchMode = ui.search.visibility || DEFAULT_SEARCH_MODE;
+        searchPosition = ui.search.position || DEFAULT_SEARCH_POSITION;
+        searchRadius = ui.search.radius || DEFAULT_SEARCH_RADIUS;
+        currentOpacity = ui.icon.opacity !== undefined ? parseFloat(ui.icon.opacity) : DEFAULT_OPACITY;
+        overlayOpacity = ui.wallpaper.overlayOpacity !== undefined ? parseFloat(ui.wallpaper.overlayOpacity) : DEFAULT_OVERLAY_OPACITY;
+        panelOpacity = ui.panel.opacity !== undefined ? parseFloat(ui.panel.opacity) : DEFAULT_PANEL_OPACITY;
+        themeEnabled = ui.wallpaper.themeEnabled === true;
+        currentEngine = ui.search.engine || DEFAULT_ENGINE;
 
         applySearchMode(searchMode);
         applySearchPosition(searchPosition);
@@ -692,9 +692,11 @@
         el = document.getElementById('modalPanelOpacityNum'); if (el) el.value = DEFAULT_PANEL_OPACITY;
         el = document.getElementById('modalEngineSel'); if (el) el.value = DEFAULT_ENGINE;
         // Reset hotkeys
-        localStorage.setItem('ptab_shortcut_hotkey', 'ctrl+k');
-        localStorage.setItem('ptab_shortcut_hidden_hotkey', 'ctrl+shift+k');
-        localStorage.setItem('ptab_shortcut_recommend', 'true');
+        if (window.Palette) {
+            window.Palette.saveHotkey('ctrl+k');
+            window.Palette.saveHiddenHotkey('ctrl+shift+k');
+            window.Palette.saveRecommend(true);
+        }
     }
 
     // ================================================================
@@ -716,8 +718,8 @@
         if (el) {
             el.classList.remove('recording');
             el.value = isRecording === 'normal'
-                ? (localStorage.getItem('ptab_shortcut_hotkey') || 'ctrl+k')
-                : (localStorage.getItem('ptab_shortcut_hidden_hotkey') || 'ctrl+shift+k');
+                ? (window.Palette ? window.Palette.loadHotkey() : 'ctrl+k')
+                : (window.Palette ? window.Palette.loadHiddenHotkey() : 'ctrl+shift+k');
         }
         isRecording = null;
     }
@@ -753,8 +755,10 @@
             el.value = combo;
             el.classList.remove('recording');
 
-            var storeKey = isRecording === 'normal' ? 'ptab_shortcut_hotkey' : 'ptab_shortcut_hidden_hotkey';
-            localStorage.setItem(storeKey, combo);
+            if (window.Palette) {
+                if (isRecording === 'normal') window.Palette.saveHotkey(combo);
+                else window.Palette.saveHiddenHotkey(combo);
+            }
 
             isRecording = null;
         } else {
@@ -1008,11 +1012,11 @@
                         if (newOrder.length === oldOrder.length &&
                             newOrder.some(function (id, i) { return id !== oldOrder[i]; })) {
                             D.saveOrder(newOrder);
-                            var idx = parseInt(localStorage.getItem(D.KEYS.LOCAL_INDEX)) || 0;
+                            var idx = D.getActiveIndex();
                             var thumbs = D.loadThumbs();
                             var nextId = newOrder[idx % newOrder.length];
                             if (thumbs[nextId]) {
-                                try { localStorage.setItem(D.KEYS.PREVIEW_THUMB, thumbs[nextId]); } catch (ex) {}
+                                D.savePreview(thumbs[nextId]);
                             }
                         }
                     }, 300);
@@ -1076,15 +1080,13 @@
     // 数据操作：上传 / 删除 / 重置
     // ================================================================
     function saveLocalImage(file, show) {
-        var id = F.generateId();
+        var id = 'upload_' + F.generateId();
         var blobUrl = URL.createObjectURL(file);
 
-        if (show) currentMode = 'local';
-
         var start = show
-            ? (localStorage.setItem(D.KEYS.MODE, 'local'), S.apply(blobUrl, 'local').then(function (img) {
+            ? S.apply(blobUrl, 'local').then(function (img) {
                 return img ? S.thumbnail(img) : null;
-              }))
+              })
             : S.thumbnail(blobUrl).then(function (thumb) {
                 URL.revokeObjectURL(blobUrl);
                 return thumb;
@@ -1106,10 +1108,11 @@
                 D.saveMeta(meta);
 
                 if (show && order.length) {
-                    var curIdx = (parseInt(localStorage.getItem(D.KEYS.LOCAL_INDEX)) || 0) % order.length;
+                    currentMode = 'local';
+                    var curIdx = D.getActiveIndex() % order.length;
                     var nextId = order[curIdx];
                     if (thumbs[nextId]) {
-                        try { localStorage.setItem(D.KEYS.PREVIEW_THUMB, thumbs[nextId]); } catch (e) { /* quota */ }
+                        D.savePreview(thumbs[nextId]);
                     }
                 }
 
@@ -1134,15 +1137,22 @@
         D.saveMeta(meta);
 
         if (newOrder.length === 0) {
-            localStorage.removeItem(D.KEYS.LOCAL_INDEX);
-            localStorage.removeItem(D.KEYS.PREVIEW_THUMB);
-            localStorage.setItem(D.KEYS.MODE, 'bing');
+            D.saveActiveIndex(0);
+            D.savePreview(null);
+            D.setActiveSource('bing');
             currentMode = 'bing';
             wallpaperInfoEl.textContent = t('wpBing');
             removeLocalGallery();
             return D.idbDelete(D.imgKey(id)).then(function () {
                 if (window.reloadWallpaper) window.reloadWallpaper();
             }).catch(function () {});
+        }
+
+        var nextId = newOrder[D.getActiveIndex() % newOrder.length];
+        if (thumbs[nextId]) {
+            D.savePreview(thumbs[nextId]);
+        } else {
+            D.savePreview(null);
         }
 
         return D.idbDelete(D.imgKey(id)).then(function () {
@@ -1157,14 +1167,13 @@
 
         currentMode = 'bing';
         removeLocalGallery();
-        localStorage.removeItem(D.KEYS.BING_THUMB);
-        localStorage.removeItem(D.KEYS.PREVIEW_THUMB);
-        localStorage.removeItem(D.KEYS.IMG_THUMBS);
+        D.savePreview(null);
+        D.saveThumbs({});
         D.clearCaches();
-        localStorage.removeItem(D.KEYS.IMG_META);
-        localStorage.removeItem(D.KEYS.IMG_ORDER);
-        localStorage.removeItem(D.KEYS.LOCAL_INDEX);
-        localStorage.setItem(D.KEYS.MODE, 'bing');
+        D.saveMeta({ bing: {} });
+        D.saveOrder([]);
+        D.saveActiveIndex(0);
+        D.setActiveSource('bing');
 
         return D.idbDeleteMany(order.map(function (id) { return D.imgKey(id); })).then(function () {
             if (window.reloadWallpaper) window.reloadWallpaper();
@@ -1328,7 +1337,8 @@
         bindEvents();
         loadSettings();
 
-        currentLang = localStorage.getItem(LS_KEY_LANG) || detectLang();
+        currentMode = D.compatMode(D.getActiveSource());
+        currentLang = D.loadLocale() || detectLang();
         if (!I18N[currentLang]) currentLang = 'en';
         updateLangUI();
 

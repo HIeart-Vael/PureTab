@@ -61,7 +61,8 @@
         var isNew = meta.src !== url;
 
         if (!isNew) {
-            return D.idbGet(D.DB.BING_BLOB).then(function (blob) {
+            return D.idbGet(D.DB.BING_BLOB).then(function (record) {
+                var blob = D.imageBlob(record);
                 if (blob) {
                     var kb = (blob.size / 1024).toFixed(0);
                     log('Bing', 'wallpaper unchanged, skipped  ·  ' + provider + '  ·  ' + kb + ' KB');
@@ -76,13 +77,15 @@
 
         function downloadAndStore() {
             return downloadBingBlob(url).then(function (blob) {
-                meta.src = url;
-                meta.date = today;
-                meta.provider = provider;
-                D.saveBingMeta(meta);
                 var kb = (blob.size / 1024).toFixed(0);
                 log('Bing', 'fetched new wallpaper from ' + provider + '  ·  ' + kb + ' KB');
-                return D.idbPut(D.DB.BING_BLOB, blob).then(function () { return blob; });
+                return D.idbPut(D.DB.BING_BLOB, D.imageRecord(blob, 'bing')).then(function () {
+                    meta.src = url;
+                    meta.date = today;
+                    meta.provider = provider;
+                    D.saveBingMeta(meta);
+                    return blob;
+                });
             }).catch(function () { warn('Bing', 'got the URL but failed to download image, kept last image'); });
         }
     }

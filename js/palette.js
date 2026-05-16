@@ -14,14 +14,7 @@
     // 常量
     // ================================================================
 
-    var LS_KEY_SHORTCUTS = 'ptab_shortcuts';
     var LS_KEY_SHORTCUT_ICONS = 'ptab_shortcut_icons';
-    var LS_KEY_SHORTCUT_RECENTS = 'ptab_shortcut_recents';
-    var LS_KEY_SHORTCUT_HOTKEY = 'ptab_shortcut_hotkey';
-    var LS_KEY_SHORTCUT_HIDDEN_HOTKEY = 'ptab_shortcut_hidden_hotkey';
-    var LS_KEY_SHORTCUT_RECOMMEND = 'ptab_shortcut_recommend';
-    var LS_KEY_SHORTCUT_VIEW = 'ptab_shortcut_view';
-    var LS_KEY_SHORTCUT_HIDDEN = 'ptab_shortcut_hidden';
 
     var CP_COMMANDS_NORMAL = ['add', 'edit', 'delete', 'hide', 'recent', 'import', 'export', 'reset', 'clear', 'help'];
     var CP_COMMANDS_HIDDEN = ['add', 'edit', 'delete', 'unhide', 'recent', 'import', 'export', 'reset', 'clear', 'help'];
@@ -46,7 +39,7 @@
     var cpKeyIndex = 0;
     var cpCurrentPage = 1;
     var cpItemsPerPage = 15;
-    var cpViewMode = localStorage.getItem(LS_KEY_SHORTCUT_VIEW) || 'list';
+    var cpViewMode = loadShortcutSettings().viewMode || 'list';
     var cpCurrentMode = 'list';
     var cpEditTarget = null;
 
@@ -62,12 +55,12 @@
 
     function loadShortcuts() {
         if (_shortcutsCache !== null) return _shortcutsCache;
-        try { _shortcutsCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUTS) || '[]'); } catch (e) { _shortcutsCache = []; }
+        _shortcutsCache = loadShortcutModel().items || [];
         return _shortcutsCache;
     }
     function saveShortcuts(arr) {
         _shortcutsCache = arr;
-        try { localStorage.setItem(LS_KEY_SHORTCUTS, JSON.stringify(arr)); return true; } catch (e) { return false; }
+        return updateShortcutModel(function (model) { model.items = arr; });
     }
     function loadIcons() {
         if (_iconsCache !== null) return _iconsCache;
@@ -80,28 +73,51 @@
     }
     function loadRecents() {
         if (_recentsCache !== null) return _recentsCache;
-        try { _recentsCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_RECENTS) || '[]'); } catch (e) { _recentsCache = []; }
+        _recentsCache = loadShortcutModel().recents || [];
         return _recentsCache;
     }
     function saveRecents(arr) {
         _recentsCache = arr;
-        try { localStorage.setItem(LS_KEY_SHORTCUT_RECENTS, JSON.stringify(arr)); return true; } catch (e) { return false; }
+        return updateShortcutModel(function (model) { model.recents = arr; });
     }
-    function loadHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HOTKEY) || 'ctrl+k'; }
-    function saveHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HOTKEY, key); return true; } catch (e) { return false; } }
-    function loadRecommend() { return localStorage.getItem(LS_KEY_SHORTCUT_RECOMMEND) !== 'false'; }
-    function saveRecommend(bool) { try { localStorage.setItem(LS_KEY_SHORTCUT_RECOMMEND, bool ? 'true' : 'false'); } catch (e) { } }
+    function loadHotkey() { return loadShortcutSettings().primaryHotkey || 'ctrl+k'; }
+    function saveHotkey(key) { return updateShortcutSettings(function (settings) { settings.primaryHotkey = key; }); }
+    function loadRecommend() { return loadShortcutSettings().recommendEnabled !== false; }
+    function saveRecommend(bool) { updateShortcutSettings(function (settings) { settings.recommendEnabled = !!bool; }); }
     function loadHidden() {
         if (_hiddenCache !== null) return _hiddenCache;
-        try { _hiddenCache = JSON.parse(localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN) || '[]'); } catch (e) { _hiddenCache = []; }
+        _hiddenCache = loadShortcutModel().hidden || [];
         return _hiddenCache;
     }
     function saveHidden(arr) {
         _hiddenCache = arr;
-        try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN, JSON.stringify(arr)); return true; } catch (e) { return false; }
+        return updateShortcutModel(function (model) { model.hidden = arr; });
     }
-    function loadHiddenHotkey() { return localStorage.getItem(LS_KEY_SHORTCUT_HIDDEN_HOTKEY) || 'ctrl+shift+k'; }
-    function saveHiddenHotkey(key) { try { localStorage.setItem(LS_KEY_SHORTCUT_HIDDEN_HOTKEY, key); return true; } catch (e) { return false; } }
+    function loadHiddenHotkey() { return loadShortcutSettings().hiddenHotkey || 'ctrl+shift+k'; }
+    function saveHiddenHotkey(key) { return updateShortcutSettings(function (settings) { settings.hiddenHotkey = key; }); }
+
+    function loadShortcutModel() {
+        if (window.WallpaperData && window.WallpaperData.loadShortcutsModel) return window.WallpaperData.loadShortcutsModel();
+        return { items: [], recents: [], hidden: [], settings: { primaryHotkey: 'ctrl+k', hiddenHotkey: 'ctrl+shift+k', recommendEnabled: true, viewMode: 'list' } };
+    }
+    function saveShortcutModel(model) {
+        if (window.WallpaperData && window.WallpaperData.saveShortcutsModel) return window.WallpaperData.saveShortcutsModel(model);
+        return false;
+    }
+    function updateShortcutModel(mutator) {
+        var model = loadShortcutModel();
+        mutator(model);
+        return saveShortcutModel(model);
+    }
+    function loadShortcutSettings() {
+        return loadShortcutModel().settings || {};
+    }
+    function updateShortcutSettings(mutator) {
+        return updateShortcutModel(function (model) {
+            if (!model.settings) model.settings = {};
+            mutator(model.settings);
+        });
+    }
 
     function recordAccess(id) {
         var shortcuts = loadShortcuts();
@@ -222,7 +238,7 @@
         toggleBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             cpViewMode = cpViewMode === 'icon' ? 'list' : 'icon';
-            localStorage.setItem(LS_KEY_SHORTCUT_VIEW, cpViewMode);
+            updateShortcutSettings(function (settings) { settings.viewMode = cpViewMode; });
             renderPinnedBar();
             if (cpCurrentMode === 'list' || cpCurrentMode === 'feedback') renderShortcutList(cpSearchTerm);
             else if (cpCurrentMode === 'recent') renderRecentList();
@@ -654,6 +670,10 @@
         setTimeout(function () { cpContent.textContent = ''; }, 2000);
     }
 
+    function refreshShortcutSettings() {
+        cpViewMode = loadShortcutSettings().viewMode || 'list';
+    }
+
     function openPalette() {
         if (isPaletteOpen && isHiddenMode) {
             showPaletteHint(t('hiddenModeHint'));
@@ -662,6 +682,7 @@
         if (isPaletteOpen) return;
         isPaletteOpen = true;
         isHiddenMode = false;
+        refreshShortcutSettings();
         cmdOverlay.style.visibility = 'visible';
         cmdPalette.classList.remove('hidden-mode');
         cmdPalette.classList.add('normal-mode');
@@ -685,6 +706,7 @@
         if (isPaletteOpen) return;
         isPaletteOpen = true;
         isHiddenMode = true;
+        refreshShortcutSettings();
         cmdOverlay.style.visibility = 'visible';
         cmdPalette.classList.remove('normal-mode');
         cmdPalette.classList.add('hidden-mode');
