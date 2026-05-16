@@ -215,6 +215,19 @@
     // 全局事件绑定
     // ================================================================
 
+    function eventMatchesHotkey(e, combo) {
+        if (!combo) return false;
+        var parts = String(combo).toLowerCase().split('+').map(function (part) { return part.trim(); }).filter(Boolean);
+        var key = parts[parts.length - 1];
+        var wantsCtrl = parts.indexOf('ctrl') !== -1 || parts.indexOf('cmd') !== -1 || parts.indexOf('meta') !== -1;
+        var wantsShift = parts.indexOf('shift') !== -1;
+        if (!key || !wantsCtrl) return false;
+        return !!(e.ctrlKey || e.metaKey) === wantsCtrl &&
+            !!e.shiftKey === wantsShift &&
+            !e.altKey &&
+            String(e.key || '').toLowerCase() === key;
+    }
+
     function bindGlobalEvents() {
         // --- 全局鼠标跟踪 ---
 
@@ -257,8 +270,8 @@
                 if (e.key !== 'Escape') return;
             }
             if (e.key === 'Escape') { SP.closeAll(); SP.hideCorners(); }
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) { e.preventDefault(); if (window.Palette) window.Palette.open(); return; }
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'k') { e.preventDefault(); if (window.Palette) window.Palette.openHidden(); return; }
+            if (window.Palette && eventMatchesHotkey(e, window.Palette.loadHotkey())) { e.preventDefault(); window.Palette.open(); return; }
+            if (window.Palette && eventMatchesHotkey(e, window.Palette.loadHiddenHotkey())) { e.preventDefault(); window.Palette.openHidden(); return; }
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') { e.preventDefault(); if (SP.isModalOpen && SP.isModalOpen()) SP.closeModal(); else SP.openModal(); return; }
             if (e.key === 'Enter' && document.activeElement === searchInput) { doSearch(searchInput.value); return; }
         });

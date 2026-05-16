@@ -5,12 +5,13 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
+    background-size: var(--wallpaper-fit, cover);
+    background-position: var(--wallpaper-position, center);
     background-repeat: no-repeat;
+    filter: blur(var(--wallpaper-blur, 0px));
     z-index: 0;
     contain: layout style paint;
-    will-change: transform;
+    will-change: transform, filter;
     transform: translateZ(0);
 }
 
@@ -20,8 +21,7 @@
     transition: opacity 0.5s ease;
     pointer-events: none;
     contain: layout style paint;
-    will-change: transform;
-    transform: translateZ(0);
+    will-change: transform, filter;
 }
 
 .wallpaper-layer-front.active {

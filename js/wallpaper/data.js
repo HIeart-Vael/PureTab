@@ -142,11 +142,22 @@
             visibility: 'always',
             engine: 'google',
             position: 'center',
-            radius: 'capsule'
+            align: 'center',
+            iconPosition: 'right',
+            radius: 'capsule',
+            width: 560,
+            backgroundOpacity: 0.1,
+            blur: 24
         },
         wallpaper: {
             overlayOpacity: 0,
-            themeEnabled: false
+            themeEnabled: false,
+            fit: 'cover',
+            position: 'center',
+            blur: 0
+        },
+        appearance: {
+            radius: 'soft'
         },
         icon: {
             opacity: 0.45

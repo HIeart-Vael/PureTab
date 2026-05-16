@@ -1,18 +1,18 @@
 /* ========== 搜索栏 ========== */
 .search-bar {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 560px;
+    top: var(--search-top, 50%);
+    left: var(--search-left, 50%);
+    transform: translate(var(--search-translate-x, -50%), -50%);
+    width: min(var(--search-width, 560px), 88vw);
     max-width: 88vw;
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 10px 22px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255, 255, 255, var(--search-bg-opacity, 0.1));
+    backdrop-filter: blur(var(--search-blur, 24px));
+    -webkit-backdrop-filter: blur(var(--search-blur, 24px));
     border-radius: 28px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -20,6 +20,68 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.search-bar[data-position="edge-top"] {
+    --search-top: 10%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="top"] {
+    --search-top: 18%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="upper"] {
+    --search-top: 26%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="center-upper"] {
+    --search-top: 38%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="center"] {
+    --search-top: 50%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="center-lower"] {
+    --search-top: 62%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="lower"] {
+    --search-top: 74%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="bottom"] {
+    --search-top: 82%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-position="edge-bottom"] {
+    --search-top: 90%;
+    --search-left: 50%;
+    --search-translate-x: -50%;
+}
+
+.search-bar[data-icon-position="left"] {
+    flex-direction: row-reverse;
+}
+
+.search-bar[data-icon-position="right"] {
+    flex-direction: row;
 }
 
 .search-bar.visible {

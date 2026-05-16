@@ -28,6 +28,16 @@
     var DEFAULT_OVERLAY_OPACITY = 0;
     var DEFAULT_PANEL_OPACITY = 0.88;
     var DEFAULT_SEARCH_RADIUS = 'capsule';
+    var DEFAULT_SEARCH_ALIGN = 'center';
+    var DEFAULT_SEARCH_ICON_POSITION = 'right';
+    var DEFAULT_SEARCH_WIDTH = 560;
+    var DEFAULT_SEARCH_BG_OPACITY = 0.1;
+    var DEFAULT_SEARCH_BLUR = 24;
+    var DEFAULT_WALLPAPER_FIT = 'cover';
+    var DEFAULT_WALLPAPER_POSITION = 'center';
+    var DEFAULT_WALLPAPER_BLUR = 0;
+    var DEFAULT_WALLPAPER_BLUR_MAX = 15;
+    var DEFAULT_UI_RADIUS = 'soft';
 
     var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id;
 
@@ -99,15 +109,27 @@
     var currentOpacity = DEFAULT_OPACITY;
     var currentEngine = DEFAULT_ENGINE;
     var searchPosition = DEFAULT_SEARCH_POSITION;
+    var searchAlign = DEFAULT_SEARCH_ALIGN;
+    var searchIconPosition = DEFAULT_SEARCH_ICON_POSITION;
+    var searchWidth = DEFAULT_SEARCH_WIDTH;
+    var searchBackgroundOpacity = DEFAULT_SEARCH_BG_OPACITY;
+    var searchBlur = DEFAULT_SEARCH_BLUR;
     var overlayOpacity = DEFAULT_OVERLAY_OPACITY;
     var searchRadius = DEFAULT_SEARCH_RADIUS;
     var panelOpacity = DEFAULT_PANEL_OPACITY;
+    var wallpaperFit = DEFAULT_WALLPAPER_FIT;
+    var wallpaperPosition = DEFAULT_WALLPAPER_POSITION;
+    var wallpaperBlur = DEFAULT_WALLPAPER_BLUR;
+    var uiRadius = DEFAULT_UI_RADIUS;
     var themeEnabled = false;
     var engineIndex = 0;
     var langBtns = null;
     var activeTab = 'appearance';
     var isRecording = null;
     var _keepGalleryOpen = false;
+    var wallpaperBlurApplyTimer = null;
+    var wallpaperBlurSaveTimer = null;
+    var activeCustomSelect = null;
 
     // ================================================================
     // 语言面板
@@ -232,6 +254,7 @@
     function closeModal(options) {
         if (!isModalOpen) return;
         isModalOpen = false;
+        closeCustomSelects();
         modalOverlay.classList.remove('active');
         maybePromptEmptyLocalUpload(options);
     }
@@ -272,6 +295,7 @@
         page.dataset.tab = tabName;
         page.hidden = true;
         page.innerHTML = builder();
+        enhanceModalSelects(page);
         modalContent.appendChild(page);
         _tabPages[tabName] = page;
         return page;
@@ -299,7 +323,9 @@
             '<h2>' + title + '</h2>' +
             '<p>' + subtitle + '</p>' +
             '</div>' +
+            '<div class="settings-page-body">' +
             body +
+            '</div>' +
             '</div>';
     }
 
@@ -312,12 +338,20 @@
             modalSubtitleShortcuts: 'Shortcuts stay lightweight and focused on frequent entry points.',
             modalSubtitleAbout: 'PlainTab stays quietly behind your new tab page.',
             modalDescSearchMode: 'Choose when the search box should appear.',
-            modalDescSearchPosition: 'Anchor the search area within the vertical rhythm.',
+            modalDescSearchPosition: 'Choose a centered vertical anchor for the search box.',
+            modalDescSearchIconPosition: 'Place the search icon or web engine logo on either side.',
+            modalDescSearchWidth: 'Set how much horizontal room the search box takes.',
             modalDescSearchRadius: 'Match the search box shape to the current wallpaper mood.',
+            modalDescSearchBackground: 'Tune the search box glass surface strength.',
+            modalDescSearchBlur: 'Adjust how much the wallpaper diffuses behind the search box.',
+            modalDescWallpaperFit: 'Choose how the wallpaper fills the viewport.',
+            modalDescWallpaperPosition: 'Pick the visual anchor point when the wallpaper is cropped.',
+            modalDescWallpaperBlur: 'Soften the wallpaper itself while keeping foreground controls sharp.',
             modalDescOverlay: 'Darken the wallpaper to improve foreground readability.',
             modalDescIconOpacity: 'Tune the presence of corner buttons and the search engine icon.',
             modalDescTheme: 'Extract surface, stroke, accent, and text colors from the wallpaper.',
             modalDescPanelOpacity: 'Adjust the distance between floating panels and the wallpaper.',
+            modalDescUiRadius: 'Choose the overall corner language for panels and controls.',
             modalDescEngine: 'Web mode can switch engines; extension mode uses the browser default.',
             modalDescHotkey: 'Open the command palette and quick entries.',
             modalDescHiddenHotkey: 'Open hidden shortcut management directly.',
@@ -326,14 +360,165 @@
         return lang[key] || en[key] || (currentLang.indexOf('zh') === 0 ? fallback : (enFallback[key] || fallback));
     }
 
-    function settingItem(label, desc, control, extraClass) {
+    function settingItem(label, desc, control, extraClass, note) {
         return '<div class="setting-item' + (extraClass ? ' ' + extraClass : '') + '">' +
             '<div class="setting-copy">' +
             '<span class="setting-label">' + label + '</span>' +
             '<span class="setting-desc">' + desc + '</span>' +
+            (note || '') +
             '</div>' +
             '<div class="setting-control">' + control + '</div>' +
             '</div>';
+    }
+
+    function settingGroup(title, body) {
+        return '<section class="setting-group">' +
+            '<h3 class="setting-group-title">' + title + '</h3>' +
+            '<div class="setting-stack">' + body + '</div>' +
+            '</section>';
+    }
+
+    function getSelectLabel(select) {
+        var option = select.options[select.selectedIndex] || select.options[0];
+        return option ? option.textContent : '';
+    }
+
+    function syncCustomSelect(custom) {
+        if (!custom) return;
+        var select = custom.querySelector('select');
+        var value = custom.querySelector('.custom-select-value');
+        if (value && select) value.textContent = getSelectLabel(select);
+        custom.querySelectorAll('.custom-select-option').forEach(function (option) {
+            var selected = select && option.dataset.value === select.value;
+            option.classList.toggle('selected', selected);
+            option.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+    }
+
+    function syncCustomSelects(root) {
+        (root || modalContent).querySelectorAll('.custom-select').forEach(syncCustomSelect);
+    }
+
+    function closeCustomSelects(except) {
+        if (!modalContent) return;
+        modalContent.querySelectorAll('.custom-select[data-open="true"]').forEach(function (custom) {
+            if (custom === except) return;
+            custom.dataset.open = 'false';
+            custom.querySelector('.custom-select-trigger').setAttribute('aria-expanded', 'false');
+        });
+        if (!except) activeCustomSelect = null;
+    }
+
+    function focusCustomSelectOption(custom, delta) {
+        var options = Array.prototype.slice.call(custom.querySelectorAll('.custom-select-option:not([disabled])'));
+        if (!options.length) return;
+        var current = document.activeElement && document.activeElement.classList.contains('custom-select-option')
+            ? options.indexOf(document.activeElement)
+            : options.findIndex(function (option) { return option.classList.contains('selected'); });
+        var next = current < 0 ? 0 : (current + delta + options.length) % options.length;
+        options[next].focus();
+    }
+
+    function openCustomSelect(custom) {
+        if (!custom) return;
+        closeCustomSelects(custom);
+        syncCustomSelect(custom);
+        var menu = custom.querySelector('.custom-select-menu');
+        custom.classList.remove('drop-up');
+        custom.dataset.open = 'true';
+        custom.querySelector('.custom-select-trigger').setAttribute('aria-expanded', 'true');
+        activeCustomSelect = custom;
+        if (menu) {
+            var rect = menu.getBoundingClientRect();
+            var customRect = custom.getBoundingClientRect();
+            var roomBelow = window.innerHeight - customRect.bottom;
+            var roomAbove = customRect.top;
+            if (roomBelow < Math.min(rect.height, 220) && roomAbove > roomBelow) {
+                custom.classList.add('drop-up');
+            }
+        }
+    }
+
+    function chooseCustomSelectOption(custom, option) {
+        var select = custom.querySelector('select');
+        if (!select || !option || option.disabled) return;
+        if (select.value !== option.dataset.value) {
+            select.value = option.dataset.value;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        syncCustomSelect(custom);
+        closeCustomSelects();
+        custom.querySelector('.custom-select-trigger').focus();
+    }
+
+    function enhanceModalSelects(root) {
+        if (!root) return;
+        root.querySelectorAll('.setting-item select:not([data-custom-select-ready])').forEach(function (select) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'custom-select';
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+
+            select.dataset.customSelectReady = 'true';
+            select.classList.add('custom-select-native');
+            select.setAttribute('tabindex', '-1');
+            select.setAttribute('aria-hidden', 'true');
+
+            var trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'custom-select-trigger';
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.innerHTML = '<span class="custom-select-value"></span><span class="custom-select-chevron"></span>';
+
+            var menu = document.createElement('div');
+            menu.className = 'custom-select-menu';
+            menu.setAttribute('role', 'listbox');
+
+            Array.prototype.forEach.call(select.options, function (opt) {
+                var option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'custom-select-option';
+                option.dataset.value = opt.value;
+                option.textContent = opt.textContent;
+                option.setAttribute('role', 'option');
+                if (opt.disabled) option.disabled = true;
+                option.addEventListener('click', function () {
+                    chooseCustomSelectOption(wrapper, option);
+                });
+                option.addEventListener('keydown', function (e) {
+                    if (e.key === 'ArrowDown') { e.preventDefault(); focusCustomSelectOption(wrapper, 1); }
+                    if (e.key === 'ArrowUp') { e.preventDefault(); focusCustomSelectOption(wrapper, -1); }
+                    if (e.key === 'Escape') { e.preventDefault(); closeCustomSelects(); trigger.focus(); }
+                });
+                menu.appendChild(option);
+            });
+
+            trigger.addEventListener('click', function () {
+                if (wrapper.dataset.open === 'true') closeCustomSelects();
+                else openCustomSelect(wrapper);
+            });
+            trigger.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    openCustomSelect(wrapper);
+                    focusCustomSelectOption(wrapper, e.key === 'ArrowDown' ? 1 : 0);
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeCustomSelects();
+                }
+            });
+            select.addEventListener('change', function () { syncCustomSelect(wrapper); });
+
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(menu);
+            syncCustomSelect(wrapper);
+        });
+    }
+
+    function unavailableSourceHTML(message) {
+        return '<p class="source-config-note">' + message + '</p>';
     }
 
     function buildAppearanceHTML() {
@@ -343,17 +528,48 @@
             '<option value="never"' + (searchMode === 'never' ? ' selected' : '') + '>' + (t('searchNever') || '始终隐藏') + '</option>' +
             '</select>';
         var searchPosControl = '<select id="modalSearchPos">' +
-            '<option value="top"' + (searchPosition === 'top' ? ' selected' : '') + '>' + (t('posTop') || '顶部') + '</option>' +
+            '<option value="edge-top"' + (searchPosition === 'edge-top' ? ' selected' : '') + '>' + tr('posEdgeTop', '贴近顶部') + '</option>' +
+            '<option value="top"' + (searchPosition === 'top' ? ' selected' : '') + '>' + tr('posHigh', '居上') + '</option>' +
             '<option value="upper"' + (searchPosition === 'upper' ? ' selected' : '') + '>' + (t('posUpper') || '中上') + '</option>' +
+            '<option value="center-upper"' + (searchPosition === 'center-upper' ? ' selected' : '') + '>' + tr('posCenterUpper', '居中偏上') + '</option>' +
             '<option value="center"' + (searchPosition === 'center' ? ' selected' : '') + '>' + (t('posCenter') || '居中') + '</option>' +
+            '<option value="center-lower"' + (searchPosition === 'center-lower' ? ' selected' : '') + '>' + tr('posCenterLower', '居中偏下') + '</option>' +
             '<option value="lower"' + (searchPosition === 'lower' ? ' selected' : '') + '>' + (t('posLower') || '中下') + '</option>' +
-            '<option value="bottom"' + (searchPosition === 'bottom' ? ' selected' : '') + '>' + (t('posBottom') || '底部') + '</option>' +
+            '<option value="bottom"' + (searchPosition === 'bottom' ? ' selected' : '') + '>' + tr('posLow', '居下') + '</option>' +
+            '<option value="edge-bottom"' + (searchPosition === 'edge-bottom' ? ' selected' : '') + '>' + tr('posEdgeBottom', '贴近底部') + '</option>' +
+            '</select>';
+        var searchIconPositionControl = '<select id="modalSearchIconPosition">' +
+            '<option value="left"' + (searchIconPosition === 'left' ? ' selected' : '') + '>' + tr('iconLeft', '左侧') + '</option>' +
+            '<option value="right"' + (searchIconPosition === 'right' ? ' selected' : '') + '>' + tr('iconRight', '右侧') + '</option>' +
             '</select>';
         var radiusControl = '<select id="modalSearchRadius">' +
             '<option value="capsule"' + (searchRadius === 'capsule' ? ' selected' : '') + '>' + (t('radiusCapsule') || '胶囊 (偏圆)') + '</option>' +
             '<option value="rounded"' + (searchRadius === 'rounded' ? ' selected' : '') + '>' + (t('radiusRounded') || '圆角') + '</option>' +
             '<option value="sharp"' + (searchRadius === 'sharp' ? ' selected' : '') + '>' + (t('radiusSharp') || '直角') + '</option>' +
             '</select>';
+        var searchWidthControl = '<input type="range" id="modalSearchWidthRange" min="360" max="760" step="10" value="' + searchWidth + '">' +
+            '<input type="number" id="modalSearchWidthNum" class="input-w-55" min="360" max="760" step="10" value="' + searchWidth + '">';
+        var searchBgControl = '<input type="range" id="modalSearchBgRange" min="0.04" max="0.32" step="0.01" value="' + searchBackgroundOpacity + '">' +
+            '<input type="number" id="modalSearchBgNum" class="input-w-55" min="0.04" max="0.32" step="0.01" value="' + searchBackgroundOpacity + '">';
+        var searchBlurControl = '<input type="range" id="modalSearchBlurRange" min="0" max="40" step="1" value="' + searchBlur + '">' +
+            '<input type="number" id="modalSearchBlurNum" class="input-w-55" min="0" max="40" step="1" value="' + searchBlur + '">';
+        var wallpaperFitControl = '<select id="modalWallpaperFit">' +
+            '<option value="cover"' + (wallpaperFit === 'cover' ? ' selected' : '') + '>' + tr('fitCover', '铺满裁切') + '</option>' +
+            '<option value="contain"' + (wallpaperFit === 'contain' ? ' selected' : '') + '>' + tr('fitContain', '完整显示') + '</option>' +
+            '<option value="100% 100%"' + (wallpaperFit === '100% 100%' ? ' selected' : '') + '>' + tr('fitStretch', '拉伸填充') + '</option>' +
+            '</select>';
+        var wallpaperPositionControl = '<select id="modalWallpaperPosition">' +
+            '<option value="center"' + (wallpaperPosition === 'center' ? ' selected' : '') + '>' + (t('posCenter') || '居中') + '</option>' +
+            '<option value="top"' + (wallpaperPosition === 'top' ? ' selected' : '') + '>' + (t('posTop') || '顶部') + '</option>' +
+            '<option value="bottom"' + (wallpaperPosition === 'bottom' ? ' selected' : '') + '>' + (t('posBottom') || '底部') + '</option>' +
+            '<option value="left"' + (wallpaperPosition === 'left' ? ' selected' : '') + '>' + tr('alignLeft', '靠左') + '</option>' +
+            '<option value="right"' + (wallpaperPosition === 'right' ? ' selected' : '') + '>' + tr('alignRight', '靠右') + '</option>' +
+            '</select>';
+        var wallpaperBlurHint = '<span class="setting-warning' + (wallpaperBlur > 5 ? '' : ' hidden') + '" id="wallpaperBlurPerfHint">' +
+            tr('wallpaperBlurPerfHint', '背景模糊超过 5 后会自动关闭面板动画，避免设置面板卡顿。') +
+            '</span>';
+        var wallpaperBlurControl = '<input type="range" id="modalWallpaperBlurRange" min="0" max="15" step="1" value="' + wallpaperBlur + '">' +
+            '<input type="number" id="modalWallpaperBlurNum" class="input-w-55" min="0" max="15" step="1" value="' + wallpaperBlur + '">';
         var overlayControl = '<input type="range" id="modalOverlayRange" min="0" max="0.6" step="0.01" value="' + overlayOpacity + '">' +
             '<input type="number" id="modalOverlayNum" class="input-w-55" min="0" max="0.6" step="0.01" value="' + overlayOpacity + '">';
         var opacityControl = '<input type="range" id="modalOpacityRange" min="0" max="1" step="0.01" value="' + currentOpacity + '">' +
@@ -361,6 +577,11 @@
         var themeControl = '<label class="switch-control"><input type="checkbox" id="modalThemeEnabled"' + (themeEnabled ? ' checked' : '') + '><span></span></label>';
         var panelOpacityControl = '<input type="range" id="modalPanelOpacityRange" min="0.3" max="1" step="0.01" value="' + panelOpacity + '">' +
             '<input type="number" id="modalPanelOpacityNum" class="input-w-55" min="0.3" max="1" step="0.01" value="' + panelOpacity + '">';
+        var uiRadiusControl = '<select id="modalUiRadius">' +
+            '<option value="compact"' + (uiRadius === 'compact' ? ' selected' : '') + '>' + tr('radiusCompact', '克制') + '</option>' +
+            '<option value="soft"' + (uiRadius === 'soft' ? ' selected' : '') + '>' + tr('radiusSoft', '柔和') + '</option>' +
+            '<option value="round"' + (uiRadius === 'round' ? ' selected' : '') + '>' + tr('radiusRound', '圆润') + '</option>' +
+            '</select>';
         var engineControl = '<select id="modalEngineSel">' +
             '<option value="google"' + (currentEngine === 'google' ? ' selected' : '') + '>Google</option>' +
             '<option value="bing"' + (currentEngine === 'bing' ? ' selected' : '') + '>Bing</option>' +
@@ -368,16 +589,27 @@
             '<option value="duckduckgo"' + (currentEngine === 'duckduckgo' ? ' selected' : '') + '>DuckDuckGo</option>' +
             '</select>';
 
-        var body = '<div class="setting-stack">' +
+        var body =
+            settingGroup(tr('settingsGroupTheme', '主题'),
+            settingItem(t('themeEnableLabel') || '壁纸主题色', modalCopy('modalDescTheme', '从当前壁纸提取表面、描边、强调和文字色。'), themeControl, 'setting-compact')) +
+            settingGroup(tr('settingsGroupSearch', '搜索栏'),
             settingItem(t('searchLabel') || '搜索栏显示', modalCopy('modalDescSearchMode', '设定搜索框出现的时机。'), searchModeControl) +
-            settingItem(t('searchPosition') || '搜索栏位置', modalCopy('modalDescSearchPosition', '在画面纵向节奏中固定搜索重心。'), searchPosControl) +
+            settingItem(t('searchPosition') || '搜索栏位置', modalCopy('modalDescSearchPosition', '选择搜索框在画面中轴上的高度。'), searchPosControl) +
+            settingItem(tr('searchWidth', '搜索栏宽度'), modalCopy('modalDescSearchWidth', '调整搜索框占据的横向空间。'), searchWidthControl) +
             settingItem(t('searchRadius') || '搜索栏圆角', modalCopy('modalDescSearchRadius', '让搜索框形态匹配当前壁纸氛围。'), radiusControl) +
-            settingItem(t('overlayLabel') || '壁纸遮罩', modalCopy('modalDescOverlay', '加深背景，提升前景元素识别度。'), overlayControl) +
+            settingItem(tr('searchBackground', '搜索框背景'), modalCopy('modalDescSearchBackground', '调节搜索框玻璃表面的强弱。'), searchBgControl) +
+            settingItem(tr('searchBlur', '搜索框模糊'), modalCopy('modalDescSearchBlur', '调节搜索框背后的壁纸扩散程度。'), searchBlurControl) +
+            settingItem(tr('searchIconPosition', '搜索图标位置'), modalCopy('modalDescSearchIconPosition', '选择搜索图标或网页版引擎 Logo 在左侧还是右侧。'), searchIconPositionControl) +
+            settingItem(t('engineLabel') || '搜索引擎', modalCopy('modalDescEngine', '网页版可切换，扩展版沿用浏览器默认搜索。'), engineControl, IS_EXTENSION ? 'engine-row-hidden' : '')) +
+            settingGroup(tr('settingsGroupWallpaper', '壁纸'),
+            settingItem(tr('wallpaperFit', '壁纸适配'), modalCopy('modalDescWallpaperFit', '选择壁纸如何填充整个视口。'), wallpaperFitControl) +
+            settingItem(tr('wallpaperPosition', '壁纸焦点'), modalCopy('modalDescWallpaperPosition', '当壁纸被裁切时选择画面锚点。'), wallpaperPositionControl) +
+            settingItem(tr('wallpaperBlur', '背景模糊'), modalCopy('modalDescWallpaperBlur', '柔化壁纸本身，前景控件保持清晰。'), wallpaperBlurControl, '', wallpaperBlurHint) +
+            settingItem(t('overlayLabel') || '壁纸遮罩', modalCopy('modalDescOverlay', '加深背景，提升前景元素识别度。'), overlayControl)) +
+            settingGroup(tr('settingsGroupSurface', '界面'),
             settingItem(t('opacityLabel') || '图标透明度', modalCopy('modalDescIconOpacity', '控制角落按钮和搜索引擎图标的存在感。'), opacityControl) +
-            settingItem(t('themeEnableLabel') || '壁纸主题色', modalCopy('modalDescTheme', '从当前壁纸提取表面、描边、强调和文字色。'), themeControl, 'setting-compact') +
             settingItem(t('panelOpacityLabel') || '面板透明度', modalCopy('modalDescPanelOpacity', '调整浮层与壁纸之间的距离感。'), panelOpacityControl) +
-            settingItem(t('engineLabel') || '搜索引擎', modalCopy('modalDescEngine', '网页版可切换，扩展版沿用浏览器默认搜索。'), engineControl, IS_EXTENSION ? 'engine-row-hidden' : '') +
-            '</div>' +
+            settingItem(tr('uiRadiusLabel', '界面圆角'), modalCopy('modalDescUiRadius', '切换面板和控件的整体圆角语言。'), uiRadiusControl)) +
             '<div class="settings-actions"><button class="reset-defaults-btn" id="modalResetBtn">' + (t('resetAdv') || '恢复默认设置') + '</button></div>';
 
         return buildPageShell(tr('tabAppearance', '界面设置'), modalCopy('modalSubtitleAppearance', '搜索、遮罩、主题和浮层质感集中在这里。'), body);
@@ -386,7 +618,18 @@
     function bindAppearanceEvents() {
         var selMode = document.getElementById('modalSearchMode');
         var selPos = document.getElementById('modalSearchPos');
+        var selIconPosition = document.getElementById('modalSearchIconPosition');
         var selRadius = document.getElementById('modalSearchRadius');
+        var searchWidthRange = document.getElementById('modalSearchWidthRange');
+        var searchWidthNum = document.getElementById('modalSearchWidthNum');
+        var searchBgRange = document.getElementById('modalSearchBgRange');
+        var searchBgNum = document.getElementById('modalSearchBgNum');
+        var searchBlurRange = document.getElementById('modalSearchBlurRange');
+        var searchBlurNum = document.getElementById('modalSearchBlurNum');
+        var wallpaperFitSel = document.getElementById('modalWallpaperFit');
+        var wallpaperPositionSel = document.getElementById('modalWallpaperPosition');
+        var wallpaperBlurRange = document.getElementById('modalWallpaperBlurRange');
+        var wallpaperBlurNum = document.getElementById('modalWallpaperBlurNum');
         var overlayRange = document.getElementById('modalOverlayRange');
         var overlayNum = document.getElementById('modalOverlayNum');
         var opacityRange = document.getElementById('modalOpacityRange');
@@ -394,12 +637,25 @@
         var themeCheck = document.getElementById('modalThemeEnabled');
         var panelOpacityRange = document.getElementById('modalPanelOpacityRange');
         var panelOpacityNum = document.getElementById('modalPanelOpacityNum');
+        var uiRadiusSel = document.getElementById('modalUiRadius');
         var engineSel = document.getElementById('modalEngineSel');
         var resetBtn = document.getElementById('modalResetBtn');
 
         if (selMode) selMode.addEventListener('change', function () { applySearchMode(this.value); });
         if (selPos) selPos.addEventListener('change', function () { applySearchPosition(this.value); });
+        if (selIconPosition) selIconPosition.addEventListener('change', function () { applySearchIconPosition(this.value); });
         if (selRadius) selRadius.addEventListener('change', function () { applySearchRadius(this.value); });
+        if (searchWidthRange) searchWidthRange.addEventListener('input', function () { applySearchWidth(this.value); if (searchWidthNum) searchWidthNum.value = this.value; });
+        if (searchWidthNum) searchWidthNum.addEventListener('change', function () { applySearchWidth(this.value); if (searchWidthRange) searchWidthRange.value = searchWidth; this.value = searchWidth; });
+        if (searchBgRange) searchBgRange.addEventListener('input', function () { applySearchBackgroundOpacity(this.value); if (searchBgNum) searchBgNum.value = searchBackgroundOpacity; });
+        if (searchBgNum) searchBgNum.addEventListener('change', function () { applySearchBackgroundOpacity(this.value); if (searchBgRange) searchBgRange.value = searchBackgroundOpacity; this.value = searchBackgroundOpacity; });
+        if (searchBlurRange) searchBlurRange.addEventListener('input', function () { applySearchBlur(this.value); if (searchBlurNum) searchBlurNum.value = searchBlur; });
+        if (searchBlurNum) searchBlurNum.addEventListener('change', function () { applySearchBlur(this.value); if (searchBlurRange) searchBlurRange.value = searchBlur; this.value = searchBlur; });
+        if (wallpaperFitSel) wallpaperFitSel.addEventListener('change', function () { applyWallpaperFit(this.value); });
+        if (wallpaperPositionSel) wallpaperPositionSel.addEventListener('change', function () { applyWallpaperPosition(this.value); });
+        if (wallpaperBlurRange) wallpaperBlurRange.addEventListener('input', function () { applyWallpaperBlur(this.value, { preview: true }); if (wallpaperBlurNum) wallpaperBlurNum.value = wallpaperBlur; });
+        if (wallpaperBlurRange) wallpaperBlurRange.addEventListener('change', function () { applyWallpaperBlur(this.value); if (wallpaperBlurNum) wallpaperBlurNum.value = wallpaperBlur; this.value = wallpaperBlur; });
+        if (wallpaperBlurNum) wallpaperBlurNum.addEventListener('change', function () { applyWallpaperBlur(this.value); if (wallpaperBlurRange) wallpaperBlurRange.value = wallpaperBlur; this.value = wallpaperBlur; });
         if (overlayRange) overlayRange.addEventListener('input', function () { applyOverlayOpacity(this.value); if (overlayNum) overlayNum.value = this.value; });
         if (overlayNum) overlayNum.addEventListener('change', function () { applyOverlayOpacity(this.value); if (overlayRange) overlayRange.value = this.value; });
         if (opacityRange) opacityRange.addEventListener('input', function () { applyOpacity(this.value); if (opacityNum) opacityNum.value = this.value; });
@@ -407,8 +663,10 @@
         if (themeCheck) themeCheck.addEventListener('change', function () { applyThemeMode(this.checked); });
         if (panelOpacityRange) panelOpacityRange.addEventListener('input', function () { applyPanelOpacity(this.value); if (panelOpacityNum) panelOpacityNum.value = this.value; });
         if (panelOpacityNum) panelOpacityNum.addEventListener('change', function () { applyPanelOpacity(this.value); if (panelOpacityRange) panelOpacityRange.value = this.value; });
+        if (uiRadiusSel) uiRadiusSel.addEventListener('change', function () { applyUiRadius(this.value); });
         if (engineSel) engineSel.addEventListener('change', function () { applyEngine(this.value); });
         if (resetBtn) resetBtn.addEventListener('click', resetAppearanceDefaults);
+        syncCustomSelects(modalContent);
     }
 
     function buildWallpaperHTML() {
@@ -421,18 +679,13 @@
         ];
 
         var activeSource = currentMode === 'local' ? 'upload' : currentMode;
+        var pendingSourceText = tr('sourcePendingHint', '这个来源的配置正在接入中，当前还不会改变壁纸。');
         var configs = {
             bing:   '<p>' + (t('bingConfigHint') || '根据当前界面语言自动选择 Bing 市场区域。') + '</p>',
             upload: '<p>' + (t('uploadConfigHint') || '在一级面板中使用「+」按钮上传图片。支持多选，单张上限 12 张。') + '</p>',
-            folder: '<div class="config-row"><input type="text" value="" readonly class="opacity-50" placeholder="' + (t('noFolderSelected') || '未选择文件夹') + '"><button>' + (t('chooseFolder') || '选择文件夹') + '</button></div>' +
-                '<div class="folder-strategy-row">' +
-                '<label class="folder-strategy-label"><input type="radio" name="folderStrategy" value="random" checked> ' + (t('strategyRandom') || '随机') + '</label>' +
-                '<label class="folder-strategy-label"><input type="radio" name="folderStrategy" value="sequential"> ' + (t('strategySequential') || '顺序') + '</label></div>',
-            rss:    '<div class="config-row"><input type="text" placeholder="https://example.com/feed.xml"><button>' + (t('fetchImages') || '拉取图片') + '</button></div>' +
-                '<p class="mt-8">' + (t('rssConfigHint') || '支持 RSS 2.0 / Atom，自动提取 enclosure、media:content 中的图片') + '</p>',
-            api:    '<input type="text" class="input-w-full" placeholder="https://api.example.com/wallpaper">' +
-                '<input type="text" class="input-w-full" placeholder="' + (t('jsonPathPlaceholder') || 'JSON 图片路径，如 data.image.url') + '">' +
-                '<button>' + (t('saveConfig') || '保存配置') + '</button>'
+            folder: unavailableSourceHTML(pendingSourceText + ' ' + tr('folderPendingHint', '文件夹读取需要先完成目录授权和轮换策略。')),
+            rss:    unavailableSourceHTML(pendingSourceText + ' ' + tr('rssPendingHint', 'RSS 订阅需要先完成抓取、解析和缓存流程。')),
+            api:    unavailableSourceHTML(pendingSourceText + ' ' + tr('apiPendingHint', 'API 端点需要先完成 URL 校验和 JSON 路径解析。'))
         };
 
         var drawers = sources.map(function (s) {
@@ -528,6 +781,7 @@
     // Tab switching
     // ================================================================
     function switchTab(tabName) {
+        closeCustomSelects();
         activeTab = tabName;
         var tabs = modalWindow.querySelectorAll('.modal-tab');
         tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.tab === tabName); });
@@ -537,27 +791,175 @@
     // ================================================================
     // 搜索 & 界面设置
     // ================================================================
+    function clampNumber(value, min, max, fallback) {
+        var parsed = parseFloat(value);
+        if (!isFinite(parsed)) parsed = fallback;
+        return Math.min(max, Math.max(min, parsed));
+    }
+
+    function clampInteger(value, min, max, fallback) {
+        return Math.round(clampNumber(value, min, max, fallback));
+    }
+
+    function validValue(value, allowed, fallback) {
+        return allowed.indexOf(value) !== -1 ? value : fallback;
+    }
+
+    function searchPositionParts(value, fallbackAlign) {
+        var allowed = {
+            'edge-top': ['edge-top', 'center'],
+            top: ['top', 'center'],
+            upper: ['upper', 'center'],
+            'center-upper': ['center-upper', 'center'],
+            center: ['center', 'center'],
+            'center-lower': ['center-lower', 'center'],
+            lower: ['lower', 'center'],
+            bottom: ['bottom', 'center'],
+            'edge-bottom': ['edge-bottom', 'center']
+        };
+        if (allowed[value]) return { value: value, row: allowed[value][0], align: allowed[value][1] };
+
+        var legacyRows = {
+            top: 'top',
+            'top-left': 'top',
+            'top-center': 'top',
+            'top-right': 'top',
+            upper: 'upper',
+            'center-left': 'center',
+            center: 'center',
+            'center-right': 'center',
+            lower: 'lower',
+            bottom: 'bottom',
+            'bottom-left': 'bottom',
+            'bottom-center': 'bottom',
+            'bottom-right': 'bottom',
+            'edge-bottom': 'edge-bottom'
+        };
+        var row = legacyRows[value] || 'center';
+        return { value: row, row: row, align: DEFAULT_SEARCH_ALIGN };
+    }
+
     function applySearchMode(mode) {
-        searchMode = mode;
-        searchBar.classList.toggle('visible', mode === 'always');
+        searchMode = validValue(mode, ['hover', 'always', 'never'], DEFAULT_SEARCH_MODE);
+        searchBar.classList.toggle('visible', searchMode === 'always');
         saveAllSettings();
     }
 
     function applySearchPosition(pos) {
-        searchPosition = pos;
-        searchBar.setAttribute('data-position', pos);
+        var parts = searchPositionParts(pos, searchAlign);
+        searchPosition = parts.value;
+        searchAlign = parts.align;
+        searchBar.setAttribute('data-position', searchPosition);
+        searchBar.setAttribute('data-align', searchAlign);
+        saveAllSettings();
+    }
+
+    function applySearchAlign(align) {
+        var current = searchPositionParts(searchPosition, searchAlign);
+        searchAlign = validValue(align, ['left', 'center', 'right'], DEFAULT_SEARCH_ALIGN);
+        searchPosition = current.value;
+        searchBar.setAttribute('data-position', searchPosition);
+        searchBar.setAttribute('data-align', searchAlign);
+        saveAllSettings();
+    }
+
+    function applySearchIconPosition(value) {
+        searchIconPosition = validValue(value, ['left', 'right'], DEFAULT_SEARCH_ICON_POSITION);
+        searchBar.setAttribute('data-icon-position', searchIconPosition);
+        saveAllSettings();
+    }
+
+    function applySearchWidth(value) {
+        searchWidth = clampInteger(value, 360, 760, DEFAULT_SEARCH_WIDTH);
+        document.documentElement.style.setProperty('--search-width', searchWidth + 'px');
+        saveAllSettings();
+    }
+
+    function applySearchBackgroundOpacity(value) {
+        searchBackgroundOpacity = clampNumber(value, 0.04, 0.32, DEFAULT_SEARCH_BG_OPACITY);
+        searchBackgroundOpacity = parseFloat(searchBackgroundOpacity.toFixed(2));
+        document.documentElement.style.setProperty('--search-bg-opacity', searchBackgroundOpacity);
+        saveAllSettings();
+    }
+
+    function applySearchBlur(value) {
+        searchBlur = clampInteger(value, 0, 40, DEFAULT_SEARCH_BLUR);
+        document.documentElement.style.setProperty('--search-blur', searchBlur + 'px');
         saveAllSettings();
     }
 
     function applySearchRadius(radius) {
-        searchRadius = radius;
+        searchRadius = validValue(radius, ['capsule', 'rounded', 'sharp'], DEFAULT_SEARCH_RADIUS);
         var radii = { capsule: '28px', rounded: '12px', sharp: '4px' };
-        searchBar.style.borderRadius = radii[radius] || '28px';
+        searchBar.style.borderRadius = radii[searchRadius] || radii[DEFAULT_SEARCH_RADIUS];
+        saveAllSettings();
+    }
+
+    function applyWallpaperFit(value) {
+        wallpaperFit = validValue(value, ['cover', 'contain', '100% 100%'], DEFAULT_WALLPAPER_FIT);
+        document.documentElement.style.setProperty('--wallpaper-fit', wallpaperFit);
+        saveAllSettings();
+    }
+
+    function applyWallpaperPosition(value) {
+        wallpaperPosition = validValue(value, ['center', 'top', 'bottom', 'left', 'right'], DEFAULT_WALLPAPER_POSITION);
+        document.documentElement.style.setProperty('--wallpaper-position', wallpaperPosition);
+        saveAllSettings();
+    }
+
+    function normalizeWallpaperBlur(value) {
+        return clampInteger(value, 0, DEFAULT_WALLPAPER_BLUR_MAX, DEFAULT_WALLPAPER_BLUR);
+    }
+
+    function setWallpaperBlurCss(value) {
+        document.documentElement.style.setProperty('--wallpaper-blur', value + 'px');
+    }
+
+    function syncWallpaperBlurPerformanceMode() {
+        var active = wallpaperBlur > 5;
+        if (document.documentElement && document.documentElement.classList) {
+            document.documentElement.classList.toggle('wallpaper-blur-active', active);
+        }
+        var hint = document.getElementById('wallpaperBlurPerfHint');
+        if (hint) hint.classList.toggle('hidden', !active);
+    }
+
+    function queueWallpaperBlurApply() {
+        clearTimeout(wallpaperBlurApplyTimer);
+        wallpaperBlurApplyTimer = setTimeout(function () {
+            setWallpaperBlurCss(wallpaperBlur);
+            wallpaperBlurApplyTimer = null;
+        }, 120);
+    }
+
+    function queueWallpaperBlurSave() {
+        clearTimeout(wallpaperBlurSaveTimer);
+        wallpaperBlurSaveTimer = setTimeout(function () {
+            saveAllSettings();
+            wallpaperBlurSaveTimer = null;
+        }, 260);
+    }
+
+    function applyWallpaperBlur(value, options) {
+        wallpaperBlur = normalizeWallpaperBlur(value);
+        if (options && options.preview) {
+            setWallpaperBlurCss(wallpaperBlur);
+            syncWallpaperBlurPerformanceMode();
+            queueWallpaperBlurSave();
+            return;
+        }
+        clearTimeout(wallpaperBlurApplyTimer);
+        clearTimeout(wallpaperBlurSaveTimer);
+        wallpaperBlurApplyTimer = null;
+        wallpaperBlurSaveTimer = null;
+        setWallpaperBlurCss(wallpaperBlur);
+        syncWallpaperBlurPerformanceMode();
         saveAllSettings();
     }
 
     function applyOverlayOpacity(val) {
-        overlayOpacity = parseFloat(val);
+        overlayOpacity = clampNumber(val, 0, 0.6, DEFAULT_OVERLAY_OPACITY);
+        overlayOpacity = parseFloat(overlayOpacity.toFixed(2));
         var overlayEl = document.getElementById('wallpaperOverlay');
         if (!overlayEl) {
             overlayEl = document.createElement('div');
@@ -570,7 +972,8 @@
     }
 
     function applyOpacity(val) {
-        currentOpacity = parseFloat(val);
+        currentOpacity = clampNumber(val, 0, 1, DEFAULT_OPACITY);
+        currentOpacity = parseFloat(currentOpacity.toFixed(2));
         document.documentElement.style.setProperty('--icon-opacity', currentOpacity);
         saveAllSettings();
     }
@@ -590,8 +993,24 @@
     }
 
     function applyPanelOpacity(val) {
-        panelOpacity = parseFloat(val);
+        panelOpacity = clampNumber(val, 0.3, 1, DEFAULT_PANEL_OPACITY);
+        panelOpacity = parseFloat(panelOpacity.toFixed(2));
         document.documentElement.style.setProperty('--panel-opacity', panelOpacity);
+        saveAllSettings();
+    }
+
+    function applyUiRadius(value) {
+        uiRadius = validValue(value, ['compact', 'soft', 'round'], DEFAULT_UI_RADIUS);
+        var presets = {
+            compact: { sm: '6px', md: '8px', lg: '12px' },
+            soft: { sm: '8px', md: '12px', lg: '16px' },
+            round: { sm: '12px', md: '16px', lg: '22px' }
+        };
+        var preset = presets[uiRadius] || presets[DEFAULT_UI_RADIUS];
+        var root = document.documentElement.style;
+        root.setProperty('--radius-sm', preset.sm);
+        root.setProperty('--radius-md', preset.md);
+        root.setProperty('--radius-lg', preset.lg);
         saveAllSettings();
     }
 
@@ -654,34 +1073,72 @@
 
     function saveAllSettings() {
         var ui = D.loadUI();
+        if (!ui.search) ui.search = {};
+        if (!ui.wallpaper) ui.wallpaper = {};
+        if (!ui.icon) ui.icon = {};
+        if (!ui.panel) ui.panel = {};
+        if (!ui.appearance) ui.appearance = {};
         ui.search.visibility = searchMode;
         ui.search.engine = currentEngine;
         ui.search.position = searchPosition;
+        ui.search.align = searchAlign;
+        ui.search.iconPosition = searchIconPosition;
         ui.search.radius = searchRadius;
+        ui.search.width = searchWidth;
+        ui.search.backgroundOpacity = searchBackgroundOpacity;
+        ui.search.blur = searchBlur;
         ui.wallpaper.overlayOpacity = overlayOpacity;
         ui.wallpaper.themeEnabled = themeEnabled;
+        ui.wallpaper.fit = wallpaperFit;
+        ui.wallpaper.position = wallpaperPosition;
+        ui.wallpaper.blur = wallpaperBlur;
         ui.icon.opacity = currentOpacity;
         ui.panel.opacity = panelOpacity;
+        ui.appearance.radius = uiRadius;
         D.saveUI(ui);
     }
 
     function loadSettings() {
         var ui = D.loadUI();
-        searchMode = ui.search.visibility || DEFAULT_SEARCH_MODE;
-        searchPosition = ui.search.position || DEFAULT_SEARCH_POSITION;
-        searchRadius = ui.search.radius || DEFAULT_SEARCH_RADIUS;
-        currentOpacity = ui.icon.opacity !== undefined ? parseFloat(ui.icon.opacity) : DEFAULT_OPACITY;
-        overlayOpacity = ui.wallpaper.overlayOpacity !== undefined ? parseFloat(ui.wallpaper.overlayOpacity) : DEFAULT_OVERLAY_OPACITY;
-        panelOpacity = ui.panel.opacity !== undefined ? parseFloat(ui.panel.opacity) : DEFAULT_PANEL_OPACITY;
-        themeEnabled = ui.wallpaper.themeEnabled === true;
-        currentEngine = ui.search.engine || DEFAULT_ENGINE;
+        var search = ui.search || {};
+        var wallpaper = ui.wallpaper || {};
+        var icon = ui.icon || {};
+        var panel = ui.panel || {};
+        var appearance = ui.appearance || {};
+        searchMode = search.visibility || DEFAULT_SEARCH_MODE;
+        searchPosition = search.position || DEFAULT_SEARCH_POSITION;
+        searchAlign = search.align || DEFAULT_SEARCH_ALIGN;
+        searchPosition = searchPositionParts(searchPosition, searchAlign).value;
+        searchAlign = searchPositionParts(searchPosition, searchAlign).align;
+        searchIconPosition = search.iconPosition || DEFAULT_SEARCH_ICON_POSITION;
+        searchRadius = search.radius || DEFAULT_SEARCH_RADIUS;
+        searchWidth = search.width !== undefined ? search.width : DEFAULT_SEARCH_WIDTH;
+        searchBackgroundOpacity = search.backgroundOpacity !== undefined ? search.backgroundOpacity : DEFAULT_SEARCH_BG_OPACITY;
+        searchBlur = search.blur !== undefined ? search.blur : DEFAULT_SEARCH_BLUR;
+        currentOpacity = icon.opacity !== undefined ? parseFloat(icon.opacity) : DEFAULT_OPACITY;
+        overlayOpacity = wallpaper.overlayOpacity !== undefined ? parseFloat(wallpaper.overlayOpacity) : DEFAULT_OVERLAY_OPACITY;
+        panelOpacity = panel.opacity !== undefined ? parseFloat(panel.opacity) : DEFAULT_PANEL_OPACITY;
+        wallpaperFit = wallpaper.fit || DEFAULT_WALLPAPER_FIT;
+        wallpaperPosition = wallpaper.position || DEFAULT_WALLPAPER_POSITION;
+        wallpaperBlur = wallpaper.blur !== undefined ? wallpaper.blur : DEFAULT_WALLPAPER_BLUR;
+        uiRadius = appearance.radius || DEFAULT_UI_RADIUS;
+        themeEnabled = wallpaper.themeEnabled === true;
+        currentEngine = search.engine || DEFAULT_ENGINE;
 
         applySearchMode(searchMode);
         applySearchPosition(searchPosition);
+        applySearchIconPosition(searchIconPosition);
+        applySearchWidth(searchWidth);
+        applySearchBackgroundOpacity(searchBackgroundOpacity);
+        applySearchBlur(searchBlur);
         applySearchRadius(searchRadius);
         applyOpacity(currentOpacity);
+        applyWallpaperFit(wallpaperFit);
+        applyWallpaperPosition(wallpaperPosition);
+        applyWallpaperBlur(wallpaperBlur);
         applyOverlayOpacity(overlayOpacity);
         applyPanelOpacity(panelOpacity);
+        applyUiRadius(uiRadius);
         applyThemeMode(themeEnabled);
         if (!IS_EXTENSION) applyEngine(currentEngine);
     }
@@ -689,10 +1146,18 @@
     function resetAppearanceDefaults() {
         applySearchMode(DEFAULT_SEARCH_MODE);
         applySearchPosition(DEFAULT_SEARCH_POSITION);
+        applySearchIconPosition(DEFAULT_SEARCH_ICON_POSITION);
+        applySearchWidth(DEFAULT_SEARCH_WIDTH);
+        applySearchBackgroundOpacity(DEFAULT_SEARCH_BG_OPACITY);
+        applySearchBlur(DEFAULT_SEARCH_BLUR);
         applySearchRadius(DEFAULT_SEARCH_RADIUS);
         applyOpacity(DEFAULT_OPACITY);
+        applyWallpaperFit(DEFAULT_WALLPAPER_FIT);
+        applyWallpaperPosition(DEFAULT_WALLPAPER_POSITION);
+        applyWallpaperBlur(DEFAULT_WALLPAPER_BLUR);
         applyOverlayOpacity(DEFAULT_OVERLAY_OPACITY);
         applyPanelOpacity(DEFAULT_PANEL_OPACITY);
+        applyUiRadius(DEFAULT_UI_RADIUS);
         applyThemeMode(false);
         if (!IS_EXTENSION) applyEngine(DEFAULT_ENGINE);
         saveAllSettings();
@@ -700,20 +1165,28 @@
         var el;
         el = document.getElementById('modalSearchMode'); if (el) el.value = DEFAULT_SEARCH_MODE;
         el = document.getElementById('modalSearchPos'); if (el) el.value = DEFAULT_SEARCH_POSITION;
+        el = document.getElementById('modalSearchIconPosition'); if (el) el.value = DEFAULT_SEARCH_ICON_POSITION;
         el = document.getElementById('modalSearchRadius'); if (el) el.value = DEFAULT_SEARCH_RADIUS;
+        el = document.getElementById('modalSearchWidthRange'); if (el) el.value = DEFAULT_SEARCH_WIDTH;
+        el = document.getElementById('modalSearchWidthNum'); if (el) el.value = DEFAULT_SEARCH_WIDTH;
+        el = document.getElementById('modalSearchBgRange'); if (el) el.value = DEFAULT_SEARCH_BG_OPACITY;
+        el = document.getElementById('modalSearchBgNum'); if (el) el.value = DEFAULT_SEARCH_BG_OPACITY;
+        el = document.getElementById('modalSearchBlurRange'); if (el) el.value = DEFAULT_SEARCH_BLUR;
+        el = document.getElementById('modalSearchBlurNum'); if (el) el.value = DEFAULT_SEARCH_BLUR;
+        el = document.getElementById('modalWallpaperFit'); if (el) el.value = DEFAULT_WALLPAPER_FIT;
+        el = document.getElementById('modalWallpaperPosition'); if (el) el.value = DEFAULT_WALLPAPER_POSITION;
+        el = document.getElementById('modalWallpaperBlurRange'); if (el) el.value = DEFAULT_WALLPAPER_BLUR;
+        el = document.getElementById('modalWallpaperBlurNum'); if (el) el.value = DEFAULT_WALLPAPER_BLUR;
         el = document.getElementById('modalOpacityRange'); if (el) el.value = DEFAULT_OPACITY;
         el = document.getElementById('modalOpacityNum'); if (el) el.value = DEFAULT_OPACITY;
         el = document.getElementById('modalOverlayRange'); if (el) el.value = DEFAULT_OVERLAY_OPACITY;
         el = document.getElementById('modalOverlayNum'); if (el) el.value = DEFAULT_OVERLAY_OPACITY;
         el = document.getElementById('modalPanelOpacityRange'); if (el) el.value = DEFAULT_PANEL_OPACITY;
         el = document.getElementById('modalPanelOpacityNum'); if (el) el.value = DEFAULT_PANEL_OPACITY;
+        el = document.getElementById('modalUiRadius'); if (el) el.value = DEFAULT_UI_RADIUS;
         el = document.getElementById('modalEngineSel'); if (el) el.value = DEFAULT_ENGINE;
-        // Reset hotkeys
-        if (window.Palette) {
-            window.Palette.saveHotkey('ctrl+k');
-            window.Palette.saveHiddenHotkey('ctrl+shift+k');
-            window.Palette.saveRecommend(true);
-        }
+        el = document.getElementById('modalThemeEnabled'); if (el) el.checked = false;
+        syncCustomSelects(modalContent);
     }
 
     // ================================================================
@@ -743,27 +1216,30 @@
 
     function handleRecording(e) {
         if (!isRecording) return;
+        e.preventDefault();
+        e.stopPropagation();
         if (e.key === 'Escape') { cancelRecording(); return; }
 
         var id = isRecording === 'normal' ? 'hkNormal' : 'hkHidden';
         var el = document.getElementById(id);
         if (!el) { cancelRecording(); return; }
 
-        if (!e.ctrlKey) {
+        if (!e.ctrlKey || e.altKey) {
             el.value = t('needCtrl') || '需要 Ctrl 键';
             setTimeout(function () { if (isRecording) el.value = t('pressCombo') || '按下组合键...'; }, 800);
             return;
         }
 
-        if (e.key.length === 1 && e.key >= 'A' && e.key <= 'Z') {
+        var key = e.key.toUpperCase();
+        if (key.length === 1 && key >= 'A' && key <= 'Z') {
             var parts = ['Ctrl'];
             if (e.shiftKey) parts.push('Shift');
-            parts.push(e.key.toUpperCase());
+            parts.push(key);
             var combo = parts.join('+');
 
             var otherId = isRecording === 'normal' ? 'hkHidden' : 'hkNormal';
             var otherEl = document.getElementById(otherId);
-            if (otherEl && combo === otherEl.value) {
+            if (otherEl && combo.toLowerCase() === otherEl.value.toLowerCase()) {
                 el.value = t('hotkeyConflict') || '冲突！';
                 setTimeout(function () { if (isRecording) el.value = t('pressCombo') || '按下组合键...'; }, 1000);
                 return;
@@ -1463,6 +1939,7 @@
                 e.stopPropagation();
                 var tab = e.target.closest('.modal-tab');
                 if (tab) { switchTab(tab.dataset.tab); return; }
+                if (!e.target.closest('.custom-select')) closeCustomSelects();
             });
         }
 
@@ -1477,6 +1954,8 @@
         if (engineIcon && !IS_EXTENSION) {
             engineIcon.addEventListener('click', function (e) { e.stopPropagation(); nextEngine(); });
         }
+
+        document.addEventListener('keydown', handleRecording, true);
     }
 
     // ================================================================
