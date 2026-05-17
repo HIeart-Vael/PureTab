@@ -795,6 +795,36 @@
             '</div>';
     }
 
+    function apiSourceRowHTML(source, apiType, activeId) {
+        var hash = D.apiFieldHash(source, apiType);
+        var passed = D.isTestPassed(source, hash);
+        var checked = source.id === activeId ? ' checked' : '';
+        return '<div class="api-source-row' + (checked ? ' selected' : '') + '" data-api-type="' + apiType + '" data-api-source="' + escapeHtml(source.id) + '">' +
+            '<span class="source-status-dot ' + (passed ? 'passed' : 'failed') + '"></span>' +
+            '<label class="api-source-main"><input type="radio" name="apiSource" value="' + escapeHtml(source.id) + '"' + checked + '><span><strong>' + escapeHtml(source.name) + '</strong><small>' + escapeHtml(source.url) + '</small></span></label>' +
+            '<button type="button" data-action="test-api">' + tr('apiTest', '测试') + '</button>' +
+            '<button type="button" data-action="delete-api" aria-label="' + tr('deleteImage', '删除') + '">×</button>' +
+            '</div>';
+    }
+
+    function buildApiConfigHTML() {
+        var config = currentWallpaperDraft().providers.api.config;
+        var apiType = config.apiType === 'json' ? 'json' : 'image';
+        var sources = apiType === 'json' ? config.jsonSources : config.imageSources;
+        var activeId = apiType === 'json' ? config.activeJsonSourceId : config.activeImageSourceId;
+        var rows = sources.map(function (source) { return apiSourceRowHTML(source, apiType, activeId); }).join('');
+        function selected(value, current) { return String(value) === String(current) ? ' selected' : ''; }
+        return '<div class="api-config" data-api-type="' + apiType + '">' +
+            '<div class="api-type-tabs"><button type="button" data-api-type-tab="image" class="' + (apiType === 'image' ? 'active' : '') + '"><span></span>' + tr('apiTypeImage', '图片直链/重定向') + '</button><button type="button" data-api-type-tab="json" class="' + (apiType === 'json' ? 'active' : '') + '"><span></span>' + tr('apiTypeJson', 'JSON') + '</button></div>' +
+            '<div class="api-source-list">' + rows + '</div>' +
+            '<div class="api-notice" id="apiNotice" hidden></div>' +
+            '<div class="api-add-row"><input id="apiNameInput" type="text" placeholder="' + tr('rssNamePlaceholder', '源名称') + '"><input id="apiUrlInput" type="url" placeholder="https://example.com/wallpaper">' + (apiType === 'json' ? '<input id="apiJsonPathInput" type="text" placeholder="data.image.url">' : '') + '<button id="apiAddBtn" type="button">' + tr('rssAdd', '添加') + '</button></div>' +
+            '<div class="api-options">' +
+            settingItem(tr('rssRefreshInterval', '自动拉取'), '', '<select id="apiRefreshInterval"><option value="0"' + selected(0, config.refreshIntervalMs) + '>' + tr('rssRefreshOff', '关闭') + '</option><option value="-1"' + selected(-1, config.refreshIntervalMs) + '>' + tr('apiRefreshEveryTab', '每次打开') + '</option><option value="86400000"' + selected(86400000, config.refreshIntervalMs) + '>1 天</option><option value="259200000"' + selected(259200000, config.refreshIntervalMs) + '>3 天</option><option value="604800000"' + selected(604800000, config.refreshIntervalMs) + '>7 天</option></select>', 'setting-compact') +
+            '</div>' +
+            '</div>';
+    }
+
     function buildAppearanceHTML() {
         var searchModeControl = '<select id="modalSearchMode">' +
             '<option value="hover"' + (searchMode === 'hover' ? ' selected' : '') + '>' + (t('searchHover') || '悬停时显示') + '</option>' +
@@ -958,7 +988,7 @@
             upload: '<p>' + (t('uploadConfigHint') || '在一级面板中使用「+」按钮上传图片。支持多选，单张上限 12 张。') + '</p>',
             folder: unavailableSourceHTML(pendingSourceText + ' ' + tr('folderPendingHint', '文件夹读取需要先完成目录授权和轮换策略。')),
             rss:    buildRssConfigHTML(),
-            api:    unavailableSourceHTML(pendingSourceText + ' ' + tr('apiPendingHint', 'API 端点需要先完成 URL 校验和 JSON 路径解析。'))
+            api:    buildApiConfigHTML()
         };
 
         var drawers = sources.map(function (s) {
@@ -995,6 +1025,7 @@
             });
         });
         bindRssConfigEvents();
+        bindApiConfigEvents();
         var applyBtn = modalContent.querySelector('#wallpaperApplyBtn');
         if (applyBtn) applyBtn.addEventListener('click', applyWallpaperDraft);
         var reset = modalContent.querySelector('#wallpaperResetBtn');
@@ -1192,6 +1223,138 @@
                 setRssTestButtonState(testButton, false);
             });
         }
+    }
+
+    function bindApiConfigEvents() {
+        var root = modalContent.querySelector('.api-config');
+        if (!root) return;
+        root.addEventListener('click', onApiConfigClick);
+        root.addEventListener('change', onApiConfigChange);
+    }
+
+    function onApiConfigChange(e) {
+        var config = currentWallpaperDraft().providers.api.config;
+        if (e.target.id === 'apiRefreshInterval') {
+            config.refreshIntervalMs = parseInt(e.target.value, 10);
+            refreshWallpaperApplyFooter();
+            return;
+        }
+        if (e.target.name === 'apiSource') {
+            if (config.apiType === 'json') config.activeJsonSourceId = e.target.value;
+            else config.activeImageSourceId = e.target.value;
+            wallpaperDraftApiTestResult = null;
+            invalidateWallpaperTab();
+        }
+    }
+
+    function onApiConfigClick(e) {
+        var target = e.target;
+        var config = currentWallpaperDraft().providers.api.config;
+        var apiType = config.apiType === 'json' ? 'json' : 'image';
+        var typeTab = target.closest('[data-api-type-tab]');
+        if (typeTab) {
+            config.apiType = typeTab.dataset.apiTypeTab === 'json' ? 'json' : 'image';
+            wallpaperDraftApiTestResult = null;
+            invalidateWallpaperTab();
+            return;
+        }
+        if (target.id === 'apiAddBtn') {
+            var name = document.getElementById('apiNameInput').value.trim();
+            var url = document.getElementById('apiUrlInput').value.trim();
+            var pathEl = document.getElementById('apiJsonPathInput');
+            var list = apiType === 'json' ? config.jsonSources : config.imageSources;
+            if (list.length >= 5) return showApiNotice(tr('apiLimit', '最多 5 个 API 源'), 'error');
+            if (!F.isHttpUrl(url)) return showApiNotice(tr('apiInvalidUrl', '请输入 http:// 或 https:// 链接'), 'error');
+            var id = apiType + '-' + F.generateId();
+            var source = {
+                id: id,
+                name: name || url,
+                url: url,
+                test: { status: 'untested', fieldHash: '', testedAt: 0, imageUrl: '', error: '' }
+            };
+            if (apiType === 'json') source.jsonPath = pathEl ? pathEl.value.trim() : '';
+            list.push(source);
+            if (apiType === 'json') config.activeJsonSourceId = id;
+            else config.activeImageSourceId = id;
+            wallpaperDraftApiTestResult = null;
+            invalidateWallpaperTab();
+            return;
+        }
+        var row = target.closest('.api-source-row');
+        if (!row) return;
+        var listForRow = row.dataset.apiType === 'json' ? config.jsonSources : config.imageSources;
+        var sourceForRow = listForRow.filter(function (item) { return item.id === row.dataset.apiSource; })[0];
+        if (!sourceForRow) return;
+        if (target.dataset.action === 'delete-api') {
+            listForRow.splice(listForRow.indexOf(sourceForRow), 1);
+            if (row.dataset.apiType === 'json') config.activeJsonSourceId = listForRow[0] ? listForRow[0].id : '';
+            else config.activeImageSourceId = listForRow[0] ? listForRow[0].id : '';
+            wallpaperDraftApiTestResult = null;
+            invalidateWallpaperTab();
+            return;
+        }
+        if (target.dataset.action === 'test-api') {
+            runApiSourceTest(sourceForRow, row.dataset.apiType, target);
+        }
+    }
+
+    function showApiNotice(message, type) {
+        var el = document.getElementById('apiNotice');
+        if (!el) return;
+        el.textContent = message || '';
+        el.dataset.type = type || 'info';
+        el.hidden = !message;
+    }
+
+    function apiErrorMessage(err) {
+        var map = {
+            INVALID_API_URL: tr('apiInvalidUrl', '请输入 http:// 或 https:// 链接'),
+            API_AUTH_REQUIRED: tr('apiAuthRequired', '该接口可能需要鉴权，当前版本仅支持把 token 放在 URL 参数里的 GET 接口'),
+            API_CORS_OR_NETWORK: tr('apiCorsFailed', '请求失败，可能是 CORS、网络或权限限制'),
+            API_TIMEOUT: tr('apiTimeout', 'API 请求超时'),
+            API_JSON_PARSE_FAILED: tr('apiJsonParseFailed', 'JSON 内容无法解析'),
+            API_JSON_PATH_FAILED: tr('apiJsonPathFailed', '没有从 JSON 中找到图片 URL'),
+            API_NOT_IMAGE: tr('apiNotImage', '响应不是图片'),
+            API_IMAGE_DOWNLOAD_FAILED: tr('apiImageDownloadFailed', '图片下载失败')
+        };
+        return map[err && err.code] || (err && err.message ? err.message : String(err || 'API failed'));
+    }
+
+    function runApiSourceTest(source, apiType, button) {
+        button.disabled = true;
+        button.classList.add('testing');
+        showApiNotice(tr('rssTesting', '正在测试...'), 'info');
+        F.testApiSource(source, apiType).then(function (result) {
+            source.test = {
+                status: 'passed',
+                fieldHash: D.apiFieldHash(source, apiType),
+                testedAt: Date.now(),
+                imageUrl: result.imageUrl || '',
+                error: ''
+            };
+            wallpaperDraftApiTestResult = result;
+            showApiNotice(tr('apiTestOk', '测试通过'), 'success');
+            refreshWallpaperApplyFooter();
+            var passedDot = button.closest('.api-source-row') && button.closest('.api-source-row').querySelector('.source-status-dot');
+            if (passedDot) passedDot.classList.add('passed');
+        }).catch(function (err) {
+            var message = apiErrorMessage(err);
+            source.test = {
+                status: 'failed',
+                fieldHash: D.apiFieldHash(source, apiType),
+                testedAt: Date.now(),
+                imageUrl: '',
+                error: message
+            };
+            wallpaperDraftApiTestResult = null;
+            showApiNotice(message, 'error');
+            refreshWallpaperApplyFooter();
+            var failedDot = button.closest('.api-source-row') && button.closest('.api-source-row').querySelector('.source-status-dot');
+            if (failedDot) failedDot.classList.remove('passed');
+        }).finally(function () {
+            button.disabled = false;
+            button.classList.remove('testing');
+        });
     }
 
     function buildShortcutsHTML() {
