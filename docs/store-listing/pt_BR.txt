@@ -1,79 +1,98 @@
-PlainTab é uma extensão de navegador que torna cada nova aba um prazer visual.
+PlainTab é uma nova guia bonita, rápida e silenciosa.
 
-Por quê? Porque sua nova aba merece um bom papel de parede, e não anúncios, notícias e atalhos.
+Por quê? Porque sua nova guia deveria mostrar primeiro um papel de parede agradável, não anúncios, notícias, tendências ou uma tela cheia de atalhos.
+
+O PlainTab faz uma coisa simples: você abre uma nova guia, vê o papel de parede e então pesquisa, digita uma URL ou abre seus próprios atalhos. Ele não disputa sua atenção nem transforma a página inicial do navegador em mais um feed.
 
 Por que escolher o PlainTab?
 
-• 【Liberdade de papel de parede】
-• Imagem diária do Bing atualizada automaticamente — dois endpoints globais em corrida concorrente, rápido onde quer que você esteja.
-• Velocidade máxima de carregamento local — o papel de parede fica armazenado na sua máquina, lido instantaneamente ao abrir a aba, uma ordem de grandeza mais rápido que qualquer requisição de rede.
-• Envie até 12 papéis de parede locais, com rotação automática a cada nova aba. Visualização em grade 3×4, exclua ou troque quando quiser.
+【Imagem imediatamente】
+• Carregamento local de papéis de parede extremamente rápido: o PlainTab salva localmente uma prévia leve e a carrega instantaneamente a cada nova guia, reduzindo piscadas de tela branca.
+• Papéis de parede em alta resolução trocam suavemente em segundo plano, enquanto a imagem existente permanece abaixo como fallback. Você não precisa esperar a rede para ver um fundo.
+• Papéis de parede diários do Bing têm cache e atualização; depois do primeiro uso, as próximas aberturas ficam mais fluidas.
 
-• 【Privacidade absoluta】
-• Sem anúncios, sem rastreamento, sem coleta de dados.
-• Todos os papéis de parede são armazenados offline na sua máquina — sem upload, sem sincronização, sem passar por qualquer servidor. Sua atividade de navegação pertence apenas a você.
+【Liberdade de papéis de parede】
+• Suporta papéis de parede diários do Bing e suas próprias imagens enviadas.
+• Permite selecionar uma pasta local de papéis de parede, ideal para quem já tem uma coleção.
+• Suporta fontes RSS de imagens e APIs personalizadas: simples quando você quer simplicidade, flexível quando quer experimentar.
+• Papéis de parede locais suportam até 12 imagens em rotação, com prévia de galeria 3×4 para excluir ou substituir a qualquer momento.
 
-• 【Rápido, sem incomodar】
-• JavaScript puro nativo, zero dependências externas. Sem frameworks de terceiros, o navegador exibe instantaneamente.
-• O papel de parede gera em segundo plano uma pré-visualização ultraleve; na próxima vez que você abrir uma nova aba, ele é lido diretamente do computador local, sem passar pela rede.
+【Silencioso, mas não vazio】
+• A página inicial permanece contida: papel de parede, barra de busca e poucas entradas necessárias, sem encher a tela de widgets.
+• A barra de busca permite ajustar posição, tamanho, cantos arredondados, transparência e modo de exibição.
+• Ela pode ficar sempre visível, aparecer quando necessário ou permanecer oculta.
+• Atalhos são gerenciados no painel de comandos, com busca, adição, edição e importação de favoritos, sem cobrir o papel de parede.
+• O espaço oculto permite guardar links que você não quer exibir diretamente, mantendo a página limpa.
 
-• 【Flexível, não complicado】
-• Correspondência automática em 16 idiomas.
-• Barra de pesquisa: aparece ao passar o mouse / sempre visível / oculta.
-• Mecanismo de busca: Google / Bing / Baidu / DuckDuckGo (modo Web).
+【Privacidade em primeiro lugar】
+• Sem anúncios, sem rastreamento e sem coleta de dados de navegação.
+• Papéis de parede enviados localmente ficam no armazenamento local do navegador. Eles não são enviados, sincronizados nem passam por servidores de terceiros.
+• Configurações de busca e atalhos são pensadas para uso local. Sua nova guia deve pertencer a você.
 
-• 【Transparente e código aberto】
-• Código totalmente aberto: https://github.com/kaininx/PlainTab
-• Experimente online: https://plaintab.kaininx.workers.dev
+【Leve e transparente】
+• Construído com JavaScript nativo, CSS e APIs do navegador, sem framework frontend, sem etapa de build e sem grandes dependências de runtime.
+• Funciona como extensão de nova guia para Chrome / Edge e também pode ser aberto diretamente como página web.
+• Totalmente open source, adequado para uso diário e para aprender desenvolvimento de extensões, frontend e engenharia assistida por IA.
 
-✨ Uso combinado (recomendado pelo desenvolvedor):
-• 📌 Nova aba: instale esta extensão, permite configurar até 12 papéis de parede diferentes, sem limite de tamanho.
-• 📌 Página inicial: configure o navegador para https://plaintab.kaininx.workers.dev para manter o modo diário padrão.
-• 📌 Botão inicial: configure para https://kaininx.github.io/PlainTab/, que é o GitHub Pages deste projeto, para definir papéis de parede adicionais de sua preferência.
+O PlainTab é para você se quiser:
 
-PlainTab é para você, se está cansado de:
-• Novas abas cheias de anúncios, notícias e atalhos inúteis
-• Extensões de navegador que coletam seus dados secretamente em segundo plano
-• Navegador ficando lento com muitas extensões, quando você quer velocidade nativa
-• Ver a mesma imagem todos os dias ao abrir uma nova aba
+• Uma nova guia mais bonita sem ruído de feeds
+• Papéis de parede diários ou um lugar para gerenciar sua própria coleção
+• Busca, atalhos, importação de favoritos e backup sem bagunçar a página
+• Uma página inicial que não seja coberta por dezenas de atalhos
+• Uma extensão leve e transparente sem ferramentas de build complexas
+• Um projeto real e completo de extensão de navegador para aprender
+
+O que o PlainTab não fará:
+
+• Sem feeds de notícias, listas de tendências ou recomendações
+• Sem anúncios, cartões patrocinados ou espaços promocionais
+• Sem sistema de contas, funções sociais ou fluxo de conteúdo em nuvem
+• Sem uma parede de atalhos cobrindo a página inicial
+• Sem vídeos em reprodução automática ou fundos animados
 
 Suporte e feedback
-• Gostou do PlainTab? Deixe uma avaliação positiva na Chrome Web Store.
-• GitHub: https://github.com/kaininx/PlainTab
-• Problemas ou sugestões? Sinta-se à vontade para abrir um Issue.
+
+• Código aberto: https://github.com/kaininx/PlainTab
+• Demo online: https://plaintab.kaininx.workers.dev
+• Notas de lançamento detalhadas: https://github.com/kaininx/PlainTab/blob/main/docs/RELEASE_NOTES.md
+• Gostou do PlainTab? Uma avaliação na Chrome Web Store é sempre bem-vinda.
+• Dúvidas ou sugestões? Abra uma Issue no GitHub.
 
 Registro de alterações
+
+• v3.2.0 · Grande atualização de recursos e desempenho: adiciona painel de comandos, papéis de parede RSS/API/pasta local, cores de tema do papel de parede via WASM, importação/exportação de configuração e histórico de busca; migra o armazenamento para o modelo v3.2, restringe permissões e fallback de busca, e modulariza/otimiza inicialização, papéis de parede, galeria e configurações.
 
 • v3.1.4 · Refatorada a nomenclatura de constantes de armazenamento e unificada a migração IDB em transação de duas fases para ordenação recuperável; otimizado o salto de migração para novos usuários; adicionada deduplicação em lote com limite de 12 imagens
 
 • v3.1.3 · Implementada migração de versão de armazenamento para localStorage e IndexedDB, unificada a nomenclatura de chaves, corrigida a lógica de persistência de miniaturas no modo local.
 
-• v3.1.2 · Renomeado _locales/pt para pt_BR para conformidade com a Chrome Web Store; formato do changelog unificado para estilo compacto; arquivos em português renomeados para pt_BR para consistência.
+• v3.1.2 · _locales/pt renomeado para pt_BR para conformidade com a Chrome Web Store; formato do changelog unificado; arquivos em português renomeados para pt_BR.
 
-• v3.1.1 · A API do Bing foi alterada para o modo de corrida Promise.any com um tempo limite de 8 segundos via AbortController; todos os 16 READMEs de idiomas foram atualizados para refletir a nova estratégia de obtenção.
+• v3.1.1 · Bing API alterada para modo de corrida Promise.any com timeout AbortController de 8 segundos; READMEs em 16 idiomas atualizados.
 
-• v3.1.0 · Galeria local de papéis de parede: envio/exclusão/rotação de múltiplos papéis de parede locais, seleção em lote; refatoração de código; melhoria nos estilos dos painéis; localização multilíngue aprimorada; correção de CSP com remoção de domínios de API JSON.
+• v3.1.0 · Galeria de papéis de parede locais: enviar, excluir e alternar várias imagens, seleção em lote; estilo dos painéis melhorado; localização ampliada; configuração CSP mais restrita.
 
-• v3.0.5 · Atualização do proxy da API do Bing (requisições regionalizadas + deduplicação de imagens); otimização do cache de papéis de parede; unificação dos nomes de chaves do localStorage; novo changelog em 16 idiomas; melhoria de logs e semântica do código.
+• v3.0.5 · Proxy da Bing API atualizado, cache de papéis de parede otimizado, chaves localStorage unificadas, changelogs em 16 idiomas adicionados, logs e semântica de código melhorados.
 
-• v3.0.4 · Corrigida falha no carregamento de papéis de parede: a lista branca CSP img-src não incluía o domínio CDN do Bing, fazendo com que as imagens redirecionadas pelo proxy da API fossem bloqueadas pelo navegador.
+• v3.0.4 · Corrigida falha de carregamento de papéis de parede causada por domínios Bing CDN ausentes na allowlist CSP de imagens.
 
-• v3.0.3 · Bypass do CSSOM para acelerar a renderização do primeiro quadro, reforço de segurança CSP, limpeza de código morto, novos ícones SVG e material promocional.
+• v3.0.3 · Caminho de primeiro render otimizado, segurança CSP reforçada, código não usado removido, ícones e materiais promocionais adicionados.
 
-• v3.0.2 · Fundo adaptativo no modo escuro, reestruturação de código, barra de informação multilíngue na parte inferior.
+• v3.0.2 · Fundo adaptativo no modo escuro, estrutura de código ajustada, barra inferior multilíngue adicionada.
 
-• v3.0.1 · Integração da Chrome Search API para passar na auditoria de conformidade de propósito único do Chrome Web Store.
+• v3.0.1 · Chrome Search API integrada para cumprir os requisitos de finalidade única da Chrome Web Store.
 
-• v3.0.0 · Reescrita completa: arquitetura de dupla camada para eliminar o flicker de tela branca em novas abas, adicionado fundo cinza de fallback.
+• v3.0.0 · Reescrita do núcleo: arquitetura de duas camadas reduz piscadas brancas em novas guias, com fundo de fallback.
 
-• v2.2.7 · Novos READMEs em inglês, japonês, coreano, russo e chinês simplificado; modo de busca padrão alterado para "sempre visível".
+• v2.2.7 · READMEs adicionados em inglês, japonês, coreano, russo e chinês simplificado; modo de busca padrão alterado para sempre visível.
 
-• v2.2.6 · Otimização da lógica de carregamento de papéis de parede e do cache de miniaturas, reorganização das constantes da API do Bing.
+• v2.2.6 · Carregamento de papéis de parede e cache de miniaturas otimizados, constantes da Bing API organizadas.
 
-• v2.2.5 · Pré-carregamento de papéis de parede e otimização do primeiro quadro, eliminando a tela branca em novas abas.
+• v2.2.5 · Pré-carregamento de papéis de parede e otimização do primeiro quadro adicionados para reduzir telas brancas.
 
-• v2.2.4 · Migração do armazenamento de papéis de parede de localStorage para IndexedDB.
+• v2.2.4 · Armazenamento de papéis de parede migrado de localStorage para IndexedDB.
 
-• v2.2.3 · Envio de papéis de parede locais, melhoria na experiência de troca de mecanismo de busca.
+• v2.2.3 · Envio de papéis de parede locais adicionado e troca de mecanismo de busca melhorada.
 
-• v1.2.0 · Primeiro lançamento: sistema de papéis de parede, interface em 16 idiomas, localização Chrome i18n, licença MIT.
+• v1.2.0 · Primeira versão: sistema de papéis de parede, interface em 16 idiomas, localização Chrome i18n e licença MIT.

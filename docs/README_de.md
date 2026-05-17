@@ -1,279 +1,245 @@
 <p align="center">
-  <img src="../icon/icon2048.png" alt="PlainTab Logo" width="80">
+  <a href="../README.md">English</a>
+  ·
+  <a href="../README.zh-CN.md">简体中文</a>
+  ·
+  <a href="README_zh-TW.md">繁體中文</a>
+  ·
+  <a href="README_hi.md">हिन्दी</a>
+  ·
+  <a href="README_es.md">Español</a>
+  ·
+  <a href="README_ar.md">العربية</a>
+  ·
+  <a href="README_fr.md">Français</a>
+  ·
+  <a href="README_pt_BR.md">Português</a>
+  ·
+  <a href="README_ru.md">Русский</a>
+  ·
+  Deutsch
+  ·
+  <a href="README_ja.md">日本語</a>
+  ·
+  <a href="README_it.md">Italiano</a>
+  ·
+  <a href="README_tr.md">Türkçe</a>
+  ·
+  <a href="README_vi.md">Tiếng Việt</a>
+  ·
+  <a href="README_ko.md">한국어</a>
+  ·
+  <a href="README_pl.md">Polski</a>
 </p>
 
-<h1 align="center">PlainTab · Minimalistische neue Tab-Seite</h1>
+<p align="center">
+  <img src="../icon/icon2048.png" alt="PlainTab Logo" width="92">
+</p>
 
-
- > Ein neuer Tab sollte nur eines tun — geoffnet werden, ein schones Hintergrundbild zeigen und dich zur nachsten Seite bringen. Brauchst du wirklich eine Uhr, eine Begrußung oder einen Bildschirm voller Schnellzugriffe? Die Antwort von PlainTab: maximale Reduktion, hochste Geschwindigkeit — mach deinen neuen Tab wieder zu dem, was er sein sollte: schon und sauber.
+<h1 align="center">PlainTab</h1>
 
 <p align="center">
-  <a href="../README.md">English</a> · <a href="README_zh-CN.md">中文 (简体)</a> · <a href="README_zh-TW.md">中文 (繁體)</a> · <a href="README_hi.md">हिन्दी</a> · <a href="README_es.md">Español</a> · <a href="README_ar.md">العربية</a> · <a href="README_fr.md">Français</a> · <a href="README_pt_BR.md">Português</a> · <a href="README_ru.md">Русский</a> · <a href="README_ja.md">日本語</a> · <a href="README_it.md">Italiano</a> · <a href="README_tr.md">Türkçe</a> · <a href="README_vi.md">Tiếng Việt</a> · <a href="README_ko.md">한국어</a> · <a href="README_pl.md">Polski</a>
+  Eine schöne, schnelle und ruhige neue Tab-Seite.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.4-blue?style=flat-square" alt="Version">
-  <img src="https://img.shields.io/badge/Chrome-≥88-brightgreen?style=flat-square&logo=googlechrome" alt="Chrome">
-  <img src="https://img.shields.io/badge/Edge-≥88-brightgreen?style=flat-square&logo=microsoftedge" alt="Edge">
-  <a href="../LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="Lizenz">
-  </a>
-  <a href="https://plaintab.kaininx.workers.dev">
-    <img src="https://img.shields.io/badge/Online%20testen-Cloudflare-00c7b7?style=flat-square&logo=cloudflare" alt="Cloudflare">
-  </a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Manifest-V3-4285f4?style=flat-square&logo=googlechrome" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/AI-Collaboration-7c3aed?style=flat-square" alt="AI Collaboration">
+  <img src="https://img.shields.io/badge/No-Build_Step-00a884?style=flat-square" alt="No Build Step">
 </p>
 
 <div align="center">
-  <img src="../imgs/chrome_01.jpg" width="45%" />
-  <img src="../imgs/chrome_02.jpg" width="45%" />
+  <img src="../imgs/chrome_01.jpg" width="45%" alt="PlainTab screenshot 1" />
+  <img src="../imgs/chrome_02.jpg" width="45%" alt="PlainTab screenshot 2" />
 </div>
 
-<details>
-<summary><b>📸 Weitere Screenshots anzeigen</b></summary>
-<div align="center">
-  <img src="../imgs/chrome_03.jpg" width="45%" />
-  <img src="../imgs/chrome_04.jpg" width="45%" />
-  <img src="../imgs/chrome_05.jpg" width="45%" />
-  <img src="../imgs/chrome_06.jpg" width="45%" />
-  <img src="../imgs/chrome_07.jpg" width="45%" />
-  <img src="../imgs/chrome_08.jpg" width="45%" />
-</div>
-</details>
+## Was ist das?
 
----
-Einen neuen Tab zu offnen ist eine Augenblickshandlung — du druckst `Ctrl+T` und erwartest, dass dein Hintergrundbild bereits da ist. Um das richtig zu machen, ist das gesamte Design von PlainTab auf ein Ziel ausgerichtet: **das Hintergrundbild so schnell wie moglich auf dem Bildschirm erscheinen zu lassen**, ohne sichtbaren Ladevorgang. Zweischichtarchitektur, synchrones Vorladen, Canvas-Miniaturbild-Pipeline, hybride Speicherstrategie — jede technische Entscheidung fuhrt zum selben Ziel: schneller, flussiger, unbemerkter.
+PlainTab ist eine neue Tab-Seite für den Browser.
 
-PlainTab ist sowohl eine Manifest-V3-Browsererweiterung als auch eine eigenstandige Webseite. Null externe Abhangigkeiten, kein Build-Schritt, reines Vanilla-JS + CSS. Der Erweiterungsmodus und der Webmodus teilen sich denselben Code mit automatischer Umgebungserkennung zur Laufzeit. [Online testen](https://plaintab.kaininx.workers.dev).
+Es macht etwas ganz Einfaches: Wenn du einen neuen Tab öffnest, siehst du zuerst ein schönes Hintergrundbild, dann kannst du direkt suchen, eine URL eingeben oder deine eigenen Kurzlinks öffnen.
 
----
+Es gibt keinen News-Feed, keine bildschirmfüllenden Widgets, kein Wetter, keine Begrüßung, keine To-do-Liste, und nichts, was deine Aufmerksamkeit woanders hinzieht. Es ist eher wie ein sauberer Schreibtisch: da, wenn du es brauchst; unaufdringlich, wenn du es nicht brauchst.
+
+## Warum es sich lohnt
+
+### Bild sofort beim Öffnen
+
+Das auffälligste an PlainTab ist die Geschwindigkeit.
+
+Viele neue Tab-Seiten blitzen beim Öffnen kurz weiß auf, bevor das Bild erscheint. PlainTab versucht, dieses Gefühl zu vermeiden. Sobald du es einmal benutzt hast und der Browser einen Cache hat, erscheint das Hintergrundbild beim nächsten Öffnen sehr schnell — als wäre es schon immer da gewesen.
+
+Das ist nicht die Art von "Performance-Optimierung", die nur in Spezifikationen steht — es ist eine flüssige Erfahrung, die du direkt spürst.
+
+### Angenehm auf den ersten Blick
+
+Die Standardoberfläche ist zurückhaltend: Hintergrundbild, Suchleiste, ein paar kleine Buttons.
+
+Es überhäuft dich beim Öffnen nicht mit Informationen und verwandelt die Browser-Startseite nicht in einen weiteren Arbeitsplatz. Seine Schönheit kommt vom Weglassen, nicht vom Anhäufen.
+
+### Viele Möglichkeiten bei Hintergrundbildern
+
+Du kannst direkt das tägliche Bing-Hintergrundbild verwenden, eigene Bilder hochladen oder einen Hintergrundbild-Ordner auf deinem Computer auswählen.
+
+Wenn du gerne experimentierst, kannst du auch RSS-Bildquellen oder deine eigene Bild-API einbinden. Einfach zu benutzen, wenn du es einfach willst, aber mit Tiefe, wenn du tiefer eintauchen möchtest.
+
+### Angenehme Suche
+
+Die Suchleiste kann an der gewünschten Position platziert werden, mit anpassbarer Größe, Abrundung, Transparenz und Anzeigemodus.
+
+Du kannst sie immer sichtbar lassen oder sie normalerweise ausblenden, sodass sie nur bei Bedarf erscheint. Sie sieht leicht aus, ist aber im Alltag sehr praktisch.
+
+### Kurzlinks, die die Startseite nicht überladen
+
+Viele neue Tab-Seiten füllen den Bildschirm mit Kurzlinks. PlainTab macht das nicht.
+
+Es legt die Kurzlinks in eine Befehlspalette. Du kannst suchen, hinzufügen, bearbeiten, Lesezeichen importieren und einige Links in einen versteckten Bereich legen. Die Startseite bleibt sauber, aber die Funktionen fehlen nicht.
+
+### Viele Einstellungen, aber nicht aufdringlich
+
+PlainTab lässt sich anpassen: Hintergrundbild, Suchleiste, Tastenkürzel, Backups, Sprache, Oberflächendetails.
+
+Aber diese Einstellungen überladen die Startseite nicht. Normalerweise siehst du eine ruhige neue Tab-Seite; wenn du Anpassungen brauchst, öffnest du das Einstellungs-Panel.
+
+## Ein KI-gestütztes Projekt
+
+PlainTab eignet sich auch hervorragend zum Lernen.
+
+Es ist kein Spielzeugprojekt, das nur auf Demo-Niveau bleibt, sondern eine vollständige neue Tab-Erweiterung: mit echter Oberfläche, Benutzereinstellungen, Datenspeicherung, Import und Export, Mehrsprachigkeit, sowohl als Browser-Erweiterung als auch als normale Webseite.
+
+Das Projekt wurde in Entwicklung, Organisation, Dokumentation und Iteration umfassend mit KI-Unterstützung erstellt. Du kannst es als hervorragendes Lernbeispiel nutzen:
+
+- Um zu sehen, wie KI an echter Projektentwicklung teilnimmt.
+- Um zu lernen, wie eine Browser-Erweiterung gebaut wird.
+- Um in Frontend einzusteigen, ohne sofort mit komplexen Frameworks konfrontiert zu werden.
+- Um ein kleines Projekt zu studieren, das von der Idee über Funktionen und UX bis zur Dokumentation recht vollständig ist.
+
+Der Code ist nicht von komplexen Build-Tools abhängig — Dateien öffnen und lesen, Seite öffnen und sie läuft. Für Einsteiger ist das freundlicher, als zuerst eine Reihe von Abhängigkeiten installieren zu müssen.
+
+## Für wen ist es?
+
+PlainTab ist für diese Leute geeignet:
+
+- Die eine schönere neue Tab-Seite haben möchten.
+- Die es nicht mögen, beim Öffnen des Browsers eine Flut von Informationen zu sehen.
+- Die tägliche Hintergrundbilder mögen oder eine eigene Hintergrundbild-Sammlung haben.
+- Die eine leichte, aber funktional vollständige Startseite wollen.
+- Die ein echtes, vollständiges KI-Kollaborationsprojekt zum Lernen suchen.
+- Die in Browser-Erweiterungen oder Frontend-Projekte einsteigen möchten.
+
+## Was es nicht tun wird
+
+PlainTab wird weiterhin zurückhaltend bleiben. Manche Funktionen, selbst wenn viele sie kennen, passen nicht unbedingt in dieses Projekt.
+
+Wird höchstwahrscheinlich nicht unterstützt:
+
+- News-Feeds, Trendlisten, Empfehlungsinhalte.
+- Startbildschirm-Werbung, Werbekarten, Sponsorenplätze.
+- Großflächige Wetter-, Kalender-, Aufgaben-Panels.
+- Automatisch abspielende Videos oder animierte Hintergründe.
+- Kontosysteme, soziale Funktionen, Cloud-Inhaltsströme.
+- Die Startseite mit Dutzenden von Kurzlinks vollpacken.
+- Safari-Version. Sie würde zusätzlichen Veröffentlichungs- und Wartungsaufwand bedeuten, was für ein persönliches Projekt im Moment noch nicht realistisch ist.
+
+Nicht, dass diese Funktionen schlecht wären — sie würden PlainTab einfach in etwas anderes verwandeln.
+
+Wenn du einen neuen Tab öffnest, nur um kurz Ruhe zu haben, etwas zu suchen oder einen Blick auf das Hintergrundbild zu werfen, dann sollte PlainTab auf deiner Seite sein.
+
+## Was die Zukunft bringen könnte
+
+Ich möchte PlainTab eher in diese Richtungen wachsen lassen:
+
+- Stabilere Hintergrundbild-Quellen.
+- Ein angenehmeres Einstellungserlebnis.
+- Leichter verständliche Lerndokumentation.
+- Code-Erklärungen, die einsteigerfreundlicher sind.
+- Eine vollständigere Aufzeichnung der KI-gestützten Entwicklung.
+- Möglicherweise Firefox-Unterstützung.
+
+Firefox-Unterstützung kann im Moment noch nicht direkt versprochen werden, da sich die Erweiterungsumgebung, Berechtigungen und das API-Verhalten von Chrome / Edge unterscheiden können. Aber wenn die Bedingungen in Zukunft passen, würde ich PlainTab gerne über die Chromium-basierten Browser hinaus bringen.
+
+Wenn du dich zufällig für Firefox-Erweiterungen, Browser-Kompatibilität oder KI-gestützte Entwicklung interessierst, bist du ebenfalls eingeladen, mitzuforschen. Dieses Projekt eignet sich gut zum Lernen während der Nutzung.
+
+## Funktionsübersicht
+
+| Funktion | Beschreibung |
+|------|------|
+| Neue Tab-Ersetzung | Übernimmt nach der Installation den neuen Tab des Browsers |
+| Online-Startseite | Kann auch direkt als Webseite genutzt werden |
+| Tägliches Hintergrundbild | Unterstützt das tägliche Bing-Hintergrundbild |
+| Lokale Hintergrundbilder | Unterstützt das Hochladen von Bildern und die Auswahl lokaler Ordner |
+| RSS / API-Hintergrundbilder | Kann weitere Bildquellen einbinden |
+| Suchleiste | Position, Größe, Stil und Anzeigemodus anpassbar |
+| Suchverlauf | Kann kürzliche Suchanfragen speichern oder deaktiviert werden |
+| Kurzlinks | Verwaltung über Befehlspalette, ohne die Startseite zu belegen |
+| Versteckter Bereich | Getrennte Speicherung von Links, die nicht angezeigt werden sollen |
+| Einstellungs-Panel | Oberfläche, Hintergrundbilder, Tastenkürzel und Daten anpassen |
+| Daten-Backup | Unterstützt Export, Import und verschlüsseltes Backup |
+| Mehrsprachig | Mehrsprachige Benutzeroberfläche |
+| KI-Kollaboration | Geeignet, um KI-gestützte Projektentwicklung zu lernen |
 
 ## Schnellstart
 
-**Browser-Erweiterung**: installieren aus dem [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo).
+### Erweiterung installieren
 
-**Online-Startseite**: besuche [plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev) und lege sie in den Browsereinstellungen als Startseite fest.
+[PlainTab im Chrome Web Store installieren](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo)
 
-**Lokale Ausfuhrung**:
+### Online ausprobieren
+
+[plaintab.kaininx.workers.dev](https://plaintab.kaininx.workers.dev)
+
+### Lokal ausführen
 
 ```bash
 git clone https://github.com/kaininx/PlainTab.git
 ```
 
-Lade das Verzeichnis in `chrome://extensions` uber „Entpackte Erweiterung laden". Kein Build-Schritt, kein `npm install`.
+Erweiterungsmodus:
 
-<details>
-<summary><b>🔧 Wie entferne ich die graue Leiste am unteren Rand des neuen Tabs?</b></summary>
+1. Öffne `chrome://extensions`
+2. Aktiviere den Entwicklermodus
+3. Wähle "Entpackte Erweiterung laden"
+4. Wähle das PlainTab-Projektverzeichnis
 
-Nach der Installation der Erweiterung zeigt Chrome / Edge moglicherweise eine Fußzeile in der unteren rechten Ecke des neuen Tabs an (mit dem Namen der Erweiterung). Dies ist ein Browserverhalten, das PlainTab nicht uber Code steuern kann.
+Webseiten-Modus:
 
-Zum Deaktivieren: neuer Tab → „Chrome anpassen" ✏️ unten rechts → Fußzeile → deaktiviere „Fußzeile auf der Seite 'Neuer Tab' anzeigen". Siehe die [offizielle Chrome-Hilfe](https://support.google.com/chrome/answer/11032183?hl=de).
+Öffne `index.html` direkt im Browser.
 
-</details>
-
----
-
-## Wie schnell ist das Hintergrundbild?
-
-Die Anzeige des Hintergrundbilds in PlainTab ist kein „Bild laden", sondern **eine Progression uber drei Zeitskalen**, von denen jede die Erfahrung der vorherigen verbessert:
-
-| Zeitpunkt | Was passiert | Was der Benutzer sieht |
-|-----------|-------------|------------------------|
-| **0ms** (vor dem ersten Frame) | `preload.js` liest synchron das Base64-Miniaturbild aus dem `localStorage` und schreibt es direkt in `#wallpaperBack.style.backgroundImage` | Ein Hintergrundbild, das bereits da ist — nicht in HD, aber **kein weißer Bildschirm oder grauer Hintergrund** |
-| **~300ms** | `loadWallpaper()` liest den gecacheten Blob aus IndexedDB und zeigt ihn uber eine Blob-URL an | Das HD-Hintergrundbild erscheint und lost das Miniaturbild sanft uber einen CSS-opacity-Ubergang ab |
-| **Nur bei Cache-Ungultigkeit** | Netzwerkanfrage an die Bing-API → Blob herunterladen → anzeigen → asynchron in IDB cachen | Der Benutzer merkt nichts — das vorherige Hintergrundbild bleibt auf der Ruckebene als Absicherung |
-
-Jede der folgenden Techniken dient diesen drei Zeitpunkten — entweder durch Zeitverkurzung oder durch Beseitigung sichtbarer Ubergangsspuren.
-
----
-
-## Technische Highlights
-
-### Kein weißer Bildschirm beim ersten Frame: Doppelschicht + synchrones Vorladen
-
-Dies ist das zentrale Designmerkmal von PlainTab. Bevor das Bild geladen ist, zeigt ein neuer Tab die Standard-Hintergrundfarbe des Browsers an — normalerweise einen weißen Bildschirm oder grauen Hintergrund. Zwei `<div>`-Schichten losen dieses Problem vollstandig:
-
-- **[`#wallpaperBack`](../index.html#L14)** (z-index: 0) — enthalt immer ein sichtbares Bild. [`preload.js`](../js/preload.js) wird in den `<head>` gesetzt und synchron ausgefuhrt, wobei das Miniaturbild als `data: URL` geschrieben wird, bevor der Browser den ersten Frame zeichnet. Dieser Schritt ist synchron — keine asynchronen APIs, kein Warten auf das Netzwerk. Im Rotationsmodus mehrerer Bilder weiß es sogar, welcher Index des Miniaturbilds zu verwenden ist.
-- **[`#wallpaperFront`](../index.html#L16)** (z-index: 1, `opacity: 0`) — wird fur Einblendubergange verwendet. Das neue Bild wird uber [`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode) im Speicher vordekodiert → als Hintergrund der vorderen Schicht gesetzt → CSS-[`opacity`-Ubergang](https://developer.mozilla.org/docs/Web/CSS/transition) → nach Abschluss auf der Ruckebene stabilisiert → vordere Schicht wird auf transparent zuruckgesetzt.
-
-Kernprinzip: **Zu jeder Zeit halt mindestens eine Schicht ein gerendertes Bild**. Die Ruckebene hat immer etwas anzuzeigen; die vordere Schicht kommt nur wahrend des Ubergangs kurz zum Einsatz. Selbst wenn der Benutzer Frame fur Frame hinsieht, wird er keinen leeren Augenblick sehen.
-
-### Vom Input zum Pixel: Warum Miniaturbild statt Original?
-
-`preload.js` kann nicht auf asynchrones Laden warten — das wurde den ersten Frame verpassen. Aber das Speichern des Originalbilds in IndexedDB ist asynchron, und ein mehrere MB großer Base64-String passt nicht in den `localStorage` (begrenztes Kontingent). Also macht PlainTab nach der Anzeige des vorherigen Hintergrundbilds **einen zusatzlichen Schritt**: das Bild wird uber Canvas auf 640px Breite als JPEG mit Qualitat 0.55 skaliert, typischerweise auf 30–60 KB komprimiert und sicher im `localStorage` gespeichert. Beim nachsten Offnen eines neuen Tabs verwendet `preload.js` es direkt.
-
-640px ist auf 2K-Bildschirmen scharf genug, um nicht wie ein Miniaturbild auszusehen — und hinter der Kontrolle dieser wenigen Kilobyte stehen die prazise Skalierung der [Canvas API](https://developer.mozilla.org/docs/Web/API/Canvas_API) + die Qualitatseinstellung von [`toDataURL('image/jpeg', 0.55)`](https://developer.mozilla.org/docs/Web/API/HTMLCanvasElement/toDataURL). Dieses Miniaturbild dient auch als Datenquelle fur das 3x4-Raster der Galerie — einmal generiert, zweifach genutzt.
-
-### Doppelter `requestAnimationFrame` fur CSS-Ubergange
-
-Beim Ubergang vom Miniaturbild zum HD-Bild muss der CSS-Ubergang ausgelost werden. Aber die Stilberechnung und das Rendern des Browsers sind asynchron — wenn die Klasse unmittelbar nach dem Setzen des `backgroundImage` hinzugefugt wird, konnte der Browser beide Zustande im selben Render-Frame verarbeiten, und die Ubergangsanimation wurde nicht ausgelost.
-
-```javascript
-requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-        front.classList.add('active');
-    });
-});
-```
-
-Der erste [`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) stellt sicher, dass `backgroundImage` berechnet wurde; der zweite, dass der Stil an die Rendering-Pipeline ubergeben wurde. Erst dann, beim Hinzufugen der Klasse, sieht der Browser die Anderung von „altem Stil zu neuem Stil" und kann den Ubergang korrekt auslosen. Fehlt ein Schritt, wird der Ubergang ubersprungen — der Benutzer sieht einen harten Wechsel statt einer sanften Einblendung.
-
-### Warum koexistieren IndexedDB und localStorage?
-
-Die beiden Speicher sind keine binare Wahl, sondern eine Arbeitsteilung:
-
-| Speicher | Was er enthalt | Warum hier |
-|----------|---------------|------------|
-| **[IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API)** | Original-Blobs (Bing-Tagesbild, vom Benutzer hochgeladene Bilder) | Große Dateien brauchen großes Kontingent; asynchrones Lesen/Schreiben ist außerhalb des Erst-Frame-Pfads vollkommen akzeptabel |
-| **[localStorage](https://developer.mozilla.org/docs/Web/API/Window/localStorage)** | Miniaturbilder als `data: URL`, UI-Einstellungen, Metadaten, Rotationsindex | **Synchrons Lesen** — das ist der entscheidende Punkt. `preload.js` wird vor dem ersten Frame ausgefuhrt und kann nicht auf asynchrone Callbacks warten |
-
-Die IDB-Verbindung wird als Singleton gecached und bei `onclose` automatisch neu erstellt. Aus IDB abgerufene Blobs konnen ihren MIME-Typ verlieren — beim Speichern wird immer das Feld `mime` aufgezeichnet, und beim Abrufen wird `new Blob([blob], {type: img.mime})` zur Wiederherstellung verwendet, um eine korrekte Darstellung uber Blob-URL sicherzustellen.
-
-### Selbstheilung von Miniaturbildern
-
-`saveLocalImage()` schreibt zuerst in IDB (Blob), dann in localStorage (Miniaturbild). Diese beiden Schritte sind keine atomare Transaktion — wenn die Seite genau dazwischen absturzt, ist das Miniaturbild-Array um einen Eintrag kurzer als das Bilder-Array. PlainTab fuhrt beim Start keine globale Selbstprufung durch (das wurde schwerwiegendere Dateninkonsistenzen uberdecken), sondern **regeneriert das Miniaturbild direkt**, wenn die Rotation auf das Bild mit fehlendem Miniaturbild stößt. Die Reparatur erfolgt nur, wenn beide Arrays die gleiche Lange haben — unterschiedliche Langen weisen auf eine unbekannte Schreibanomalie hin; uberspringen ist die sicherere Wahl.
-
-### Lebenszyklus von Blob-URLs
-
-Alle uber [`URL.createObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/createObjectURL) in der Galerie erstellten Blob-URLs werden in einem Array verfolgt und beim Schließen der Galerie uber [`URL.revokeObjectURL()`](https://developer.mozilla.org/docs/Web/API/URL/revokeObjectURL) massenhaft bereinigt. Aber dieser Weg ist ein Fallback — **vorgenerierte Base64-Miniaturbilder haben Prioritats**, da Base64 keine Erstellung/Widerrufung von Blob-URLs erfordert und schneller rendert.
-
-### CSS-Benutzerdefinierte Eigenschaften fur Laufzeit-Theme
-
-Die Symboldurchsichtigkeit (`--icon-opacity`) wird uber JS durch Andern einer [CSS-benutzerdefinierten Eigenschaft](https://developer.mozilla.org/docs/Web/CSS/--*) gesteuert und kontrolliert einheitlich alle Eckenschaltflachen und Panels — ein `setProperty`, und der Browser zeichnet automatisch alle Elemente neu, die diese Variable referenzieren. Die Design-Tokens (`--glass-bg`, `--glass-border`, `--text-primary` usw.) sind alle in [`:root`](https://developer.mozilla.org/docs/Web/CSS/:root) definiert, mit Umschaltung zwischen Dunkel-/Hell-Theme uber die Media-Query [`prefers-color-scheme`](https://developer.mozilla.org/docs/Web/CSS/@media/prefers-color-scheme).
-
-### Glas-Morphismus-Panels
-
-Die Einstellungs- und Sprachpanels verwenden [`backdrop-filter: blur()`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter), um den Hintergrund **hinter** dem Panel unscharf zu machen — keine billige Losung mit halbtransparenter Maske. In Kombination mit `--glass-bg: rgba(18, 18, 22, 0.82)` entsteht ein echtes Tiefengefuhl.
-
-### Mauspositionserkennung fur die UI
-
-Die Eckenschaltflachen und die Suchleiste erscheinen nur bei Bedarf — zwei mathematische Funktionen `isNearTopRight()` und `isInCenter()` bestimmen die Mausposition, ohne `mouseenter`/`mouseleave` an den Vollbildhintergrund binden zu mussen. Das Ausblenden erfolgt verzogert (400ms fur Schaltflachen, 150ms fur die Suchleiste) und wird ubersprungen, wenn ein Panel geoffnet oder das Eingabefeld fokussiert ist. Jeder Interaktionspfad ist so kurz wie moglich: **erscheinen schnell, verschwinden stabil**, ohne den Benutzer durch versehentliche Auslosungen zu storen.
-
-### Serielle Promise-Kette fur Batch-Upload
-
-Benutzer konnen mehrere lokale Bilder auf einmal auswahlen. Jeder `saveLocalImage()` liest und schreibt in IDB — parallele Ausfuhrung wurde zu Wettlaufsituationen fuhren. Batch-Uploads verwenden eine serielle Promise-Kette fur alle Speichervorgange, wobei jeweils nur ein Bild geschrieben wird; das erste erfolgreich gespeicherte Bild wird als Hintergrundbild angezeigt, die ubrigen werden nur gespeichert. So sieht der Benutzer kein Flackern durch wiederholte Bildwechsel.
-
-### `chrome.search.query()` fur CWS-Konformitat
-
-Im Erweiterungsmodus delegiert [`chrome.search.query()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/search/query) die Suche an die Standardsuchmaschine des Browsers — eine Anforderung der Einzweckrichtlinie des Chrome Web Store. Der Suchmaschinenwahler wird aus dem DOM ausgeblendet und das Symbol wird zu einer statischen Lupe.
-
----
-
-## Technologien zur Beseitigung von Latenz
-
-PlainTab verwendet keine Frameworks oder Bibliotheken. Jede der folgenden APIs wurde ausgewahlt, um **eine asynchrone Wartezeit zu vermeiden, ein sichtbares Flackern zu beseitigen, eine Frame-Verzogerung zu reduzieren**:
-
-- **[`Image.decode()`](https://developer.mozilla.org/docs/Web/API/HTMLImageElement/decode)** — dekodiert asynchron vor dem Setzen des `backgroundImage` und vermeidet so die Dekodierungspause beim ersten Frame. Das Laden von `<img>` bedeutet nicht, dass die Dekodierung abgeschlossen ist; ohne `decode()` kann beim ersten Rendern ein kurzer leerer Frame erscheinen
-- **[`backdrop-filter`](https://developer.mozilla.org/docs/Web/CSS/backdrop-filter)** — verwendet GPU-synthetisierte Unscharke anstelle zusatzlicher DOM-Ebenen und Maskenbilder, keine zusatzlichen Layoutkosten
-- **[`<meta name="darkreader-lock">`](https://github.com/darkreader/darkreader/blob/main/tips/website-lock-meta-tag.md)** — sperrt Dark Reader und verhindert, dass es die Hintergrundbildfarben mit Filtern umkehrt — das Hintergrundbild ist visueller Inhalt, und eine Filterung wurde die Treue der Canvas-Miniaturbild-Pipeline zunichtemachen
-- **[`color-scheme: dark light`](https://developer.mozilla.org/docs/Web/CSS/color-scheme)** — eine einzige Deklaration lasst den Browser die Farben von Formularen, Scrollleisten und Systemsteuerelementen automatisch anpassen, ohne dass zwei Stilsatze manuell geschrieben werden mussen
-- **[`cubic-bezier(0.4, 0, 0.2, 1)`](https://developer.mozilla.org/docs/Web/CSS/easing-function#cubic-bezier)** — einheitliche Easing-Kurve fur alle Einblend- und Pop-in-Animationen. Nicht `ease` oder `ease-in-out` — diese Kurve erreicht das Ziel am Anfang schneller und hat am Ende eine sanftere Abklingung; bei Unterschieden in der UI-Reaktion im Millisekundenbereich ist der Unterschied spurbar
-- **[`chrome.i18n.getUILanguage()`](https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/i18n/getUILanguage)** — im Erweiterungsmodus wird die UI-Sprache des Browsers abgerufen, die die wahre Absicht des Benutzers genauer widerspiegelt als `navigator.language`
-- **[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame)** — verlasst sich nicht auf `setTimeout`, um den Render-Zeitpunkt zu erraten, sondern synchronisiert sich prazise mit dem Frame-Rhythmus des Browsers. Die doppelte Verwendung stellt eine klare Framegrenze zwischen Stilberechnung und -ubergabe sicher
-- **[`Promise.any()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)** — Feuert beide Bing-API-Endpunkte gleichzeitig ab und verwendet den, der zuerst antwortet, wodurch unnotiges Warten entfallt
-- **[`AbortController`](https://developer.mozilla.org/docs/Web/API/AbortController)** — Begrenzt jede Bing-API-Anfrage auf 8 Sekunden und bricht die verlierende Verbindung sauber ab, anstatt sie bis zum TCP-Timeout auf Betriebssystemebene hangen zu lassen
-
-**Die nicht verwendeten Technologien sind ebenso wichtig**: null externe Abhangigkeiten. Kein React, Tailwind oder Build-Tools. Das CSP in `manifest.json` schrankt `script-src 'self'` ein — der Browser erzwingt reines Vanilla-JS. Jede nicht eingebundene Bibliothek bedeutet weniger Parsing-Zeit, weniger Netzwerk-Overhead, einen fruheren ersten Frame.
-
-**Font Stack**: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif` — systemeigene Schriftarten des Betriebssystems, null Netzwerkanfragen, null Layout-Verschiebung. Schriftdateien gehoren normalerweise zu den großten blockierenden Ressourcen einer Seite; PlainTab umgeht das gesamte Problem.
-
----
-
-## Zwei Betriebsmodi
-
-Derselbe Code, automatische Umgebungserkennung zur Laufzeit:
-
-| Eigenschaft | Erweiterungsmodus | Webmodus |
-|-------------|------------------|----------|
-| Umgebungserkennung | `chrome.runtime.id` existiert | Alle anderen Falle |
-| Suchmaschine | Standard des Browsers (`chrome.search.query`) | Google / Bing / Baidu / DuckDuckGo auswahlbar |
-| Wechsel der Suchmaschine | Nicht wechselbar (statische Lupe) | Wechsel per Klick auf das Symbol |
-| Bereitstellung | Chrome Web Store / Entwickler laden | Cloudflare Workers / GitHub Pages direkt hosten |
-| CSP | In `manifest.json` deklariert | Kein CSP |
-
----
-
-## Prioritat der Hintergrundbildladung
-
-Bei jedem Offnen eines neuen Tabs wird in der folgenden Reihenfolge nach der schnellsten verfugbaren Quelle gesucht:
-
-1. **Lokale Rotation** — eigene Bilder des Benutzers (maximal 12), Blob bereits in IDB, direkter Zugriff. Miniaturbild vorgeneriert. Keine Netzwerkkosten.
-2. **Bing-Cache des Tages** — das heute bereits abgerufene Bing-Bild, Blob in IDB, direkt in Blob-URL umgewandelt. Keine Netzwerkkosten.
-3. **Netzwerkabruf von Bing** — das Netzwerk wird nur genutzt, wenn die beiden vorherigen Ebenen nicht verfugbar sind. Nach Erhalt der URL wird das Bild sofort angezeigt, wahrend der Blob asynchron in IDB heruntergeladen wird, um die Netzwerkwartezeit beim nachsten Mal zu vermeiden.
-
-Im lokalen Hintergrundbildmodus wird das Bing-Bild auch im Hintergrund still aktualisiert — der Benutzer kann jederzeit ohne Netzwerkwartezeit in den Bing-Modus wechseln.
-
-Die Bing-API feuert beide Endpunkte gleichzeitig uber `Promise.any` mit einem 8-Sekunden-`AbortController`-Timeout ab — die schnellste Antwort gewinnt. Die JSON-Payloads sind winzig, daher kostet die zusatzliche Anfrage praktisch nichts, und dennoch sorgt das Rennen fur optimale Latenz, egal wo du dich befindest. Der Sprachcode (z. B. `zh-CN`) wird auf den Bing-Marktcode abgebildet, wobei einige Sprachen auf `en-US` zuruckfallen.
-
----
-
-## Internationalisierung
-
-Unterstutzung von 16 Sprachen: English, 简体中文, 繁體中文, 日本語, 한국어, Español, Русский, Deutsch, Français, Italiano, Português, हिन्दी, العربية, Türkçe, Polski, Tiếng Việt.
-
-Zwei parallele i18n-Systeme: Chrome `_locales/` ist fur die Metadaten des Erweiterungsmanifests zustandig (nur zwei Schlussel: `extName`, `extDesc`), wahrend [`languages.js`](../js/languages.js) alle UI-Strings verwaltet. Spracherkennungsprioritat: Chrome-UI-Sprache (Erweiterungsmodus) → `navigator.language` (Webmodus) → Hauptsprachzuordnung → Englisch als Fallback.
-
-Die Ubersetzung hat Mangel oder du mochtest eine neue Sprache hinzufugen? Die Sprachdatei ist nur [`js/languages.js`](../js/languages.js), eine einfache Key-Value-Zuordnung. Andere es und sende einen PR.
-
----
+Keine Abhängigkeiten zu installieren, kein Build erforderlich.
 
 ## Projektstruktur
 
-```
+```text
 PlainTab/
-├── manifest.json            # Erweiterungsmanifest fur Chrome/Edge (Manifest V3)
-├── index.html               # Einzige HTML-Seite (neuer Tab der Erweiterung / Web-Startseite)
-├── 404.html                 # SPA-Fallback-Seite
-├── LICENSE                  # MIT-Lizenz
-│
-├── css/
-│   └── newtab.css           # Alle Stile: Doppelschicht, Glas-Morphismus, Suchleiste, responsiv
-│
-├── js/
-│   ├── preload.js           # Synchrones IIFE: Miniaturbild vor dem ersten Frame in die Ruckebene einfugen
-│   ├── languages.js         # UI-String-Tabelle in 16 Sprachen + Sprachliste
-│   └── newtab.js            # Hauptprogramm: Hintergrundbildverwaltung, i18n, Speicher, UI, Suchmaschine
-│
-├── _locales/                # Chrome i18n (16 Sprachverzeichnisse, nur fur das Manifest)
-│   ├── en/messages.json
-│   ├── zh_CN/messages.json
-│   └── ...
-│
-├── icon/                    # Erweiterungssymbole (16/48/128/2048 px)
-│
-├── imgs/                    # Screenshots und Werbebilder
-│   ├── chrome_01.jpg ~ chrome_08.jpg  # Funktions-Screenshots
-│   └── small_promo.png      # Kleines Werbebild fur den Chrome Web Store
-│
-├── docs/                    # Mehrsprachige READMEs (16 Sprachen) + CHANGELOG
-│
-└── changelog/               # Versionsanderungsprotokolle pro Sprache
+├── index.html              # Neue Tab-Seite und Webseiten-Einstieg
+├── manifest.json           # Browser-Erweiterungskonfiguration
+├── css/                    # Seitenstile
+├── js/                     # Seitenlogik
+├── js/wallpaper/           # Hintergrundbild-Funktionen
+├── _locales/               # Erweiterungs-Mehrsprachigkeit
+├── docs/                   # Dokumentation
+├── icon/                   # Icons
+└── imgs/                   # Screenshots und Store-Materialien
 ```
 
-- **[`css/`](../css/)** — einzelne Datei mit ~617 Zeilen, Dunkel-/Hell-Theme, Glassmorphismus-Design-Tokens, responsiver Breakpoint bei 480px
-- **[`js/`](../js/)** — drei Dateien, die in dieser Reihenfolge geladen werden: `preload.js` → `languages.js` → `newtab.js` (Reihenfolge darf nicht geandert werden)
-- **[`_locales/`](../_locales/)** — enthalt nur `extName` und `extDesc` fur das Erweiterungsmanifest; alle UI-Strings werden von [`languages.js`](../js/languages.js) verwaltet
-- **[`imgs/`](../imgs/)** — Screenshots und Werbebilder, die fur den Chrome Web Store benotigt werden
-- **[`docs/`](../docs/)** — mehrsprachige Dokumentation, 16 Sprachen in separaten Dateien
+## Mitwirken
 
----
+Issues oder Pull Requests sind willkommen.
 
-## Beitrag & Lizenz
+PlainTab wird versuchen, seine ursprüngliche Richtung beizubehalten: sauber, schnell, ruhig, lernbar.
 
-Open Source unter der MIT-Lizenz. Einen Fehler gefunden oder eine Idee? → [Issue eroffnen](https://github.com/kaininx/PlainTab/issues); Code andern? → Fork + PR.
+## Verwandte Links
 
-Einige Konventionen:
-- **Null Abhangigkeiten beibehalten** — keine npm-Pakete, CDN-Skripte oder Frameworks
-- **Keine Build-Schritte hinzufugen** — `index.html` muss direkt im Browser laufen
-- **Keine Berechtigungen erweitern** — `manifest.json` enthalt nur die Berechtigung `search`
+- [Changelog](changelog-i18n/de.txt)
+- [Detaillierte Versionshinweise](RELEASE_NOTES.md)
+- [English Technical Notes](technical/README_en.md)
+- [Online ausprobieren](https://plaintab.kaininx.workers.dev)
+- [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo)
+- [GitHub-Projektseite](https://github.com/kaininx/PlainTab)
 
-📋 [Anderungsprotokoll](changelog.md)
+## Lizenz
 
----
+PlainTab ist unter der [MIT License](../LICENSE) als Open Source veröffentlicht.
 
-## Danksagungen
-
-- Die Bing-Tagesbilder stammen von [Bing](https://www.bing.com), Dank an das Microsoft Bing-Team fur die jahrelange Bereitstellung hochwertiger taglicher Bilder
-- API-Proxys: [bing.biturl.top](https://bing.biturl.top) (offentlicher Proxy) und [bing.kaininx.workers.dev](https://bing.kaininx.workers.dev) (Cloudflare Worker als Backup)
-- Die auf den Screenshots gezeigten Hintergrundbilder stammen von verschiedenen Kreativen im Internet
-
-MIT · [Kaelri](https://github.com/kaininx)
+Erstellt und gepflegt von [Kaelri](https://github.com/kaininx).

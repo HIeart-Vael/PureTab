@@ -1,4 +1,6 @@
 Registro de alterações
+• v3.2.0 · Grande atualização de recursos e desempenho: adiciona painel de comandos, papéis de parede RSS/API/pasta local, cores de tema do papel de parede via WASM, importação/exportação de configuração e histórico de busca; migra o armazenamento para o modelo v3.2, restringe permissões e fallback de busca, e modulariza/otimiza inicialização, papéis de parede, galeria e configurações.
+
 • v3.1.4 · Refatorada a nomenclatura de constantes de armazenamento e unificada a migração IDB em transação de duas fases para ordenação recuperável; otimizado o salto de migração para novos usuários; adicionada deduplicação em lote com limite de 12 imagens
 
 • v3.1.3 · Implementada migração de versão de armazenamento para localStorage e IndexedDB, unificada a nomenclatura de chaves, corrigida a lógica de persistência de miniaturas no modo local.

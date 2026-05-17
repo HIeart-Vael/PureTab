@@ -1,4 +1,6 @@
 Registro delle modifiche
+• v3.2.0 · Grande aggiornamento di funzionalità e prestazioni: aggiunti pannello comandi, sfondi RSS/API/cartella locale, colori tema dello sfondo via WASM, import/export configurazione e cronologia ricerche; migrazione al modello storage v3.2, permessi e fallback ricerca più stretti, percorsi di avvio, sfondo, galleria e impostazioni modularizzati e ottimizzati.
+
 • v3.1.4 · Ridenominazione delle costanti di storage e migrazione IDB unificata in transazione bifase con ordinamento recuperabile; ottimizzato il salto migrazione per nuovi utenti; aggiunta deduplicazione nel caricamento batch con limite di 12 immagini
 
 • v3.1.3 · Implementata la migrazione della versione di archiviazione per localStorage e IndexedDB, unificata la denominazione delle chiavi, corretta la logica di persistenza delle miniature in modalità locale.

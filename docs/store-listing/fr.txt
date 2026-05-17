@@ -1,79 +1,98 @@
-PlainTab est une extension de navigateur qui rend chaque nouvel onglet agréable à regarder.
+PlainTab est une nouvelle page d'onglet belle, rapide et silencieuse.
 
-Pourquoi ? Parce que votre nouvel onglet mérite un beau fond d'écran, pas de la publicité, des actualités et des raccourcis.
+Pourquoi ? Parce que votre nouvel onglet devrait d'abord vous offrir un fond agréable, pas des publicités, des actualités, des tendances ou un écran rempli de raccourcis.
+
+PlainTab fait une chose simple : ouvrir un nouvel onglet, afficher votre fond d'écran, puis vous laisser rechercher, saisir une URL ou ouvrir vos propres raccourcis. Il ne cherche pas à capter votre attention et ne transforme pas la page d'accueil du navigateur en un autre flux de contenu.
 
 Pourquoi choisir PlainTab ?
 
-• 【Liberté du fond d'écran】
-• Mise à jour automatique quotidienne avec l'image du jour Bing — deux points d'accès mondiaux en compétition, rapide où que vous soyez.
-• Vitesse de chargement locale extrême — les fonds d'écran sont stockés sur votre machine et chargés instantanément à l'ouverture d'un nouvel onglet, un ordre de grandeur plus rapide que le réseau.
-• Prend en charge jusqu'à 12 fonds d'écran locaux avec rotation automatique à chaque nouvel onglet. Galerie 3×4 pour visualiser, supprimer ou changer à tout moment.
+【Une image dès l'ouverture】
+• Chargement local des fonds extrêmement rapide : PlainTab enregistre localement un aperçu léger et le charge instantanément à chaque nouvel onglet, ce qui réduit les flashs blancs.
+• Les fonds haute résolution changent en douceur en arrière-plan, tandis que l'image existante reste en dessous comme secours. Vous n'avez donc pas besoin d'attendre le réseau pour voir un fond.
+• Les fonds quotidiens Bing prennent en charge le cache et la mise à jour ; après une première utilisation, les ouvertures suivantes sont plus fluides.
 
-• 【Protection absolue de la vie privée】
-• Pas de publicité, pas de pistage, aucune collecte de données.
-• Tous les fonds d'écran sont stockés hors ligne sur votre machine — pas de téléversement, pas de synchronisation, aucun transit par un serveur. Votre navigation vous appartient exclusivement.
+【Liberté des fonds d'écran】
+• Prend en charge les fonds quotidiens Bing et vos propres images importées.
+• Permet de choisir un dossier local de fonds d'écran, idéal si vous avez déjà une collection.
+• Prend en charge les sources RSS d'images et les APIs personnalisées : simple si vous voulez rester simple, flexible si vous aimez expérimenter.
+• Les fonds locaux prennent en charge jusqu'à 12 images en rotation avec un aperçu de galerie 3×4, supprimables ou remplaçables à tout moment.
 
-• 【Rapide, sans distraction】
-• JavaScript natif pur, zéro dépendance externe. Aucun framework tiers — la page s'affiche dès l'ouverture du navigateur.
-• Les fonds d'écran génèrent en arrière-plan un aperçu ultra-léger. Au prochain nouvel onglet, il se charge instantanément depuis le stockage local, sans solliciter le réseau.
+【Silencieux, mais pas vide】
+• La page d'accueil reste sobre : fond d'écran, barre de recherche et quelques entrées nécessaires, sans se remplir de widgets.
+• La barre de recherche permet d'ajuster position, taille, arrondi, transparence et mode d'affichage.
+• Elle peut rester toujours visible, apparaître seulement quand nécessaire ou rester masquée.
+• Les raccourcis sont gérés dans le panneau de commande, avec recherche, ajout, édition et import de favoris, sans couvrir le fond.
+• L'espace caché permet de garder des liens que vous ne voulez pas afficher directement, pour une page d'accueil plus propre.
 
-• 【Flexible, pas compliqué】
-• Détection automatique de la langue parmi 16 langues disponibles.
-• Barre de recherche : apparaît au survol / toujours affichée / masquée.
-• Moteur de recherche : Google / Bing / Baidu / DuckDuckGo (mode Web).
+【Priorité à la confidentialité】
+• Pas de publicité, pas de suivi, pas de collecte de données de navigation.
+• Les fonds importés localement sont stockés dans le stockage local du navigateur. Ils ne sont pas téléversés, synchronisés ni transmis à des serveurs tiers.
+• Les réglages de recherche et de raccourcis sont pensés pour un usage local. Votre nouvel onglet devrait vous appartenir.
 
-• 【Open source transparent】
-• Code source entièrement ouvert : https://github.com/kaininx/PlainTab
+【Léger et transparent】
+• Construit avec JavaScript natif, CSS et les APIs du navigateur, sans framework frontend, sans étape de build et sans grosse dépendance d'exécution.
+• Fonctionne comme extension de nouvel onglet Chrome / Edge, et peut aussi être ouvert directement comme page web.
+• Entièrement open source, utile au quotidien et pour apprendre le développement d'extensions, les projets frontend et l'ingénierie assistée par IA.
+
+PlainTab est fait pour vous si vous voulez :
+
+• Un nouvel onglet plus beau sans bruit de flux d'information
+• Des fonds quotidiens ou un espace pour gérer votre collection personnelle
+• Recherche, raccourcis, import de favoris et sauvegarde sans encombrer la page
+• Une page d'accueil qui n'est pas couverte par des dizaines de tuiles
+• Une extension légère et transparente sans outils de build complexes
+• Un vrai projet complet d'extension de navigateur pour apprendre
+
+Ce que PlainTab ne fera pas :
+
+• Pas de flux d'actualités, de tendances ou de recommandations
+• Pas de publicités, cartes sponsorisées ou emplacements promotionnels
+• Pas de système de compte, de fonctions sociales ou de flux cloud
+• Pas de mur de raccourcis couvrant la page d'accueil
+• Pas de vidéo en lecture automatique ni de fond animé
+
+Support et retours
+
+• Open source : https://github.com/kaininx/PlainTab
 • Démo en ligne : https://plaintab.kaininx.workers.dev
-
-✨ Combinaison recommandée (par le développeur) :
-• 📌 Nouvel onglet : installez l'extension et définissez jusqu'à 12 fonds d'écran différents, sans limite de taille.
-• 📌 Page de démarrage : réglez le navigateur sur https://plaintab.kaininx.workers.dev , gardez le mode Bing par défaut.
-• 📌 Bouton Accueil : définissez https://kaininx.github.io/PlainTab/ — c'est la page GitHub Pages du projet, avec des fonds d'écran supplémentaires.
-
-PlainTab est fait pour vous si vous en avez assez :
-• d'un nouvel onglet saturé de publicités, d'actualités et de raccourcis inutiles
-• des extensions qui collectent discrètement vos données en arrière-plan
-• d'un navigateur qui ralentit à force d'extensions — vous voulez une vitesse native
-• de voir la même image tous les jours sur votre nouvel onglet
-
-Assistance et retours
-• Vous aimez PlainTab ? Notez-nous sur le Chrome Web Store.
-• GitHub : https://github.com/kaininx/PlainTab
-• Une question ou une suggestion ? Ouvrez une Issue.
+• Notes de version détaillées : https://github.com/kaininx/PlainTab/blob/main/docs/RELEASE_NOTES.md
+• Vous aimez PlainTab ? Un avis sur le Chrome Web Store est toujours apprécié.
+• Questions ou suggestions ? Ouvrez une Issue sur GitHub.
 
 Journal des mises à jour
+
+• v3.2.0 · Grande mise à jour des fonctionnalités et des performances : ajout du panneau de commande, des fonds d'écran RSS/API/dossier local, des couleurs de thème WASM, de l'import/export de configuration et de l'historique de recherche ; migration vers le modèle de stockage v3.2, permissions et repli de recherche resserrés, optimisation modulaire du démarrage, des fonds, de la galerie et des réglages.
 
 • v3.1.4 · Refonte du nommage des constantes de stockage et fusion de la migration IDB en transaction biphasée pour un ordonnancement résilient aux pannes ; optimisation du saut de migration pour les nouveaux utilisateurs ; ajout de la déduplication par lot avec limite de 12 images
 
 • v3.1.3 · Implémentation de la migration de version de stockage pour localStorage et IndexedDB, unification des noms de clés, correction de la logique de persistance des miniatures en mode local.
 
-• v3.1.2 · Renommage de _locales/pt en pt_BR pour la conformité Chrome Web Store; unification du format du changelog en style compact; renommage des fichiers portugais en pt_BR pour la cohérence.
+• v3.1.2 · Renommage de _locales/pt en pt_BR pour respecter Chrome Web Store ; format du changelog unifié ; fichiers portugais renommés en pt_BR.
 
-• v3.1.1 · Passage de l'API Bing en mode concurrent Promise.any avec un timeout AbortController de 8 secondes ; mise à jour des 16 README pour refléter la nouvelle stratégie de récupération.
+• v3.1.1 · Bing API passée en mode course Promise.any avec timeout AbortController de 8 secondes ; les README des 16 langues ont été mis à jour.
 
-• v3.1.0 · Galerie locale de fonds d'écran : téléversement/suppression/rotation de plusieurs fonds d'écran locaux, sélection par lots ; refonte du code ; amélioration du style des panneaux ; localisation multilingue complétée ; correction CSP — suppression des domaines JSON API.
+• v3.1.0 · Galerie de fonds locaux : import, suppression et rotation de plusieurs fonds, sélection par lot ; style des panneaux amélioré ; localisation enrichie ; configuration CSP resserrée.
 
-• v3.0.5 · Mise à niveau du proxy API Bing (requêtes régionalisées + déduplication des images) ; optimisation du cache des fonds d'écran ; unification des clés localStorage ; ajout de journaux d'évolution en 16 langues ; amélioration des logs et de la sémantique du code.
+• v3.0.5 · Proxy Bing API mis à jour, cache des fonds optimisé, clés localStorage unifiées, changelogs en 16 langues ajoutés, logs et sémantique du code améliorés.
 
-• v3.0.4 · Correction d'un échec de chargement des fonds d'écran : la liste blanche CSP img-src ne contenait pas les domaines CDN Bing, les images redirigées par le proxy API étaient bloquées.
+• v3.0.4 · Correction des échecs de chargement de fonds causés par l'absence de domaines CDN Bing dans la liste CSP des images.
 
-• v3.0.3 · Accélération du rendu du premier écran via CSSOM, renforcement de la sécurité CSP, nettoyage du code mort, ajout d'icônes SVG et de supports promotionnels.
+• v3.0.3 · Chemin de premier rendu optimisé, sécurité CSP renforcée, code inutilisé supprimé, icônes et ressources promotionnelles ajoutées.
 
-• v3.0.2 · Arrière-plan adaptatif au mode sombre, refonte de la structure du code, bande d'information multilingue en bas.
+• v3.0.2 · Fond adaptatif en mode sombre, structure du code ajustée, barre inférieure multilingue ajoutée.
 
-• v3.0.1 · Intégration de l'API Chrome Search, conformité à la règle d'usage unique du Chrome Web Store.
+• v3.0.1 · Intégration de Chrome Search API pour respecter l'exigence d'usage unique du Chrome Web Store.
 
-• v3.0.0 · Réécriture complète : architecture à deux couches éliminant le flash blanc du nouvel onglet, ajout d'un fond gris de secours.
+• v3.0.0 · Réécriture du cœur : architecture à deux couches pour réduire les flashs blancs des nouveaux onglets, avec fond de secours.
 
-• v2.2.7 · Ajout des README en anglais, japonais, coréen, russe et chinois simplifié ; mode de recherche par défaut changé en « toujours afficher ».
+• v2.2.7 · README ajoutés en anglais, japonais, coréen, russe et chinois simplifié ; mode de recherche par défaut passé à toujours visible.
 
-• v2.2.6 · Optimisation de la logique de chargement des fonds d'écran et du cache des miniatures, réorganisation des constantes de l'API Bing.
+• v2.2.6 · Chargement des fonds et cache des miniatures optimisés, constantes Bing API organisées.
 
-• v2.2.5 · Préchargement des fonds d'écran et optimisation de la première image, élimination de l'écran blanc du nouvel onglet.
+• v2.2.5 · Préchargement des fonds et optimisation de la première image ajoutés pour réduire les écrans blancs.
 
-• v2.2.4 · Migration du stockage des fonds d'écran de localStorage vers IndexedDB.
+• v2.2.4 · Stockage des fonds migré de localStorage vers IndexedDB.
 
-• v2.2.3 · Téléversement de fonds d'écran locaux, amélioration de l'expérience de changement de moteur de recherche.
+• v2.2.3 · Import de fonds locaux ajouté et changement de moteur de recherche amélioré.
 
-• v1.2.0 · Première version : système de fonds d'écran, interface en 16 langues, localisation Chrome i18n, licence MIT.
+• v1.2.0 · Première version : système de fonds, interface en 16 langues, localisation Chrome i18n et licence MIT.

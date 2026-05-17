@@ -1,79 +1,98 @@
-PlainTab, her yeni sekme açtığınızda gözünüzü şenlendiren bir tarayıcı eklentisidir.
+PlainTab güzel, hızlı ve sessiz bir yeni sekme sayfasıdır.
 
-Neden mi? Çünkü yeni sekmeniz reklamları, haberleri ve hızlı bağlantıları değil, güzel bir duvar kağıdını hak ediyor.
+Neden? Çünkü yeni sekmeniz önce rahatlatıcı bir duvar kâğıdı göstermeli; reklamlar, haberler, trendler veya ekranı kaplayan kısayollar değil.
+
+PlainTab basit bir şey yapar: yeni sekmeyi açarsınız, duvar kâğıdınızı görürsünüz, sonra arama yapar, URL yazarsınız ya da kendi kısayollarınızı açarsınız. Dikkatiniz için yarışmaz ve tarayıcı ana sayfanızı başka bir içerik akışına dönüştürmez.
 
 Neden PlainTab?
 
-• 【Duvar Kağıdı Özgürlüğü】
-• Her gün otomatik olarak güncellenen Bing günlük görselleri — küresel çift uç nokta eşzamanlı yarış modu sayesinde nerede olursanız olun hızlı.
-• Benzersiz yerel duvar kağıdı yükleme hızı — duvar kağıtları kendi cihazınızda saklanır, sekme açıldığı anda doğrudan okunur, ağ bağlantısından katbekat daha hızlıdır.
-• En fazla 12 yerel duvar kağıdı yükleyin, her açışta otomatik slayt gösterisi. 3×4 galeri önizlemesi, dilediğiniz zaman silin veya değiştirin.
+【Açılır açılmaz görüntü】
+• Son derece hızlı yerel duvar kâğıdı yükleme: PlainTab hafif bir önizleme görüntüsünü yerelde saklar ve her yeni sekmede anında yükler, beyaz ekran titremesini azaltır.
+• Yüksek çözünürlüklü duvar kâğıtları arka planda yumuşakça değişir; mevcut görüntü altta yedek olarak kalır, böylece arka plan görmek için ağı beklemeniz gerekmez.
+• Bing günlük duvar kâğıtları önbellek ve güncellemeyi destekler; bir kez kullandıktan sonra sonraki açılışlar daha akıcı hissedilir.
 
-• 【Kesinlikle Gizlilik Koruması】
-• Reklam yok, takip yok, hiçbir veri toplanmaz.
-• Tüm duvar kağıtları çevrimdışı olarak cihazınızda depolanır — yüklenmez, senkronize edilmez, hiçbir sunucudan geçmez. Gezinti alışkanlıklarınız yalnızca size aittir.
+【Duvar kâğıdı özgürlüğü】
+• Bing günlük duvar kâğıtlarını ve kendi yüklediğiniz görselleri destekler.
+• Yerel duvar kâğıdı klasörü seçmeyi destekler; mevcut bir koleksiyonu olan kullanıcılar için idealdir.
+• RSS görsel kaynaklarını ve özel API'leri destekler: basit kullanmak istediğinizde basit, kurcalamak istediğinizde esnek.
+• Yerel duvar kâğıtları 12 görsele kadar rotasyonu ve 3×4 galeri önizlemesini destekler; istediğiniz zaman silip değiştirebilirsiniz.
 
-• 【Son Derece Hızlı, Rahatsız Etmez】
-• Tamamen yerel JavaScript, sıfır harici bağımlılık. Üçüncü parti çerçeve yok, tarayıcı açar açmaz hazır.
-• Duvar kağıtları arka planda hafif önizleme küçük resimlerine dönüştürülür, bir sonraki yeni sekmede doğrudan cihazınızdan anında okunur, ağ üzerinden gelmez.
+【Sessiz ama boş değil】
+• Ana sayfa ölçülü kalır: duvar kâğıdı, arama çubuğu ve birkaç gerekli giriş; widget kalabalığı yok.
+• Arama çubuğunun konumu, boyutu, köşe yarıçapı, şeffaflığı ve görünürlük modu ayarlanabilir.
+• Arama çubuğu her zaman görünebilir, yalnızca gerektiğinde belirebilir veya gizli kalabilir.
+• Kısayollar komut panelinde yönetilir; arama, ekleme, düzenleme ve yer imi içe aktarma desteklenir, ana ekranı kaplamaz.
+• Gizli alan, doğrudan göstermek istemediğiniz bağlantıları saklayarak ana sayfayı temiz tutar.
 
-• 【Esnek, Karmaşık Değil】
-• 16 dilde otomatik eşleştirme.
-• Arama çubuğu: fareyle üzerine gelince görün / her zaman göster / gizle.
-• Arama motoru: Google / Bing / Baidu / DuckDuckGo (Web modu).
+【Önce gizlilik】
+• Reklam yok, takip yok, gezinme verisi toplama yok.
+• Yerel olarak yüklenen duvar kâğıtları tarayıcının yerel deposunda saklanır. Yüklenmez, senkronize edilmez, üçüncü taraf sunuculardan geçmez.
+• Arama ve kısayol ayarları yerel kullanım için tasarlanmıştır. Yeni sekmeniz size ait olmalı.
 
-• 【Açık Kaynak, Şeffaf】
-• Kod tamamen açık kaynak: https://github.com/kaininx/PlainTab
-• Çevrimiçi deneyin: https://plaintab.kaininx.workers.dev
+【Hafif ve şeffaf】
+• Saf JavaScript, CSS ve tarayıcı API'leri ile inşa edilmiştir; frontend framework yok, build adımı yok, büyük runtime bağımlılığı yok.
+• Chrome / Edge yeni sekme eklentisi olarak çalışır ve doğrudan web sayfası olarak da açılabilir.
+• Tamamen açık kaynaklıdır; günlük kullanım, tarayıcı eklentisi geliştirme, frontend projeleri ve AI destekli mühendislik öğrenmek için uygundur.
 
-✨ Önerilen Kullanım (Geliştirici Tavsiyesi):
-• 📌 Yeni Sekme: Bu eklentiyi yükleyin, boyut sınırlaması olmaksızın en fazla 12 farklı duvar kağıdı ayarlayın.
-• 📌 Başlangıç Sayfası: Tarayıcınızı https://plaintab.kaininx.workers.dev olarak ayarlayın, varsayılan günlük duvar kağıdı modunu kullanın.
-• 📌 Ana Sayfa Düğmesi: https://kaininx.github.io/PlainTab/ olarak ayarlayın — bu, projenin GitHub Pages sürümüdür; ek olarak sevdiğiniz duvar kağıtlarını da belirleyebilirsiniz.
+PlainTab size uygundur, eğer:
 
-PlainTab tam size göre, eğer şunlardan bıktıysanız:
-• Yeni sekmelerin reklam, haber ve gereksiz hızlı bağlantılarla dolu olması
-• Tarayıcı eklentilerinin arka planda gizlice verilerinizi toplaması
-• Çok fazla eklenti yüzünden tarayıcınızın yavaşlaması ve yerel hızı özlemeniz
-• Her gün yeni sekmede aynı görseli görmekten sıkılmanız
+• Bilgi akışı gürültüsü olmadan daha güzel bir yeni sekme istiyorsanız
+• Günlük duvar kâğıtlarını seviyor veya kendi koleksiyonunuzu yönetmek istiyorsanız
+• Arama, kısayollar, yer imi içe aktarma ve yedekleme özelliklerini ana sayfayı kalabalıklaştırmadan istiyorsanız
+• Ana sayfanızın onlarca kısayolla kaplanmasını istemiyorsanız
+• Karmaşık build araçları olmayan hafif ve şeffaf bir eklenti istiyorsanız
+• Öğrenmek için gerçek ve eksiksiz bir tarayıcı eklentisi projesi arıyorsanız
 
-Destek ve Geri Bildirim
-• PlainTab'i beğendiniz mi? Chrome Web Mağazası'nda bize olumlu puan verin.
-• GitHub: https://github.com/kaininx/PlainTab
-• Sorun veya öneriniz mi var? Issue açmaktan çekinmeyin.
+PlainTab ne yapmaz:
+
+• Haber akışı, trend listesi veya önerilen içerik göstermez
+• Reklam, sponsorlu kart veya tanıtım alanı koymaz
+• Hesap sistemi, sosyal özellik veya bulut içerik akışı eklemez
+• Ana sayfayı onlarca kısayol kutusuyla doldurmaz
+• Otomatik oynatılan video veya animasyonlu arka plan kullanmaz
+
+Destek ve geri bildirim
+
+• Açık kaynak: https://github.com/kaininx/PlainTab
+• Çevrimiçi demo: https://plaintab.kaininx.workers.dev
+• Ayrıntılı sürüm notları: https://github.com/kaininx/PlainTab/blob/main/docs/RELEASE_NOTES.md
+• PlainTab'i beğendiniz mi? Chrome Web Store'da değerlendirme bırakmanız çok değerli.
+• Sorular veya öneriler için GitHub'da Issue açabilirsiniz.
 
 Güncelleme Geçmişi
+
+• v3.2.0 · Büyük özellik ve performans güncellemesi: komut paneli, RSS/API/yerel klasör duvar kâğıtları, WASM duvar kâğıdı tema renkleri, yapılandırma içe/dışa aktarma ve arama geçmişi eklendi; depolama v3.2 modeline taşındı, izinler ve arama fallback'i sıkılaştırıldı, başlangıç, duvar kâğıdı, galeri ve ayarlar yolları modülerleştirilip optimize edildi.
 
 • v3.1.4 · Depolama sabitleri yeniden adlandırıldı ve IDB geçişi çökme sonrası kurtarılabilir sıralama için iki aşamalı işlemde birleştirildi; yeni kullanıcı geçiş atlaması optimize edildi; toplu yüklemede tekilleştirme ve 12 görsel sınırı eklendi
 
 • v3.1.3 · localStorage ve IndexedDB için depolama sürüm geçişi uygulandı, depolama anahtar adlandırması birleştirildi, yerel modda küçük resim kalıcılık mantığı düzeltildi.
 
-• v3.1.2 · Chrome Web Store uyumluluğu için _locales/pt, pt_BR olarak yeniden adlandırıldı; changelog biçimi tek satırlık kompak stilde birleştirildi; Portekizce dosyalar tutarlılık için pt_BR olarak yeniden adlandırıldı.
+• v3.1.2 · Chrome Web Store uyumluluğu için _locales/pt, pt_BR olarak yeniden adlandırıldı; changelog biçimi birleştirildi; Portekizce dosyalar pt_BR olarak yeniden adlandırıldı.
 
-• v3.1.1 · Bing API'si Promise.any yarış moduna geçirildi ve 8 saniyelik AbortController zaman aşımı eklendi; yeni getirme stratejisini yansıtmak için 16 dildeki README dosyalarının tamamı güncellendi.
+• v3.1.1 · Bing API, 8 saniyelik AbortController timeout ile Promise.any yarış moduna geçirildi; 16 dilde README güncellendi.
 
-• v3.1.0 · Yerel duvar kağıdı galerisi: birden çok yerel duvar kağıdını yükleme/silme/döngüye alma, toplu dosya seçimi; kod yeniden düzenlemesi; panel stilleri iyileştirildi; çoklu dil desteği genişletildi; CSP'den JSON API alan adları kaldırıldı.
+• v3.1.0 · Yerel duvar kâğıdı galerisi: çoklu görsel yükleme, silme ve rotasyon, toplu seçim; panel stilleri iyileştirildi; yerelleştirme genişletildi; CSP yapılandırması sıkılaştırıldı.
 
-• v3.0.5 · Bing API vekili yükseltildi (bölgeselleştirilmiş istek + görsel yineleme koruması); duvar kağıdı önbelleği optimize edildi; localStorage anahtar adları birleştirildi; 16 dilde changelog eklendi; günlük kaydı ve kod anlam bilgisi iyileştirildi.
+• v3.0.5 · Bing API proxy güncellendi, duvar kâğıdı önbelleği optimize edildi, localStorage anahtarları birleştirildi, 16 dil changelog eklendi, loglar ve kod semantiği iyileştirildi.
 
-• v3.0.4 · Duvar kağıdı yükleme hatası düzeltildi: CSP img-src beyaz listesinde Bing CDN alan adı eksik olduğundan vekil API yönlendirmesi sonrası görseller tarayıcı tarafından engelleniyordu.
+• v3.0.4 · CSP görsel izin listesinde Bing CDN alan adları eksik olduğu için oluşan duvar kâğıdı yükleme hatası düzeltildi.
 
-• v3.0.3 · CSSOM ile ilk kare işleme hızlandırıldı, CSP güvenliği güçlendirildi, ölü kod temizlendi, SVG simgeler ve tanıtım materyalleri eklendi.
+• v3.0.3 · İlk render yolu optimize edildi, CSP güvenliği güçlendirildi, kullanılmayan kod temizlendi, ikonlar ve tanıtım materyalleri eklendi.
 
-• v3.0.2 · Karanlık modda uyarlanabilir arka plan, kod yapısı yeniden düzenlendi, altta çok dilli bilgi çubuğu eklendi.
+• v3.0.2 · Karanlık mod uyumlu arka plan, düzenlenmiş kod yapısı, çok dilli alt bilgi çubuğu eklendi.
 
-• v3.0.1 · Chrome Search API entegre edildi, Chrome Web Mağazası tek amaç uyumluluğu denetiminden geçildi.
+• v3.0.1 · Chrome Web Store tek amaç gereksinimlerini karşılamak için Chrome Search API entegre edildi.
 
-• v3.0.0 · Tamamen yeniden yazıldı: yeni sekme beyaz ekran parlamasını ortadan kaldırmak için çift katman mimarisi, yedek gri arka plan eklendi.
+• v3.0.0 · Çekirdek yeniden yazıldı: çift katmanlı mimari yeni sekmelerde beyaz ekran titremesini azaltır, yedek arka plan eklendi.
 
-• v2.2.7 · İngilizce/Japonca/Korece/Rusça/Basitleştirilmiş Çince olmak üzere beş dilde README eklendi, varsayılan arama modu "her zaman göster" olarak değiştirildi.
+• v2.2.7 · İngilizce, Japonca, Korece, Rusça ve Basitleştirilmiş Çince README eklendi; varsayılan arama modu her zaman görünür olarak değiştirildi.
 
-• v2.2.6 · Duvar kağıdı yükleme mantığı ve küçük resim önbelleği optimize edildi, Bing API sabitleri düzenlendi.
+• v2.2.6 · Duvar kâğıdı yükleme ve küçük resim önbelleği optimize edildi, Bing API sabitleri düzenlendi.
 
-• v2.2.5 · Duvar kağıdı ön yükleme ve ilk kare iyileştirmeleri, yeni sekme beyaz ekranı giderildi.
+• v2.2.5 · Beyaz ekranları azaltmak için duvar kâğıdı ön yükleme ve ilk kare optimizasyonu eklendi.
 
-• v2.2.4 · Duvar kağıdı depolama birimi localStorage'dan IndexedDB'ye taşındı.
+• v2.2.4 · Duvar kâğıdı depolaması localStorage'dan IndexedDB'ye taşındı.
 
-• v2.2.3 · Yerel duvar kağıdı yükleme ve arama motoru geçiş deneyimi iyileştirildi.
+• v2.2.3 · Yerel duvar kâğıdı yükleme eklendi, arama motoru değiştirme deneyimi iyileştirildi.
 
-• v1.2.0 · İlk sürüm: duvar kağıdı sistemi, 16 dil arayüzü, Chrome i18n yerelleştirmesi, MIT lisansı.
+• v1.2.0 · İlk sürüm: duvar kâğıdı sistemi, 16 dil arayüzü, Chrome i18n yerelleştirmesi ve MIT lisansı.

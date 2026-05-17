@@ -1,171 +1,215 @@
 ---
 name: bump-version
-description: Use when bumping the PlainTab version number across all files — manifest.json, 16 README badge URLs, 16 changelog files, AGENTS.md, docs/, and all project docs. Triggered by phrases like "更新版本", "bump version", "upgrade to vX.Y.Z", "发布新版本".
+description: Use when preparing a PlainTab release or bumping the PlainTab version, triggered by phrases like "更新版本", "bump version", "upgrade to vX.Y.Z", "发布新版本". Updates manifest.json, localized short changelogs, store-listing files, docs/RELEASE_NOTES.md, docs/GITHUB_RELEASE.md, and any affected project documentation according to the current PlainTab docs structure.
 ---
 
 # Bump PlainTab Version
 
-## Overview
+## Purpose
 
-Automates version bumping across the entire PlainTab project. Covers mechanical replacements (badge URLs, manifest) and content generation (changelog entries in 16 languages, release notes).
+Prepare a PlainTab release using the current project structure. Keep the release surface split by audience:
 
-## Parameters
+- `docs/changelog-i18n/*.txt`: one-line localized changelog summaries.
+- `docs/RELEASE_NOTES.md`: historical detailed release notes, maintained only in Chinese and English.
+- `docs/GITHUB_RELEASE.md`: the body text for the current GitHub Release page only.
+- `docs/store-listing/*.txt`: Chrome Web Store descriptions, one file per language.
 
-Ask the user for:
-- **Version number** (e.g., `3.1.2`)
-- **Brief changelog** in Chinese — what changed? One sentence per conventional commit line
+Do not recreate removed files such as `docs/CHANGELOG.md`, `docs/release-note.md`, or `docs/requirements.md`. Do not add README version badges; the current README design does not use them.
 
-If the user doesn't provide a changelog, derive it from `git log` since the last version tag.
+## Inputs
 
-## Step 1: Mechanical Replacements
+Ask for missing essentials only:
 
-### 1a. manifest.json
+- Target version, for example `3.2.0`.
+- Release summary in Chinese or English.
+- Important changes, grouped as user-facing bullets. Conventional commit lines may be used as source material, but do not expose commit tags in user-facing docs unless the user explicitly asks.
 
-```
-"version": "X.Y.Z",
-```
+If the user does not provide release notes, derive candidate changes from `git log` and local diffs, then write user-facing summaries.
 
-### 1b. Badge URLs (17 READMEs)
+## Step 1: Read Current State
 
-```bash
-sed -i 's/version-OLD_VERSION-blue/version-NEW_VERSION-blue/g' README.md docs/README_*.md
-```
+Before editing:
 
-OLD_VERSION is the current version from manifest.json before the edit.
+- Read `manifest.json` and record the old version.
+- Check `git status --short` and preserve unrelated user changes.
+- Inspect existing entries in `docs/changelog-i18n/en.txt`, `docs/changelog-i18n/zh-CN.txt`, `docs/RELEASE_NOTES.md`, and `docs/GITHUB_RELEASE.md` for local tone and format.
+- Search for the old version before replacing it. Only update real release/version references, not historical examples unless the release task requires them.
 
-## Step 2: docs/changelog-i18n/ (16 files)
+## Step 2: Version Number
 
-Each `docs/changelog-i18n/XX.txt` needs a new entry at the top, using compact `• vX.Y.Z · ...` format. No sub-bullets, no conventional commit tags.
+Update `manifest.json`:
 
-```
-• v3.1.2 · [One sentence in this language covering everything changed]
-```
-
-Example (zh-CN):
-```
-• v3.1.1 · 将 Bing API 切换为 Promise.any 竞速模式并添加 8 秒 AbortController 超时；更新全部 16 语言 README 以反映新的获取策略。
+```json
+"version": "X.Y.Z"
 ```
 
-Example (en):
+Use semantic versioning language when helpful:
+
+- Major version: breaking architecture or compatibility change.
+- Minor version: substantial feature, UX, documentation, or capability update without breaking the core framework.
+- Patch version: small fix or maintenance release.
+
+## Step 3: Short Localized Changelogs
+
+Update every file in `docs/changelog-i18n/*.txt`.
+
+Format:
+
+```text
+• vX.Y.Z · One sentence covering the release.
 ```
-• v3.1.1 · Switched Bing API to Promise.any race mode with 8-second AbortController timeout; updated all 16 language READMEs to reflect the new fetch strategy.
-```
 
-Translate the single-line summary into each of the 16 languages.
+Rules:
 
-Languages: en, zh-CN, zh-TW, hi, es, ar, fr, pt_BR, ru, de, ja, it, tr, vi, ko, pl
+- Add the new entry directly below the title line.
+- Keep it to one sentence or one compact line.
+- Do not use sub-bullets or conventional commit tags.
+- Maintain all 16 files unless the user explicitly narrows the release scope.
 
-## Step 3: docs/changelog.md
+Language files:
 
-Add a new section at the top. Unlike `changelog-i18n/*.txt` (single-line), this uses conventional commit sub-bullets:
+`en`, `zh-CN`, `zh-TW`, `hi`, `es`, `ar`, `fr`, `pt_BR`, `ru`, `de`, `ja`, `it`, `tr`, `vi`, `ko`, `pl`.
+
+## Step 4: Detailed Release Notes
+
+Update `docs/RELEASE_NOTES.md`.
+
+This file is the detailed historical release record and is maintained only in Chinese and English. Add the new version section at the top, below the introductory note.
+
+Format:
 
 ```markdown
 ## vX.Y.Z
 
-[One-line English summary]
+### 中文
 
-- `perf`: description
-- `feat`: description
+**摘要**：中文摘要。
 
-[One-line Chinese summary]
+**更新内容**
 
-- `perf`: 中文描述
-- `feat`: 中文描述
+- 中文详细条目。
+
+### English
+
+**Summary**: English summary.
+
+**Details**
+
+- English detailed item.
 ```
 
-## Step 4: docs/release-note.md
+Rules:
 
-**Replace the entire file** with only the current version's content. Do NOT keep old versions. Historical details live in `docs/changelog.md`.
+- Write for users and maintainers, not as raw commit logs.
+- Do not include conventional commit tags such as `fix`, `docs`, or `refactor`.
+- Keep Chinese and English sections equivalent in meaning, not necessarily word-for-word identical.
 
-```
-**PlainTab vX.Y.Z**
+## Step 5: GitHub Release Body
 
-- It is recommended to install online... [English boilerplate]
-- For manual installation...
+Replace `docs/GITHUB_RELEASE.md` with only the current version's GitHub Release page body. Historical details belong in `docs/RELEASE_NOTES.md`.
 
-**Changelog (vX.Y.Z)**
+Recommended structure:
 
-- `perf`: description
-- `feat`: description
-
-**Summary (vX.Y.Z)**
-
-[One paragraph in English — what, why, impact.]
+```markdown
+# PlainTab GitHub Release Body
 
 ---
 
 **PlainTab vX.Y.Z**
 
-- 建议前往 [Chrome 网上应用店]... [Chinese boilerplate]
+- Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) for automatic updates.
+- Or download the `.crx` file below and drag it into `chrome://extensions`.
 
-**更新日志 (vX.Y.Z)**
+**Highlights**
 
-- `perf`: 中文描述
-- `feat`: 中文描述
+- User-facing English bullet.
 
-**总结 (vX.Y.Z)**
+**Summary**
 
-[一段中文总结。]
+One polished English paragraph explaining what changed and why it matters.
+
+---
+
+**PlainTab vX.Y.Z**
+
+- 前往 [Chrome 网上应用店](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo) 安装，可自动更新。
+- 或下载下方 `.crx` 文件，拖入 `chrome://extensions` 页面即可。
+
+**更新重点**
+
+- 面向用户的中文条目。
+
+**总结**
+
+一段中文总结，说明这次更新改了什么、为什么重要。
 ```
 
-Key rules:
-- Installation boilerplate is identical across versions (only version number changes)
-- Changelog uses conventional commit sub-bullets — English tags, translated descriptions
-- Summary is a well-written paragraph (not bullet points), bilingual
+Rules:
 
-## Step 4b: docs/store-listing/ (16 files)
+- This file is meant to be pasted into a GitHub Release page.
+- Keep only the current release.
+- Use user-facing bullets, not conventional commit tags.
+- Keep the installation boilerplate stable unless the install process changes.
 
-Each `docs/store-listing/XX.txt` contains the full Chrome Web Store description for one language. Add the vX.Y.Z changelog entry at the top of the changelog block, using compact `• vX.Y.Z · ...` format. All 16 files must be updated.
+## Step 6: Store Listing Files
 
-## Step 5: Project Docs
+Update every file in `docs/store-listing/*.txt` when preparing a public release.
 
-### 5a. AGENTS.md
+Rules:
 
-Check and update if it mentions outdated behavior. Common spots:
-- "Bing API endpoints" section — if the fetch strategy changed
+- Add the `vX.Y.Z` entry at the top of the changelog/update block.
+- Use compact one-line localized summaries, matching `docs/changelog-i18n/*.txt`.
+- Preserve each file's existing language and formatting.
 
-### 5b. docs/requirements.md
+## Step 7: README And Project Docs
 
-- Update any outdated feature descriptions
-- Add iteration history entry under the current month
+Update these only when the release changes their content:
 
-### 5c. docs/architecture.md
+- `README.md`: English project README.
+- `README.zh-CN.md`: root Simplified Chinese README.
+- `docs/README_*.md`: localized README files.
+- `docs/technical/README_en.md` and `docs/technical/README_zh-CN.md`: technical docs.
+- `docs/architecture.md`: architecture or directory structure notes.
+- `AGENTS.md` and `.claude/rules/`: project guidance, only when durable agent instructions change.
+- `.agents/skills/bump-version/SKILL.md`: this skill, only when release workflow or project structure changes.
 
-Update any sections describing changed behavior. Use simple language matching the existing tone.
+README link rules:
 
-## Step 6: Verify
+- Keep the short changelog link in every README pointing to the matching `docs/changelog-i18n/*.txt` file.
+- Keep a detailed release notes link in every README pointing to `docs/RELEASE_NOTES.md`.
+- The detailed release notes file is bilingual only, but every localized README should still link to it so readers can discover the full history.
+- Use a localized label for the link when practical; the target stays `RELEASE_NOTES.md` from files inside `docs/`, and `docs/RELEASE_NOTES.md` from root README files.
 
-```bash
-grep -r "OLD_VERSION" --include="*.{json,md,txt}" | grep -v node_modules
+Do not update removed files. In the current structure, `docs/requirements.md` is not part of the release workflow.
+
+## Step 8: Verify
+
+Run checks before declaring the release prep done:
+
+```powershell
+Select-String -Path manifest.json,README.md,README.zh-CN.md,docs\*.md,docs\technical\*.md,docs\changelog-i18n\*.txt,docs\store-listing\*.txt -Pattern "OLD_VERSION" -SimpleMatch
 ```
 
-Should return zero results (no stale version references left behind).
+Expected result: no stale old-version references except intentionally historical text.
 
-Then do a spot check on 2-3 random language files to verify changelog entries were added correctly.
+Also verify:
 
-## Common Patterns
+- `docs/CHANGELOG.md` does not exist.
+- `docs/release-note.md` does not exist.
+- `docs/RELEASE_NOTES.md` exists.
+- `docs/GITHUB_RELEASE.md` exists.
+- At least `en` and `zh-CN` changelog/store-listing entries are correct; spot-check a few other languages when all 16 are updated.
 
-### Conventional commit tags
+## Current File Map
 
-| Tag | Use when |
-|-----|---------|
-| `perf` | Performance improvement |
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation only |
-| `refactor` | Code restructuring, no behavior change |
-| `style` | Visual/UI adjustment |
-| `chore` | Build, deps, version bumps |
-
-### File count summary
-
-| Category | Count | Files |
-|----------|-------|-------|
-| manifest | 1 | `manifest.json` |
-| README badges | 16 | root (1) + docs/ (15) |
-| changelog-i18n | 16 | `docs/changelog-i18n/*.txt` |
-| store-listing | 16 | `docs/store-listing/*.txt` |
-| changelog.md | 1 | `docs/changelog.md` |
-| release-note.md | 1 | `docs/release-note.md` |
-| Project docs | 3 | `AGENTS.md`, `docs/requirements.md`, `docs/architecture.md` |
-| **Total** | **54** | |
+| Purpose | Files |
+|---------|-------|
+| Extension version | `manifest.json` |
+| Main READMEs | `README.md`, `README.zh-CN.md` |
+| Localized READMEs | `docs/README_*.md` |
+| Short changelogs | `docs/changelog-i18n/*.txt` |
+| Detailed release history | `docs/RELEASE_NOTES.md` |
+| GitHub Release body | `docs/GITHUB_RELEASE.md` |
+| Chrome Web Store copy | `docs/store-listing/*.txt` |
+| Technical docs | `docs/technical/README_en.md`, `docs/technical/README_zh-CN.md` |
+| Architecture notes | `docs/architecture.md` |

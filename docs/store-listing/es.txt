@@ -1,79 +1,98 @@
-PlainTab es una extensión de navegador que hace que cada nueva pestaña sea un placer visual.
+PlainTab es una página de nueva pestaña bonita, rápida y tranquila.
 
-¿Por qué? Porque tu nueva pestaña merece un buen fondo de pantalla, no anuncios, noticias ni accesos directos.
+¿Por qué? Porque tu nueva pestaña debería mostrarte primero un fondo agradable, no anuncios, noticias, tendencias ni una pantalla llena de accesos directos.
+
+PlainTab hace algo muy simple: abres una nueva pestaña, ves tu fondo, y luego puedes buscar, escribir una URL o abrir tus propios accesos directos. No compite por tu atención ni convierte la página de inicio del navegador en otro feed.
 
 ¿Por qué elegir PlainTab?
 
-• 【Libertad de fondos de pantalla】
-• Imagen diaria de Bing actualizada automáticamente — dos endpoints globales en concurrencia competitiva, rápido sin importar dónde estés.
-• Velocidad de carga local máxima — los fondos se almacenan en tu propio equipo, se leen al instante al abrir una pestaña, un orden de magnitud más rápido que cualquier carga por red.
-• Sube hasta 12 fondos de pantalla locales, con rotación automática en cada nueva pestaña. Vista previa en galería 3×4, elimina o cambia cuando quieras.
+【Imagen al instante】
+• Carga local de fondos extremadamente rápida: PlainTab guarda una vista previa ligera localmente y la carga al instante cada vez que abres una nueva pestaña, reduciendo los parpadeos en blanco.
+• Los fondos en alta resolución cambian suavemente en segundo plano, mientras la imagen anterior queda debajo como respaldo, así no tienes que esperar a la red para ver un fondo.
+• Los fondos diarios de Bing admiten caché y actualización; después del primer uso, las siguientes aperturas se sienten más fluidas.
 
-• 【Privacidad absoluta】
-• Sin anuncios, sin seguimiento, sin recopilación de datos.
-• Todos los fondos se almacenan offline en tu equipo — no se suben, no se sincronizan, no pasan por ningún servidor. Tu actividad de navegación te pertenece solo a ti.
+【Libertad de fondos】
+• Admite fondos diarios de Bing y tus propias imágenes subidas.
+• Permite elegir una carpeta local de fondos, ideal si ya tienes una colección.
+• Admite fuentes RSS de imágenes y APIs personalizadas: simple si quieres algo simple, flexible si quieres experimentar.
+• Los fondos locales admiten hasta 12 imágenes en rotación, con vista previa de galería 3×4 para eliminarlas o reemplazarlas cuando quieras.
 
-• 【Rápido, sin molestias】
-• JavaScript puro nativo, cero dependencias externas. Sin frameworks de terceros, el navegador lo muestra al instante.
-• Los fondos generan en segundo plano una vista previa ultraligera; la próxima vez que abras una nueva pestaña, se lee directamente desde el equipo local al instante, sin pasar por la red.
+【Tranquilo, pero no vacío】
+• La página principal se mantiene contenida: fondo, barra de búsqueda y unas pocas entradas necesarias, sin llenarse de widgets.
+• La barra de búsqueda permite ajustar posición, tamaño, radio de esquina, transparencia y modo de visibilidad.
+• Puede estar siempre visible, aparecer solo cuando se necesita o permanecer oculta.
+• Los accesos directos se gestionan en el panel de comandos, con búsqueda, añadir, editar e importación de marcadores, sin ocupar la imagen principal.
+• El espacio oculto permite guardar enlaces que no quieres mostrar directamente, manteniendo limpia la página.
 
-• 【Flexible, no complicado】
-• Coincidencia automática en 16 idiomas.
-• Barra de búsqueda: aparece al pasar el ratón / siempre visible / oculta.
-• Motor de búsqueda: Google / Bing / Baidu / DuckDuckGo (modo Web).
+【Privacidad primero】
+• Sin anuncios, sin seguimiento y sin recopilación de tus datos de navegación.
+• Los fondos subidos localmente se guardan en el almacenamiento local del navegador. No se suben, no se sincronizan y no pasan por servidores de terceros.
+• Los ajustes de búsqueda y accesos directos están pensados para uso local. Tu nueva pestaña debería pertenecerte.
 
-• 【Transparencia y código abierto】
-• Código completamente abierto: https://github.com/kaininx/PlainTab
-• Pruébalo en línea: https://plaintab.kaininx.workers.dev
+【Ligero y transparente】
+• Construido con JavaScript nativo, CSS y APIs del navegador, sin framework frontend, sin paso de compilación y sin grandes dependencias de ejecución.
+• Funciona como extensión de nueva pestaña para Chrome / Edge y también puede abrirse directamente como página web.
+• Totalmente open source, útil para el día a día y para aprender desarrollo de extensiones, frontend y trabajo asistido por IA.
 
-✨ Uso combinado (recomendado por el desarrollador):
-• 📌 Nueva pestaña: instala esta extensión, te permite configurar hasta 12 fondos de pantalla diferentes, sin límite de tamaño.
-• 📌 Página de inicio: configura el navegador en https://plaintab.kaininx.workers.dev para mantener el modo diario predeterminado.
-• 📌 Botón de inicio: configúralo en https://kaininx.github.io/PlainTab/ , que es la GitHub Pages de este proyecto, para establecer fondos adicionales a tu gusto.
+PlainTab es para ti si quieres:
 
-PlainTab es para ti, si estás harto de:
-• Nuevas pestañas llenas de anuncios, noticias y accesos directos inútiles
-• Extensiones que recopilan tus datos a escondidas en segundo plano
-• Navegadores que se vuelven lentos con muchas extensiones, cuando lo que quieres es velocidad nativa
-• Ver la misma imagen cada vez que abres una nueva pestaña
+• Una nueva pestaña más bonita sin ruido de feeds
+• Fondos diarios o un lugar para gestionar tu propia colección
+• Búsqueda, accesos directos, importación de marcadores y copias de seguridad sin saturar la página
+• Una página de inicio que no esté cubierta por docenas de accesos directos
+• Una extensión ligera y transparente sin herramientas de compilación complejas
+• Un proyecto real y completo de extensión de navegador para aprender
+
+Lo que PlainTab no hará:
+
+• Sin feeds de noticias, listas de tendencias ni recomendaciones
+• Sin anuncios, tarjetas patrocinadas ni espacios promocionales
+• Sin sistema de cuentas, funciones sociales ni flujos de contenido en la nube
+• Sin llenar la página de inicio con docenas de accesos directos
+• Sin vídeos en reproducción automática ni fondos animados
 
 Soporte y comentarios
-• ¿Te gusta PlainTab? Déjanos una valoración positiva en Chrome Web Store.
-• GitHub: https://github.com/kaininx/PlainTab
-• ¿Problemas o sugerencias? Bienvenido a abrir un Issue.
+
+• Código abierto: https://github.com/kaininx/PlainTab
+• Demo en línea: https://plaintab.kaininx.workers.dev
+• Notas detalladas de la versión: https://github.com/kaininx/PlainTab/blob/main/docs/RELEASE_NOTES.md
+• ¿Te gusta PlainTab? Una reseña en Chrome Web Store se agradece mucho.
+• ¿Preguntas o sugerencias? Abre un Issue en GitHub.
 
 Registro de cambios
+
+• v3.2.0 · Gran actualización de funciones y rendimiento: añade panel de comandos, fondos RSS/API/carpeta local, colores de tema de fondo con WASM, importación/exportación de configuración e historial de búsqueda; migra el almacenamiento al modelo v3.2, endurece permisos y respaldo de búsqueda, y modulariza/optimiza inicio, fondos, galería y ajustes.
 
 • v3.1.4 · Refactorizada la nomenclatura de constantes de almacenamiento y unificada la migración IDB en transacción bifásica para ordenación recuperable ante fallos; optimizada la omisión de migración para nuevos usuarios; añadida deduplicación en carga por lotes con límite de 12 imágenes
 
 • v3.1.3 · Implementada la migración de versión de almacenamiento para localStorage e IndexedDB, unificada la nomenclatura de claves, corregida la lógica de persistencia de miniaturas en modo local.
 
-• v3.1.2 · Se renombró _locales/pt a pt_BR para cumplir con Chrome Web Store; se unificó el formato del changelog al estilo compacto; se renombraron los archivos portugueses a pt_BR para mantener consistencia.
+• v3.1.2 · Renombrado _locales/pt a pt_BR para cumplir con Chrome Web Store; unificado el formato del changelog; archivos portugueses renombrados a pt_BR.
 
-• v3.1.1 · Se cambió la API de Bing al modo de concurrencia Promise.any con un tiempo de espera AbortController de 8 segundos; se actualizaron los 16 README de idiomas para reflejar la nueva estrategia de obtención.
+• v3.1.1 · Bing API cambiada a modo de carrera Promise.any con timeout AbortController de 8 segundos; actualizados los README de 16 idiomas.
 
-• v3.1.0 · Galería local de fondos: sube, elimina y rota múltiples fondos locales, selección por lotes; refactorización del código; mejora de estilos en paneles; localización multilingüe mejorada; corrección de CSP eliminando dominios de API JSON.
+• v3.1.0 · Galería de fondos locales: subir, eliminar y rotar varios fondos, selección por lotes; mejor estilo de paneles; localización mejorada; configuración CSP más estricta.
 
-• v3.0.5 · Actualización del proxy de la API de Bing (peticiones regionalizadas + deduplicación de imágenes); optimización del caché de fondos; unificación de nombres de claves en localStorage; nuevo changelog en 16 idiomas; mejora de logs y semántica del código.
+• v3.0.5 · Proxy de Bing API actualizado, caché de fondos optimizada, claves localStorage unificadas, changelogs en 16 idiomas añadidos, logs y semántica de código mejorados.
 
-• v3.0.4 · Corrección de fallo al cargar fondos: la lista blanca CSP img-src no incluía el dominio CDN de Bing, por lo que las imágenes redirigidas por el proxy API eran bloqueadas por el navegador.
+• v3.0.4 · Corregido fallo de carga de fondos causado por dominios CDN de Bing ausentes en la lista CSP de imágenes.
 
-• v3.0.3 · Omitir CSSOM para acelerar el renderizado del primer fotograma, refuerzo de seguridad CSP, limpieza de código muerto, nuevos iconos SVG y material promocional.
+• v3.0.3 · Optimizada la ruta del primer render, reforzada la seguridad CSP, eliminado código no usado, añadidos iconos y materiales promocionales.
 
-• v3.0.2 · Fondo adaptativo en modo oscuro, reestructuración del código, barra de información multilingüe en la parte inferior.
+• v3.0.2 · Fondo adaptativo en modo oscuro, estructura de código ajustada, barra inferior multilingüe añadida.
 
-• v3.0.1 · Integración de Chrome Search API para superar la auditoría de cumplimiento de propósito único de Chrome Web Store.
+• v3.0.1 · Integrada Chrome Search API para cumplir los requisitos de propósito único de Chrome Web Store.
 
-• v3.0.0 · Reescritura completa: arquitectura de doble capa para eliminar el parpadeo de pantalla blanca en nuevas pestañas, añadido fondo gris de respaldo.
+• v3.0.0 · Reescritura del núcleo: arquitectura de dos capas para reducir parpadeos en blanco en nuevas pestañas, con fondo de respaldo.
 
-• v2.2.7 · Nuevos README en inglés, japonés, coreano, ruso y chino simplificado; modo de búsqueda predeterminado cambiado a "siempre visible".
+• v2.2.7 · Añadidos README en inglés, japonés, coreano, ruso y chino simplificado; modo de búsqueda predeterminado cambiado a siempre visible.
 
-• v2.2.6 · Optimización de la lógica de carga de fondos y del caché de miniaturas, reorganización de constantes de la API de Bing.
+• v2.2.6 · Optimizada la carga de fondos y la caché de miniaturas, organizadas las constantes de Bing API.
 
-• v2.2.5 · Precarga de fondos y optimización del primer fotograma, eliminando la pantalla blanca en nuevas pestañas.
+• v2.2.5 · Añadida precarga de fondos y optimización del primer fotograma para reducir pantallas en blanco.
 
-• v2.2.4 · Migración del almacenamiento de fondos de localStorage a IndexedDB.
+• v2.2.4 · Almacenamiento de fondos migrado de localStorage a IndexedDB.
 
-• v2.2.3 · Subida de fondos locales, mejora en la experiencia de cambio de motor de búsqueda.
+• v2.2.3 · Añadida subida de fondos locales y mejorada la experiencia al cambiar motor de búsqueda.
 
-• v1.2.0 · Primera publicación: sistema de fondos, interfaz en 16 idiomas, localización Chrome i18n, licencia MIT.
+• v1.2.0 · Primera versión: sistema de fondos, interfaz en 16 idiomas, localización Chrome i18n y licencia MIT.
