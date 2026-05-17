@@ -668,8 +668,96 @@
         button.disabled = !validation.valid;
     }
 
+    function normalizeDraftSource(source) {
+        return D.normalizeSource ? D.normalizeSource(source) : (source === 'local' ? 'upload' : (source || 'bing'));
+    }
+
+    function sourceNeedsDiscardPrompt(previousSource, nextSource) {
+        previousSource = normalizeDraftSource(previousSource);
+        nextSource = normalizeDraftSource(nextSource);
+        if (previousSource === nextSource) return false;
+        if (previousSource === 'bing') return false;
+        return D.hasSourceCache && D.hasSourceCache(previousSource);
+    }
+
     function applyWallpaperDraft() {
-        refreshWallpaperApplyFooter();
+        var validation = validateWallpaperDraft();
+        if (!validation.valid) {
+            refreshWallpaperApplyFooter();
+            return;
+        }
+
+        var saved = D.loadWallpaper();
+        var draft = currentWallpaperDraft();
+        var previousSource = normalizeDraftSource(saved.activeSource);
+        var nextSource = normalizeDraftSource(draft.activeSource);
+        var applyBtn = document.getElementById('wallpaperApplyBtn');
+        if (applyBtn) applyBtn.disabled = true;
+
+        function reloadAfterApply() {
+            currentMode = D.compatMode ? D.compatMode(nextSource) : nextSource;
+            wallpaperDraftOriginal = JSON.stringify(draft);
+            if (window.reloadWallpaper) return window.reloadWallpaper();
+            return Promise.resolve();
+        }
+
+        function syncDraftRuntimeStateFromSaved() {
+            var latest = D.loadWallpaper();
+            draft.cache = clonePlain(latest.cache || draft.cache || {});
+            Object.keys(draft.providers || {}).forEach(function (key) {
+                if (latest.providers && latest.providers[key]) {
+                    draft.providers[key].state = clonePlain(latest.providers[key].state || {});
+                }
+            });
+        }
+
+        function saveDraftAfterApiCache() {
+            syncDraftRuntimeStateFromSaved();
+            D.saveWallpaper(draft);
+            return reloadAfterApply();
+        }
+
+        function finishApply() {
+            if (nextSource === 'api' && wallpaperDraftApiTestResult) {
+                var apiConfig = draft.providers.api.config;
+                var apiSource = selectedDraftApiSource();
+                if (apiSource) {
+                    apiSource.test = {
+                        status: 'passed',
+                        fieldHash: D.apiFieldHash(apiSource, apiConfig.apiType),
+                        testedAt: Date.now(),
+                        imageUrl: wallpaperDraftApiTestResult.imageUrl || '',
+                        error: ''
+                    };
+                    return F.cacheApiResult(apiSource, apiConfig.apiType, wallpaperDraftApiTestResult).then(saveDraftAfterApiCache);
+                }
+            }
+            syncDraftRuntimeStateFromSaved();
+            D.saveWallpaper(draft);
+            return reloadAfterApply();
+        }
+
+        var applyPromise;
+        if (sourceNeedsDiscardPrompt(previousSource, nextSource)) {
+            if (!confirm(tr('wallpaperDiscardCacheConfirm', '切换来源会丢弃当前来源已缓存的壁纸数据。继续吗？'))) {
+                if (applyBtn) applyBtn.disabled = false;
+                refreshWallpaperApplyFooter();
+                return;
+            }
+            applyPromise = D.clearWallpaperSourceCache(previousSource).then(finishApply);
+        } else {
+            applyPromise = finishApply();
+        }
+
+        applyPromise.then(function () {
+            openWallpaperDraft();
+            invalidateWallpaperTab();
+            refreshGallery();
+        }).catch(function (err) {
+            var status = document.getElementById('wallpaperApplyStatus');
+            if (status) status.textContent = err && err.message ? err.message : String(err || 'Apply failed');
+            if (applyBtn) applyBtn.disabled = false;
+        });
     }
 
     function rssStatusText(config, state) {
