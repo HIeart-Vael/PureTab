@@ -135,6 +135,10 @@
     var fullInitialized = false;
     var useBootstrapShell = false;
     var pendingRssWallpaperApply = false;
+    var wallpaperDraft = null;
+    var wallpaperDraftOriginal = '';
+    var wallpaperDraftApiTestResult = null;
+    var wallpaperDraftRssTestResult = null;
 
     // ================================================================
     // 语言面板
@@ -220,7 +224,6 @@
         settingsPanel.classList.remove('active');
         settingsBtn.classList.remove('panel-open');
         revokeGalleryUrls();
-        applyPendingRssWallpaper();
         maybePromptEmptyLocalUpload(options);
     }
 
@@ -268,7 +271,12 @@
         isModalOpen = false;
         closeCustomSelects();
         modalOverlay.classList.remove('active');
-        applyPendingRssWallpaper();
+        clearWallpaperDraft();
+        if (_tabPages.wallpaper) {
+            _tabPages.wallpaper.remove();
+            delete _tabPages.wallpaper;
+            _tabEventBound.wallpaper = false;
+        }
         maybePromptEmptyLocalUpload(options);
     }
 
@@ -575,6 +583,74 @@
         return '<p class="source-config-note">' + message + '</p>';
     }
 
+    function clonePlain(value) {
+        return JSON.parse(JSON.stringify(value || {}));
+    }
+
+    function openWallpaperDraft() {
+        wallpaperDraft = clonePlain(D.loadWallpaper());
+        wallpaperDraft.providers.rss.config = clonePlain(D.loadRssConfig());
+        wallpaperDraft.providers.api.config = clonePlain(D.loadApiConfig());
+        wallpaperDraftOriginal = JSON.stringify(wallpaperDraft);
+        wallpaperDraftApiTestResult = null;
+        wallpaperDraftRssTestResult = null;
+        return wallpaperDraft;
+    }
+
+    function clearWallpaperDraft() {
+        wallpaperDraft = null;
+        wallpaperDraftOriginal = '';
+        wallpaperDraftApiTestResult = null;
+        wallpaperDraftRssTestResult = null;
+    }
+
+    function currentWallpaperDraft() {
+        if (!wallpaperDraft) return openWallpaperDraft();
+        return wallpaperDraft;
+    }
+
+    function draftActiveSource() {
+        var source = currentWallpaperDraft().activeSource;
+        return D.compatMode ? D.compatMode(source) : source;
+    }
+
+    function wallpaperDraftChanged() {
+        return !!wallpaperDraft && JSON.stringify(wallpaperDraft) !== wallpaperDraftOriginal;
+    }
+
+    function selectedDraftRssSource() {
+        var config = currentWallpaperDraft().providers.rss.config;
+        return config.sources.filter(function (source) { return source.id === config.activeSourceId; })[0] || config.sources[0] || null;
+    }
+
+    function selectedDraftApiSource() {
+        var config = currentWallpaperDraft().providers.api.config;
+        return D.activeApiSource ? D.activeApiSource(config) : null;
+    }
+
+    function validateWallpaperDraft() {
+        var draft = currentWallpaperDraft();
+        var source = D.compatMode ? D.compatMode(draft.activeSource) : draft.activeSource;
+        if (!wallpaperDraftChanged()) return { valid: false, reason: tr('wallpaperApplyNoChanges', '没有未应用更改') };
+        if (source === 'bing' || source === 'local') return { valid: true, reason: '' };
+        if (source === 'folder') return { valid: false, reason: tr('folderNeedsValidSelection', '请选择有效文件夹') };
+        if (source === 'rss') {
+            var rss = selectedDraftRssSource();
+            var rssHash = D.rssFieldHash(rss);
+            if (!D.isTestPassed(rss, rssHash)) return { valid: false, reason: tr('rssNeedsTest', '当前 RSS 源需要测试通过') };
+            return { valid: true, reason: '' };
+        }
+        if (source === 'api') {
+            var api = selectedDraftApiSource();
+            var apiType = draft.providers.api.config.apiType;
+            var apiHash = D.apiFieldHash(api, apiType);
+            if (!D.isTestPassed(api, apiHash)) return { valid: false, reason: tr('apiNeedsTest', '当前 API 源需要测试通过') };
+            if (!wallpaperDraftApiTestResult) return { valid: false, reason: tr('apiNeedsFreshTest', '请重新测试当前 API 源') };
+            return { valid: true, reason: '' };
+        }
+        return { valid: false, reason: tr('sourcePendingHint', '这个来源的配置正在接入中') };
+    }
+
     function rssStatusText(config, state) {
         var count = D.activeRssOrder ? D.activeRssOrder(config.activeSourceId).length : 0;
         if (state.lastError) return tr('rssStatusError', 'RSS 状态：') + state.lastError;
@@ -756,6 +832,7 @@
     }
 
     function buildWallpaperHTML() {
+        if (!wallpaperDraft) openWallpaperDraft();
         var sources = [
             { id: 'bing',   name: getSourceLabel('bing'),   desc: t('sourceBingDesc')   || '每日自动更新，根据语言选择地区' },
             { id: 'upload', name: getSourceLabel('upload'), desc: t('sourceUploadDesc') || '上传图片，最多 12 张轮换' },
@@ -764,7 +841,8 @@
             { id: 'api',    name: getSourceLabel('api'),    desc: t('sourceApiDesc')    || '从 API 接口获取图片 URL' }
         ];
 
-        var activeSource = currentMode === 'local' ? 'upload' : currentMode;
+        var draftSource = draftActiveSource();
+        var activeSource = draftSource === 'local' ? 'upload' : draftSource;
         var pendingSourceText = tr('sourcePendingHint', '这个来源的配置正在接入中，当前还不会改变壁纸。');
         var configs = {
             bing:   '<p>' + (t('bingConfigHint') || '根据当前界面语言自动选择 Bing 市场区域。') + '</p>',
