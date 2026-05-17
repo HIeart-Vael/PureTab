@@ -166,10 +166,9 @@ Rules:
 Update these only when the release changes their content:
 
 - `README.md`: English project README.
-- `README.zh-CN.md`: root Simplified Chinese README.
+- `docs/README_zh-CN.md`: Simplified Chinese README.
 - `docs/README_*.md`: localized README files.
 - `docs/technical/README_en.md` and `docs/technical/README_zh-CN.md`: technical docs.
-- `docs/architecture.md`: architecture or directory structure notes.
 - `AGENTS.md` and `.claude/rules/`: project guidance, only when durable agent instructions change.
 - `.agents/skills/bump-version/SKILL.md`: this skill, only when release workflow or project structure changes.
 
@@ -187,7 +186,7 @@ Do not update removed files. In the current structure, `docs/requirements.md` is
 Run checks before declaring the release prep done:
 
 ```powershell
-Select-String -Path manifest.json,README.md,README.zh-CN.md,docs\*.md,docs\technical\*.md,docs\changelog-i18n\*.txt,docs\store-listing\*.txt -Pattern "OLD_VERSION" -SimpleMatch
+Select-String -Path manifest.json,README.md,docs\*.md,docs\technical\*.md,docs\changelog-i18n\*.txt,docs\store-listing\*.txt -Pattern "OLD_VERSION" -SimpleMatch
 ```
 
 Expected result: no stale old-version references except intentionally historical text.
@@ -205,11 +204,10 @@ Also verify:
 | Purpose | Files |
 |---------|-------|
 | Extension version | `manifest.json` |
-| Main READMEs | `README.md`, `README.zh-CN.md` |
+| Main READMEs | `README.md`, `docs/README_zh-CN.md` |
 | Localized READMEs | `docs/README_*.md` |
 | Short changelogs | `docs/changelog-i18n/*.txt` |
 | Detailed release history | `docs/RELEASE_NOTES.md` |
 | GitHub Release body | `docs/GITHUB_RELEASE.md` |
 | Chrome Web Store copy | `docs/store-listing/*.txt` |
 | Technical docs | `docs/technical/README_en.md`, `docs/technical/README_zh-CN.md` |
-| Architecture notes | `docs/architecture.md` |

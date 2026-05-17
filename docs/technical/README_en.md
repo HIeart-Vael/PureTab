@@ -13,7 +13,7 @@
   ·
   <a href="../../README.md">Project README</a>
   ·
-  <a href="../../README.zh-CN.md">中文介绍</a>
+  <a href="../README_zh-CN.md">中文介绍</a>
   ·
   <a href="../RELEASE_NOTES.md">Release Notes</a>
   ·
@@ -35,7 +35,7 @@ This document is not a store listing and not a full API reference. It explains:
 - which areas need extra care when modified;
 - why the project stays static, lightweight, and dependency-free.
 
-If you only want to know whether PlainTab is worth trying, start with the [project README](../../README.md) or the [Chinese introduction](../../README.zh-CN.md). If you want to learn, modify, or maintain the project, this document is the better entry point.
+If you only want to know whether PlainTab is worth trying, start with the [project README](../../README.md) or the [Chinese introduction](../README_zh-CN.md). If you want to learn, modify, or maintain the project, this document is the better entry point.
 
 ## Project Positioning
 
@@ -403,7 +403,7 @@ Live demo:
 
 - [中文技术说明](README_zh-CN.md)
 - [Project README](../../README.md)
-- [中文介绍](../../README.zh-CN.md)
+- [中文介绍](../README_zh-CN.md)
 - [Release Notes](../RELEASE_NOTES.md)
 - [Chrome Web Store](https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo)
 - [GitHub repository](https://github.com/kaininx/PlainTab)
