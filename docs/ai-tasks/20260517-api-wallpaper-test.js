@@ -201,19 +201,24 @@
             try {
                 var png = await colorBlob('#4488ff');
                 window.fetch = function (url) {
-                    if (String(url).indexOf('/json') !== -1) {
+                    var requestedUrl = String(url);
+                    try {
+                        var parsedUrl = new URL(requestedUrl);
+                        requestedUrl = parsedUrl.searchParams.get('quest') || parsedUrl.searchParams.get('url') || requestedUrl;
+                    } catch (e) { }
+                    if (requestedUrl.indexOf('/json') !== -1) {
                         return Promise.resolve(new Response(JSON.stringify({ data: { image: { url: 'https://example.com/image.png' } } }), {
                             status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         }));
                     }
-                    if (String(url).indexOf('/image.png') !== -1 || String(url).indexOf('/direct') !== -1) {
+                    if (requestedUrl.indexOf('/image.png') !== -1 || requestedUrl.indexOf('/direct') !== -1) {
                         return Promise.resolve(new Response(png, {
                             status: 200,
                             headers: { 'Content-Type': 'image/png' }
                         }));
                     }
-                    if (String(url).indexOf('/private') !== -1) {
+                    if (requestedUrl.indexOf('/private') !== -1) {
                         return Promise.resolve(new Response('forbidden', { status: 403 }));
                     }
                     return Promise.resolve(new Response('not an image', {

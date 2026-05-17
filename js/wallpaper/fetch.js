@@ -113,6 +113,12 @@
         return err;
     }
 
+    function apiError(code, message) {
+        var err = new Error(message);
+        err.code = code;
+        return err;
+    }
+
     function timeoutSignal(ms) {
         if (AbortSignal.timeout) return AbortSignal.timeout(ms);
         var controller = new AbortController();
@@ -170,6 +176,84 @@
 
     function fetchText(url, timeoutMs) {
         return fetchWithWebFallback(url, timeoutMs, function (response) { return response.text(); });
+    }
+
+    function resolveJsonPath(data, path) {
+        if (!path) return '';
+        var parts = String(path).replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+        var current = data;
+        for (var i = 0; i < parts.length; i++) {
+            if (current === null || current === undefined) return '';
+            current = current[parts[i]];
+        }
+        return typeof current === 'string' ? current.trim() : '';
+    }
+
+    function findApiImageUrl(data) {
+        var seen = [];
+        var preferred = ['url', 'imageUrl', 'image_url', 'src', 'image', 'wallpaper'];
+
+        function valid(value) {
+            return typeof value === 'string' && isHttpUrl(value) && /\.(avif|bmp|gif|jpe?g|png|webp)(\?|#|$)/i.test(value);
+        }
+
+        function walk(value, depth) {
+            if (!value || depth > 5 || seen.indexOf(value) !== -1) return '';
+            if (valid(value)) return value;
+            if (typeof value !== 'object') return '';
+            seen.push(value);
+            for (var p = 0; p < preferred.length; p++) {
+                var key = preferred[p];
+                if (Object.prototype.hasOwnProperty.call(value, key)) {
+                    var direct = walk(value[key], depth + 1);
+                    if (direct) return direct;
+                }
+            }
+            var keys = Array.isArray(value) ? value.map(function (_, index) { return index; }) : Object.keys(value);
+            for (var i = 0; i < keys.length; i++) {
+                var found = walk(value[keys[i]], depth + 1);
+                if (found) return found;
+            }
+            return '';
+        }
+
+        return walk(data, 0);
+    }
+
+    function classifyFetchError(err) {
+        var message = err && err.message ? err.message : String(err || '');
+        if (err && err.code === 'RSS_PERMISSION_DENIED') return apiError('API_CORS_OR_NETWORK', message || 'permission denied');
+        if (/HTTP 401|HTTP 403/.test(message)) return apiError('API_AUTH_REQUIRED', message);
+        if (/HTTP/.test(message)) return apiError('API_FETCH_FAILED', message);
+        if (message === 'Failed to fetch') return apiError('API_CORS_OR_NETWORK', message);
+        if ((err && err.name === 'AbortError') || message === 'The operation was aborted.' || message === 'AbortError' || message === 'signal timed out') {
+            return apiError('API_TIMEOUT', message);
+        }
+        return err;
+    }
+
+    function fetchApiResponse(url, timeoutMs) {
+        if (!isHttpUrl(url)) return Promise.reject(apiError('INVALID_API_URL', 'invalid url'));
+        return fetchWithWebFallback(url, timeoutMs || 8000, function (response) {
+            return response;
+        }).catch(function (err) {
+            throw classifyFetchError(err);
+        });
+    }
+
+    function blobFromImageResponse(response, imageUrl) {
+        var contentType = response.headers.get('Content-Type') || '';
+        if (contentType.indexOf('image/') !== 0) throw apiError('API_NOT_IMAGE', 'response is not an image');
+        return response.blob().then(function (blob) {
+            if (!blob || !blob.size) throw apiError('API_IMAGE_DOWNLOAD_FAILED', 'empty image');
+            return {
+                ok: true,
+                imageUrl: imageUrl || response.url || '',
+                blob: blob,
+                mime: blob.type || contentType || '',
+                finalUrl: response.url || imageUrl || ''
+            };
+        });
     }
 
     function textOf(node, selector) {
@@ -365,6 +449,82 @@
         });
     }
 
+    function testApiSource(source, apiType) {
+        if (!source || !isHttpUrl(source.url)) return Promise.reject(apiError('INVALID_API_URL', 'invalid url'));
+        apiType = apiType === 'json' ? 'json' : 'image';
+        if (apiType === 'image') {
+            return fetchApiResponse(source.url, 8000).then(function (response) {
+                return blobFromImageResponse(response, response.url || source.url);
+            });
+        }
+        return fetchApiResponse(source.url, 8000).then(function (response) {
+            return response.text();
+        }).then(function (text) {
+            var data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                throw apiError('API_JSON_PARSE_FAILED', 'json parse failed');
+            }
+            var imageUrl = resolveJsonPath(data, source.jsonPath || '') || findApiImageUrl(data);
+            if (!imageUrl || !isHttpUrl(imageUrl)) throw apiError('API_JSON_PATH_FAILED', 'image url not found');
+            return fetchApiResponse(imageUrl, 8000).then(function (imageResponse) {
+                return blobFromImageResponse(imageResponse, imageUrl);
+            });
+        });
+    }
+
+    function cacheApiResult(source, apiType, result) {
+        if (!result || !result.blob) return Promise.reject(apiError('API_IMAGE_DOWNLOAD_FAILED', 'empty image'));
+        apiType = apiType === 'json' ? 'json' : 'image';
+        var thumbs = D.loadThumbs();
+        var meta = D.loadMeta();
+        var blob = result.blob;
+        var imageUrl = result.imageUrl || result.finalUrl || source.url;
+        var objectUrl = URL.createObjectURL(blob);
+        return S.thumbnail(objectUrl).then(function (thumb) {
+            URL.revokeObjectURL(objectUrl);
+            if (!thumb) throw apiError('API_IMAGE_DOWNLOAD_FAILED', 'thumbnail failed');
+            return D.idbPut(D.DB.API_BLOB, D.imageRecord(blob, source.name || 'api')).then(function () {
+                var now = Date.now();
+                thumbs.api = thumb;
+                meta.api = {
+                    sourceId: source.id,
+                    sourceName: source.name,
+                    apiType: apiType,
+                    imageUrl: imageUrl,
+                    fetchedAt: now
+                };
+                D.saveThumbs(thumbs);
+                D.saveMeta(meta);
+                D.savePreview(thumb);
+                D.updateWallpaper(function (model) {
+                    model.providers.api.state.lastCheckedAt = now;
+                    model.providers.api.state.lastSuccessAt = now;
+                    model.providers.api.state.lastError = '';
+                    model.providers.api.state.lastSourceId = source.id;
+                    model.providers.api.state.lastImageUrl = imageUrl;
+                });
+                return { ok: true, blob: blob, thumb: thumb, imageUrl: imageUrl };
+            });
+        }, function (err) {
+            URL.revokeObjectURL(objectUrl);
+            throw err;
+        });
+    }
+
+    function refreshApiSource(source, apiType) {
+        return testApiSource(source, apiType).then(function (result) {
+            return cacheApiResult(source, apiType, result);
+        }).catch(function (err) {
+            D.updateWallpaper(function (model) {
+                model.providers.api.state.lastCheckedAt = Date.now();
+                model.providers.api.state.lastError = err && err.message ? err.message : String(err || 'API refresh failed');
+            });
+            throw err;
+        });
+    }
+
     // ================================================================
     // 公开 API
     // ================================================================
@@ -376,9 +536,15 @@
         cacheBingBlob: cacheBingBlob,
         generateId: generateId,
         isHttpUrl: isHttpUrl,
+        apiError: apiError,
+        resolveJsonPath: resolveJsonPath,
+        findApiImageUrl: findApiImageUrl,
         parseRssItems: parseRssItems,
         testRssSource: testRssSource,
-        refreshRssSource: refreshRssSource
+        refreshRssSource: refreshRssSource,
+        testApiSource: testApiSource,
+        cacheApiResult: cacheApiResult,
+        refreshApiSource: refreshApiSource
     };
 
 })();
