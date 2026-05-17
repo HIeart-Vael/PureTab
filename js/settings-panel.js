@@ -636,12 +636,14 @@
         if (source === 'folder') return { valid: false, reason: tr('folderNeedsValidSelection', '请选择有效文件夹') };
         if (source === 'rss') {
             var rss = selectedDraftRssSource();
+            if (!rss) return { valid: false, reason: tr('rssNeedsSource', '请添加并选择 RSS 源') };
             var rssHash = D.rssFieldHash(rss);
             if (!D.isTestPassed(rss, rssHash)) return { valid: false, reason: tr('rssNeedsTest', '当前 RSS 源需要测试通过') };
             return { valid: true, reason: '' };
         }
         if (source === 'api') {
             var api = selectedDraftApiSource();
+            if (!api) return { valid: false, reason: tr('apiNeedsSource', '请添加并选择 API 源') };
             var apiType = draft.providers.api.config.apiType;
             var apiHash = D.apiFieldHash(api, apiType);
             if (!D.isTestPassed(api, apiHash)) return { valid: false, reason: tr('apiNeedsTest', '当前 API 源需要测试通过') };
@@ -774,7 +776,9 @@
         var rows = config.sources.map(function (source) {
             var checked = source.id === config.activeSourceId ? ' checked' : '';
             var selectedClass = checked ? ' selected' : '';
+            var passed = D.isTestPassed(source, D.rssFieldHash(source));
             return '<div class="rss-source-row' + selectedClass + '" data-rss-source="' + escapeHtml(source.id) + '">' +
+                '<span class="source-status-dot ' + (passed ? 'passed' : 'failed') + '"></span>' +
                 '<label class="rss-source-main"><input type="radio" name="rssSource" value="' + escapeHtml(source.id) + '"' + checked + '><span><strong>' + escapeHtml(source.name) + '</strong><small>' + escapeHtml(source.url) + '</small></span></label>' +
                 '<button class="rss-test-btn" type="button" data-action="test-rss">' + tr('rssTest', '测试') + '</button>' +
                 '<button class="rss-delete-btn" type="button" data-action="delete-rss" aria-label="' + tr('deleteImage', '删除') + '">×</button>' +
@@ -1206,6 +1210,8 @@
                 setRssStatus(message);
                 showRssNotice(message, 'success');
                 refreshWallpaperApplyFooter();
+                var passedDot = testButton.closest('.rss-source-row') && testButton.closest('.rss-source-row').querySelector('.source-status-dot');
+                if (passedDot) passedDot.classList.add('passed');
             }).catch(function (err) {
                 var message = rssErrorMessage(err);
                 source.test = {
@@ -1219,6 +1225,8 @@
                 setRssStatus(message);
                 showRssNotice(message, 'error');
                 refreshWallpaperApplyFooter();
+                var failedDot = testButton.closest('.rss-source-row') && testButton.closest('.rss-source-row').querySelector('.source-status-dot');
+                if (failedDot) failedDot.classList.remove('passed');
             }).finally(function () {
                 setRssTestButtonState(testButton, false);
             });
