@@ -136,7 +136,7 @@
     /**
      * 应用壁纸并执行双层交叉淡入过渡。
      */
-    function applyWallpaper(url, transitionMs) {
+    function applyWallpaper(url, transitionMs, sourceId) {
         if (typeof transitionMs !== 'number' || !isFinite(transitionMs)) transitionMs = 200;
 
         return preloadImage(url).then(function (img) {
@@ -171,7 +171,7 @@
                 window.setTimeout(finishTransition, transitionMs + 100);
             });
         }).then(function (img) {
-            trackCurrentWallpaperUrl(url);
+            trackCurrentWallpaperUrl(url, sourceId);
             return img;
         });
     }
@@ -265,8 +265,8 @@
     // 公开 API
     // ================================================================
 
-    function applyAndSavePreview(url) {
-        return applyWallpaper(url).then(function (img) {
+    function applyAndSavePreview(url, sourceId) {
+        return applyWallpaper(url, undefined, sourceId).then(function (img) {
             if (!img) return;
             return generateThumbnail(img).then(function (thumb) {
                 if (thumb) {

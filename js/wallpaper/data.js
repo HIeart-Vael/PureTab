@@ -104,6 +104,39 @@
         });
     }
 
+    function idbKeys() {
+        return openDB().then(function (db) {
+            return new Promise(function (resolve, reject) {
+                var tx = db.transaction(DB.STORE, 'readonly');
+                var store = tx.objectStore(DB.STORE);
+                if (store.getAllKeys) {
+                    var req = store.getAllKeys();
+                    req.onsuccess = function () { resolve(req.result || []); };
+                    req.onerror = function (e) { reject(e.target.error); };
+                    return;
+                }
+                var keys = [];
+                var cursorReq = store.openCursor();
+                cursorReq.onsuccess = function (e) {
+                    var cursor = e.target.result;
+                    if (!cursor) {
+                        resolve(keys);
+                        return;
+                    }
+                    keys.push(cursor.key);
+                    cursor.continue();
+                };
+                cursorReq.onerror = function (e) { reject(e.target.error); };
+            });
+        });
+    }
+
+    function idbDeleteMatching(predicate) {
+        return idbKeys().then(function (keys) {
+            return idbDeleteMany(keys.filter(predicate));
+        });
+    }
+
     // ================================================================
     // v3.2 localStorage models
     // ================================================================
@@ -124,8 +157,19 @@
                 state: {}
             },
             rss: {
-                config: { url: '', strategy: 'latest', refreshIntervalMs: 300000 },
-                state: { lastCheckedAt: 0, lastSuccessAt: 0, lastImageUrl: '', lastError: '' }
+                config: {
+                    sources: [
+                        { id: 'nasa-apod', name: 'NASA APOD', url: 'https://apod.nasa.gov/apod.rss', builtIn: true },
+                        { id: 'bing-rsshub', name: 'Bing', url: 'https://rsshub.app/bing', builtIn: true }
+                    ],
+                    activeSourceId: 'nasa-apod',
+                    refreshIntervalMs: 86400000,
+                    showSummary: true,
+                    showLink: true,
+                    summaryPosition: 'bottom',
+                    summaryMode: 'expanded'
+                },
+                state: { lastCheckedAt: 0, lastSuccessAt: 0, lastImageUrl: '', lastError: '', lastTestAt: 0, lastTestMessage: '' }
             },
             api: {
                 config: { url: '', jsonPath: '', refreshIntervalMs: 300000 },
@@ -219,6 +263,14 @@
     var _uiCache = null;
     var _shortcutsCache = null;
 
+    function clearCaches() {
+        _thumbsCache = null;
+        _blurThumbsCache = null;
+        _wallpaperCache = null;
+        _uiCache = null;
+        _shortcutsCache = null;
+    }
+
     function normalizeSource(source) {
         return source === 'local' ? 'upload' : (source || 'bing');
     }
@@ -254,10 +306,48 @@
         return { blob: value, mime: value.type || '', name: fallbackName || '' };
     }
 
+    function defaultRssConfig() {
+        return clone(DEFAULT_WALLPAPER.providers.rss.config);
+    }
+
+    function normalizeRssSource(source, index) {
+        source = source || {};
+        var id = String(source.id || ('rss-source-' + index)).trim();
+        return {
+            id: id,
+            name: String(source.name || source.url || 'RSS').trim().slice(0, 80),
+            url: String(source.url || '').trim(),
+            builtIn: source.builtIn === true
+        };
+    }
+
+    function normalizeRssConfig(config) {
+        var defaults = defaultRssConfig();
+        var merged = mergeDefaults(config || {}, defaults);
+        var seen = {};
+        merged.sources = (merged.sources || []).map(normalizeRssSource).filter(function (source) {
+            if (!source.id || !source.url || seen[source.id]) return false;
+            seen[source.id] = true;
+            return true;
+        }).slice(0, 5);
+        if (!merged.sources.length) merged.sources = defaults.sources;
+        if (!merged.sources.some(function (source) { return source.id === merged.activeSourceId; })) {
+            merged.activeSourceId = merged.sources[0].id;
+        }
+        var allowedIntervals = [0, 86400000, 259200000, 604800000];
+        if (allowedIntervals.indexOf(merged.refreshIntervalMs) === -1) merged.refreshIntervalMs = defaults.refreshIntervalMs;
+        if (merged.summaryPosition !== 'top' && merged.summaryPosition !== 'bottom') merged.summaryPosition = 'bottom';
+        if (merged.summaryMode !== 'expanded' && merged.summaryMode !== 'icon') merged.summaryMode = 'expanded';
+        merged.showSummary = merged.showSummary !== false;
+        merged.showLink = merged.showLink !== false;
+        return merged;
+    }
+
     function loadWallpaper() {
         if (_wallpaperCache !== null) return _wallpaperCache;
         _wallpaperCache = mergeDefaults(readJSON(KEYS.WALLPAPER, DEFAULT_WALLPAPER), DEFAULT_WALLPAPER);
         _wallpaperCache.activeSource = normalizeSource(_wallpaperCache.activeSource);
+        _wallpaperCache.providers.rss.config = normalizeRssConfig(_wallpaperCache.providers.rss.config);
         return _wallpaperCache;
     }
 
@@ -270,6 +360,17 @@
         var model = loadWallpaper();
         mutator(model);
         return saveWallpaper(model);
+    }
+
+    function loadRssConfig() {
+        var model = loadWallpaper();
+        return model.providers.rss.config;
+    }
+
+    function saveRssConfig(config) {
+        updateWallpaper(function (model) {
+            model.providers.rss.config = normalizeRssConfig(config);
+        });
     }
 
     function loadUI() {
@@ -296,7 +397,9 @@
 
     function loadOrder() {
         var order = loadWallpaper().cache.order || [];
-        return order.filter(function (id) { return id !== 'bing' && id !== 'api'; });
+        return order.filter(function (id) {
+            return id !== 'bing' && id !== 'api' && !isRssId(id) && String(id || '').indexOf('folder:') !== 0;
+        });
     }
     function saveOrder(order) {
         updateWallpaper(function (model) {
@@ -364,6 +467,62 @@
     }
     function saveMeta(meta) {
         updateWallpaper(function (model) { model.cache.meta = meta || {}; });
+    }
+
+    function isRssId(id) {
+        return !!(id && id.indexOf('rss_') === 0);
+    }
+
+    function rssBlobKey(id) {
+        return DB.RSS_PREFIX + String(id || '').replace(/^rss_/, '');
+    }
+
+    function activeRssOrder(sourceId) {
+        var config = loadRssConfig();
+        var activeSourceId = sourceId || config.activeSourceId;
+        var meta = loadMeta();
+        return (loadWallpaper().cache.order || []).filter(isRssId).filter(function (id) {
+            return !activeSourceId || !meta[id] || meta[id].sourceId === activeSourceId;
+        });
+    }
+
+    function resetWallpaperDefaults() {
+        var previous = loadWallpaper();
+        var previousThumbs = loadThumbs();
+        var previousBlurThumbs = loadBlurThumbs();
+        var previousMeta = previous.cache && previous.cache.meta ? previous.cache.meta : {};
+
+        var model = clone(DEFAULT_WALLPAPER);
+        model.activeSource = 'bing';
+        model.providers.bing.state = mergeDefaults(previous.providers && previous.providers.bing ? previous.providers.bing.state : {}, DEFAULT_WALLPAPER.providers.bing.state);
+        model.cache.meta = { bing: previousMeta.bing || {} };
+        saveWallpaper(model);
+
+        var nextThumbs = {};
+        if (previousThumbs.bing) nextThumbs.bing = previousThumbs.bing;
+        saveThumbs(nextThumbs);
+
+        var nextBlurThumbs = {};
+        if (previousBlurThumbs.bing) nextBlurThumbs.bing = previousBlurThumbs.bing;
+        saveBlurThumbs(nextBlurThumbs);
+
+        var blur = loadUI().wallpaper ? normalizeWallpaperBlur(loadUI().wallpaper.blur) : 0;
+        var preview = null;
+        var blurEntry = nextBlurThumbs.bing;
+        if (blur >= 5 && blurEntry) preview = typeof blurEntry === 'string' ? blurEntry : blurEntry.thumb;
+        if (!preview) preview = nextThumbs.bing || null;
+        savePreview(preview);
+
+        return idbDeleteMatching(function (key) {
+            return key === DB.API_BLOB ||
+                key === DB.FOLDER_HANDLE ||
+                key === DB.FOLDER_FILES ||
+                String(key).indexOf(DB.UPLOAD_PREFIX) === 0 ||
+                String(key).indexOf(DB.RSS_PREFIX) === 0;
+        }).then(function () {
+            clearCaches();
+            return model;
+        });
     }
 
     // ================================================================
@@ -449,6 +608,8 @@
         idbGet: idbGet,
         idbDelete: idbDelete,
         idbDeleteMany: idbDeleteMany,
+        idbKeys: idbKeys,
+        idbDeleteMatching: idbDeleteMatching,
 
         // 本地图片
         imgKey: imgKey,
@@ -477,6 +638,13 @@
         loadWallpaper: loadWallpaper,
         saveWallpaper: saveWallpaper,
         updateWallpaper: updateWallpaper,
+        defaultRssConfig: defaultRssConfig,
+        loadRssConfig: loadRssConfig,
+        saveRssConfig: saveRssConfig,
+        isRssId: isRssId,
+        rssBlobKey: rssBlobKey,
+        activeRssOrder: activeRssOrder,
+        resetWallpaperDefaults: resetWallpaperDefaults,
         loadUI: loadUI,
         saveUI: saveUI,
         loadShortcutsModel: loadShortcutsModel,
@@ -492,13 +660,7 @@
         migrate: ensureBaselineSchema,
 
         // 缓存清空（源切换时调用）
-        clearCaches: function () {
-            _thumbsCache = null;
-            _blurThumbsCache = null;
-            _wallpaperCache = null;
-            _uiCache = null;
-            _shortcutsCache = null;
-        }
+        clearCaches: clearCaches
     };
 
 })();

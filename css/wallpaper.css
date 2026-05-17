@@ -31,6 +31,106 @@
     will-change: transform;
 }
 
+/* ========== RSS 壁纸摘要 ========== */
+.rss-wallpaper-info {
+    position: fixed;
+    left: 24px;
+    right: 24px;
+    z-index: 40;
+    color: #fff;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.rss-wallpaper-info.top {
+    top: 28px;
+}
+
+.rss-wallpaper-info.bottom {
+    bottom: 28px;
+}
+
+.rss-wallpaper-info.expanded {
+    max-width: min(720px, calc(100vw - 48px));
+    margin-left: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(10, 15, 24, 0.52);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.rss-info-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.rss-info-desc {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.78);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.rss-wallpaper-info a {
+    display: inline-flex;
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    pointer-events: auto;
+}
+
+.rss-wallpaper-info.icon {
+    left: auto;
+    right: 24px;
+}
+
+.rss-info-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(10, 15, 24, 0.52);
+    color: #fff;
+    font-weight: 700;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.rss-info-popover {
+    position: absolute;
+    right: 0;
+    bottom: 44px;
+    width: min(320px, calc(100vw - 48px));
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(10, 15, 24, 0.66);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+    pointer-events: auto;
+}
+
+.rss-wallpaper-info.top .rss-info-popover {
+    top: 44px;
+    bottom: auto;
+}
+
+.rss-wallpaper-info.icon:hover .rss-info-popover,
+.rss-wallpaper-info.icon:focus-within .rss-info-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
 /* ========== 本地壁纸画廊 ========== */
 .local-gallery {
     margin-bottom: 14px;

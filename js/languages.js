@@ -690,6 +690,80 @@ window.I18N = {
     }
 })();
 
+// RSS wallpaper settings i18n. Full zh-CN/en copy; other languages receive English fallback.
+(function () {
+    var en = {
+        rssTest: 'Test',
+        rssAdd: 'Add',
+        rssNamePlaceholder: 'Source name',
+        rssRefreshInterval: 'Auto refresh',
+        rssRefreshOff: 'Off',
+        rssSummaryPosition: 'Summary position',
+        rssSummaryMode: 'Summary display',
+        rssExpanded: 'Expanded strip',
+        rssIconOnly: 'i button',
+        rssShowSummary: 'Show summary',
+        rssShowLink: 'Show article link',
+        rssStatusError: 'RSS status: ',
+        rssStatusCached: 'Cached',
+        rssStatusEmpty: 'No RSS images cached yet',
+        rssLimit: 'Up to 5 RSS sources',
+        rssInvalidUrl: 'Enter an http:// or https:// URL',
+        rssTesting: 'Testing...',
+        rssTestOk: 'Test passed. Image entries: ',
+        rssTestFailed: 'Test failed: ',
+        rssNoImages: 'Test failed: this RSS feed has no usable image entries',
+        rssNoUsableImages: 'Image entries were found, but images could not be downloaded or thumbnailed',
+        rssPermissionDenied: 'Permission to access this RSS feed was denied',
+        rssParseFailed: 'RSS content could not be parsed',
+        rssFetchFailed: 'RSS request failed. Check the link or try again later',
+        rssTimeout: 'RSS request timed out. Try again later',
+        rssOpenArticle: 'Open article',
+        wallpaperResetDefaults: 'Restore Wallpaper Defaults',
+        wallpaperResetConfirm: 'This will clear upload, RSS, API, and folder wallpaper cache, restore RSS defaults, and switch back to Bing. Continue?',
+        top: 'Top',
+        bottom: 'Bottom'
+    };
+    var zhCN = {
+        rssTest: '测试',
+        rssAdd: '添加',
+        rssNamePlaceholder: '源名称',
+        rssRefreshInterval: '自动拉取',
+        rssRefreshOff: '关闭',
+        rssSummaryPosition: '摘要位置',
+        rssSummaryMode: '摘要展示',
+        rssExpanded: '展开条带',
+        rssIconOnly: 'i 按钮',
+        rssShowSummary: '显示摘要',
+        rssShowLink: '显示正文链接',
+        rssStatusError: 'RSS 状态：',
+        rssStatusCached: '已缓存',
+        rssStatusEmpty: '尚未缓存 RSS 图片',
+        rssLimit: '最多 5 个 RSS 源',
+        rssInvalidUrl: '请输入 http:// 或 https:// 链接',
+        rssTesting: '正在测试...',
+        rssTestOk: '测试通过，可用图片条目：',
+        rssTestFailed: '测试失败：',
+        rssNoImages: '测试失败：该 RSS 没有可用图片条目',
+        rssNoUsableImages: '找到图片条目，但图片无法下载或生成缩略图',
+        rssPermissionDenied: '没有获得该 RSS 地址的访问权限',
+        rssParseFailed: 'RSS 内容无法解析',
+        rssFetchFailed: 'RSS 请求失败，请检查链接或稍后重试',
+        rssTimeout: 'RSS 请求超时，请稍后重试',
+        rssOpenArticle: '查看正文',
+        wallpaperResetDefaults: '恢复默认壁纸设置',
+        wallpaperResetConfirm: '这会清理上传、RSS、API 和文件夹壁纸缓存，恢复 RSS 默认源，并切回 Bing。继续吗？',
+        top: '上方',
+        bottom: '下方'
+    };
+    Object.keys(window.I18N).forEach(function (lang) {
+        var base = lang === 'zh-CN' ? zhCN : en;
+        Object.keys(en).forEach(function (key) {
+            if (!window.I18N[lang][key]) window.I18N[lang][key] = base[key] || en[key];
+        });
+    });
+})();
+
 window.LanguageList = [
     { code: 'zh-CN', name: '中文 (简体)' },
     { code: 'zh-TW', name: '中文 (繁體)' },

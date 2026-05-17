@@ -49,6 +49,7 @@
 
     var wallpaperBackEl = document.getElementById('wallpaperBack');
     var wallpaperFrontEl = document.getElementById('wallpaperFront');
+    var rssInfoEl = document.getElementById('rssWallpaperInfo');
     var searchBar = document.getElementById('searchBar');
     var searchInput = document.getElementById('searchInput');
 
@@ -118,6 +119,106 @@
         else setTimeout(run, 300);
     }
 
+    function escapeText(value) {
+        return String(value || '').replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    function hideRssOverlay() {
+        if (!rssInfoEl) return;
+        rssInfoEl.hidden = true;
+        rssInfoEl.innerHTML = '';
+    }
+
+    function renderRssOverlay(id) {
+        if (!rssInfoEl) return;
+        var config = D.loadRssConfig();
+        var meta = id ? D.loadMeta()[id] : null;
+        if (!config.showSummary || !meta) {
+            hideRssOverlay();
+            return;
+        }
+
+        rssInfoEl.className = 'rss-wallpaper-info ' + config.summaryPosition + ' ' + config.summaryMode;
+        var title = escapeText(meta.title || meta.sourceName || 'RSS');
+        var desc = escapeText(meta.description || '');
+        var openLabel = t('rssOpenArticle');
+        if (!openLabel || openLabel === 'rssOpenArticle') openLabel = 'Open article';
+        var link = config.showLink && meta.link ? '<a href="' + escapeText(meta.link) + '" target="_blank" rel="noopener">' + escapeText(openLabel) + '</a>' : '';
+
+        if (config.summaryMode === 'icon') {
+            rssInfoEl.innerHTML = '<button class="rss-info-toggle" aria-label="RSS info">i</button><div class="rss-info-popover"><div class="rss-info-title">' + title + '</div><div class="rss-info-desc">' + desc + '</div>' + link + '</div>';
+        } else {
+            rssInfoEl.innerHTML = '<div class="rss-info-title">' + title + '</div><div class="rss-info-desc">' + desc + '</div>' + link;
+        }
+        rssInfoEl.hidden = false;
+    }
+
+    function activeRssSource() {
+        var config = D.loadRssConfig();
+        return config.sources.filter(function (source) { return source.id === config.activeSourceId; })[0] || config.sources[0] || null;
+    }
+
+    function isRssRefreshDue(config, state) {
+        if (!config.refreshIntervalMs) return false;
+        if (!state.lastSuccessAt) return true;
+        return Date.now() - state.lastSuccessAt >= config.refreshIntervalMs;
+    }
+
+    function cleanupOldRssBlobs(activeOrder) {
+        var active = {};
+        (activeOrder || []).forEach(function (id) { active[id] = true; });
+        var meta = D.loadMeta();
+        var stale = Object.keys(meta).filter(function (id) { return D.isRssId && D.isRssId(id) && !active[id]; });
+        stale.forEach(function (id) { delete meta[id]; });
+        D.saveMeta(meta);
+
+        var thumbs = D.loadThumbs();
+        stale.forEach(function (id) {
+            delete thumbs[id];
+            if (D.deleteBlurThumb) D.deleteBlurThumb(id);
+        });
+        D.saveThumbs(thumbs);
+        D.idbDeleteMany(stale.map(function (id) { return D.imgKey(id); })).catch(function () { });
+    }
+
+    function refreshRssInBackground(force) {
+        var config = D.loadRssConfig();
+        var model = D.loadWallpaper();
+        var state = model.providers.rss.state || {};
+        if (!force && !isRssRefreshDue(config, state)) return Promise.resolve(false);
+
+        var source = activeRssSource();
+        if (!source) return Promise.resolve(false);
+
+        state.lastCheckedAt = Date.now();
+        state.lastError = '';
+        D.updateWallpaper(function (next) { next.providers.rss.state = state; });
+
+        return F.refreshRssSource(source).then(function (result) {
+            D.updateWallpaper(function (next) {
+                next.activeSource = 'rss';
+                next.cache.order = result.order;
+                next.cache.index = 0;
+                next.cache.meta = result.meta;
+                next.providers.rss.state.lastSuccessAt = Date.now();
+                next.providers.rss.state.lastImageUrl = result.items[0] ? result.items[0].imageUrl : '';
+                next.providers.rss.state.lastError = '';
+            });
+            var first = result.order[0];
+            if (result.thumbs[first]) D.savePreview(result.thumbs[first]);
+            cleanupOldRssBlobs(result.order);
+            return true;
+        }).catch(function (err) {
+            D.updateWallpaper(function (next) {
+                next.providers.rss.state.lastError = err && err.message ? err.message : String(err || 'RSS refresh failed');
+            });
+            warn('RSS', 'refresh failed: ' + (err && err.message ? err.message : err));
+            return false;
+        });
+    }
+
     function isCurrentOriginalId(id) {
         var source = D.compatMode(D.getActiveSource());
         if (source === 'bing' || source === 'api') return id === source;
@@ -147,11 +248,11 @@
     function applyWallpaperRespectingBlur(url, sourceId) {
         var blur = getWallpaperBlur();
         if (blur < 5 || !S.blurredThumbnail || !S.showPreparedPreview) {
-            return S.applyAndSavePreview(url);
+            return S.applyAndSavePreview(url, sourceId);
         }
 
         return S.preloadImage(url).then(function (img) {
-            if (!img) return S.applyAndSavePreview(url);
+            if (!img) return S.applyAndSavePreview(url, sourceId);
             return Promise.all([
                 S.thumbnail(img),
                 S.blurredThumbnail(img, blur)
@@ -176,6 +277,7 @@
     function tryLoadLocalWallpaper(order) {
         if (!order || !order.length) return Promise.resolve(false);
 
+        hideRssOverlay();
         SP.setCurrentMode('local');
 
         var idx = D.getActiveIndex() % order.length;
@@ -240,6 +342,39 @@
         });
     }
 
+    function tryLoadRssWallpaper(order) {
+        if (!order || !order.length) return Promise.resolve(false);
+
+        SP.setCurrentMode('rss');
+        order = order.filter(function (id) {
+            var meta = D.loadMeta()[id];
+            return !meta || meta.sourceId === D.loadRssConfig().activeSourceId;
+        });
+        if (!order.length) return Promise.resolve(false);
+
+        var idx = D.getActiveIndex() % order.length;
+        var id = order[idx];
+        var nextId = order[(idx + 1) % order.length];
+        var thumbs = D.loadThumbs();
+        if (thumbs[nextId]) D.savePreview(thumbs[nextId]);
+
+        return D.idbGet(D.imgKey(id)).then(function (record) {
+            if (!record || !record.blob) return false;
+            var blob = record.blob;
+            if ((!blob.type || blob.type === '') && record.mime) {
+                try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+            }
+            D.saveActiveIndex((idx + 1) % order.length);
+            renderRssOverlay(id);
+            log('RSS', 'image ' + (idx + 1) + '/' + order.length);
+            return applyWallpaperRespectingBlur(URL.createObjectURL(blob), id).then(function () {
+                if (thumbs[nextId]) D.savePreview(thumbs[nextId]);
+                cacheBingInBackground();
+                return true;
+            });
+        });
+    }
+
     function tryLoadCachedBing(bingBlob, meta, today) {
         if (!bingBlob || meta.date !== today) return Promise.resolve(false);
 
@@ -248,6 +383,7 @@
     }
 
     function loadBingFromNetwork(meta, today) {
+        hideRssOverlay();
         SP.setCurrentMode('bing');
         D.setActiveSource('bing');
         SP.setWallpaperInfo(t('wpBing'));
@@ -279,6 +415,7 @@
         var meta = D.loadBingMeta();
         var today = new Date().toDateString();
         var order = D.loadOrder();
+        var rssOrder = D.activeRssOrder ? D.activeRssOrder() : [];
 
         return D.idbGet(D.DB.BING_BLOB).then(function (bingRecord) {
             var bingBlob = D.imageBlob(bingRecord);
@@ -291,6 +428,20 @@
                 });
             }
 
+            if (lastMode === 'rss') {
+                return tryLoadRssWallpaper(rssOrder).then(function (loaded) {
+                    refreshRssInBackground(!loaded).then(function (updated) {
+                        if (updated && D.compatMode(D.getActiveSource()) === 'rss') loadWallpaper();
+                    });
+                    if (loaded) return;
+                    hideRssOverlay();
+                    return tryLoadCachedBing(bingBlob, meta, today).then(function (loadedBing) {
+                        if (!loadedBing) return loadBingFromNetwork(meta, today);
+                    });
+                });
+            }
+
+            hideRssOverlay();
             return tryLoadCachedBing(bingBlob, meta, today).then(function (loaded) {
                 if (loaded) return;
                 return loadBingFromNetwork(meta, today);
