@@ -285,6 +285,65 @@
             assert('SettingsPanelFull.openModal exists', !!(window.SettingsPanelFull && window.SettingsPanelFull.openModal));
         }
 
+        if (hasSettingsPanelEnsureFull && D && D.KEYS && D.loadWallpaper && D.saveWallpaper && D.normalizeApiConfig && D.apiFieldHash && D.clearCaches) {
+            var apiSavedWallpaper = null;
+            try {
+                apiSavedWallpaper = localStorage.getItem(D.KEYS.WALLPAPER);
+                if (window.SettingsPanelFull && window.SettingsPanelFull.isModalOpen && window.SettingsPanelFull.isModalOpen()) {
+                    window.SettingsPanelFull.closeModal({ skipEmptyLocalPicker: true });
+                    await wait(0);
+                }
+
+                var greenApiSource = {
+                    id: 'green-api-source',
+                    name: 'Green API',
+                    url: 'https://example.com/direct',
+                    test: { status: 'untested', fieldHash: '', testedAt: 0, imageUrl: '', error: '' }
+                };
+                greenApiSource.test = {
+                    status: 'passed',
+                    fieldHash: D.apiFieldHash(greenApiSource, 'image'),
+                    testedAt: Date.now(),
+                    imageUrl: greenApiSource.url,
+                    error: ''
+                };
+
+                var apiSavedModel = D.loadWallpaper();
+                apiSavedModel.activeSource = 'bing';
+                apiSavedModel.providers.api.config = D.normalizeApiConfig({
+                    apiType: 'image',
+                    activeImageSourceId: greenApiSource.id,
+                    activeJsonSourceId: '',
+                    refreshIntervalMs: 0,
+                    imageSources: [greenApiSource],
+                    jsonSources: []
+                });
+                D.saveWallpaper(apiSavedModel);
+                D.clearCaches();
+
+                await window.SettingsPanel.ensureFull();
+                window.SettingsPanelFull.openModal();
+                await wait(0);
+                var savedApiWallpaperTab = document.querySelector('.modal-tab[data-tab="wallpaper"]');
+                if (savedApiWallpaperTab) savedApiWallpaperTab.click();
+                await wait(0);
+                var savedApiHeader = document.querySelector('.source-drawer[data-source="api"] .source-drawer-header');
+                if (savedApiHeader) savedApiHeader.click();
+                await wait(0);
+                var savedApiApplyBtn = document.getElementById('wallpaperApplyBtn');
+                assert('saved green API source can apply without fresh test result', !!(savedApiApplyBtn && savedApiApplyBtn.disabled === false), savedApiApplyBtn ? String(savedApiApplyBtn.disabled) : 'missing button');
+            } catch (err) {
+                assert('saved green API source can apply without fresh test result', false, err && (err.code || err.message || String(err)));
+            } finally {
+                if (window.SettingsPanelFull && window.SettingsPanelFull.isModalOpen && window.SettingsPanelFull.isModalOpen()) {
+                    window.SettingsPanelFull.closeModal({ skipEmptyLocalPicker: true });
+                }
+                if (apiSavedWallpaper === null) localStorage.removeItem(D.KEYS.WALLPAPER);
+                else localStorage.setItem(D.KEYS.WALLPAPER, apiSavedWallpaper);
+                D.clearCaches();
+            }
+        }
+
         finish();
     }
 

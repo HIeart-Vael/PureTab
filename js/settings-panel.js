@@ -647,7 +647,6 @@
             var apiType = draft.providers.api.config.apiType;
             var apiHash = D.apiFieldHash(api, apiType);
             if (!D.isTestPassed(api, apiHash)) return { valid: false, reason: tr('apiNeedsTest', '当前 API 源需要测试通过') };
-            if (!wallpaperDraftApiTestResult) return { valid: false, reason: tr('apiNeedsFreshTest', '请重新测试当前 API 源') };
             return { valid: true, reason: '' };
         }
         return { valid: false, reason: tr('sourcePendingHint', '这个来源的配置正在接入中') };
