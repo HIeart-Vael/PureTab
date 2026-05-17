@@ -1,0 +1,219 @@
+/**
+ * WallpaperFolder —— 本地文件夹壁纸能力层
+ * 只封装 File System Access API、目录索引和文件预览准备。
+ */
+(function () {
+    'use strict';
+
+    var D = window.WallpaperData;
+    var S = window.WallpaperShow;
+    var FIRST_BATCH_LIMIT = 48;
+    var IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif|gif|bmp)$/i;
+
+    function folderError(code, message) {
+        var err = new Error(message || code);
+        err.code = code;
+        return err;
+    }
+
+    function isSupported() {
+        return typeof window.showDirectoryPicker === 'function';
+    }
+
+    function pickDirectory() {
+        if (!isSupported()) return Promise.reject(folderError('FOLDER_UNSUPPORTED', 'directory picker unsupported'));
+        return window.showDirectoryPicker({ mode: 'read' });
+    }
+
+    function queryReadPermission(handle) {
+        if (!handle || typeof handle.queryPermission !== 'function') return Promise.resolve('granted');
+        return Promise.resolve(handle.queryPermission({ mode: 'read' })).catch(function () { return 'denied'; });
+    }
+
+    function requestReadPermission(handle) {
+        if (!handle || typeof handle.requestPermission !== 'function') return Promise.resolve('granted');
+        return Promise.resolve(handle.requestPermission({ mode: 'read' })).catch(function () { return 'denied'; });
+    }
+
+    function ensureReadPermission(handle, request) {
+        return queryReadPermission(handle).then(function (state) {
+            if (state === 'granted') return true;
+            if (!request) throw folderError('FOLDER_PERMISSION_DENIED', 'folder permission denied');
+            return requestReadPermission(handle).then(function (nextState) {
+                if (nextState === 'granted') return true;
+                throw folderError('FOLDER_PERMISSION_DENIED', 'folder permission denied');
+            });
+        });
+    }
+
+    function isSupportedImageName(name) {
+        return IMAGE_EXT_RE.test(String(name || ''));
+    }
+
+    function normalizeFileRecord(record) {
+        record = record || {};
+        var name = String(record.name || '').trim();
+        if (!name || !isSupportedImageName(name)) return null;
+        return {
+            name: name,
+            size: Math.max(0, parseInt(record.size, 10) || 0),
+            lastModified: Math.max(0, parseInt(record.lastModified, 10) || 0)
+        };
+    }
+
+    function fileRecord(file) {
+        return normalizeFileRecord(file);
+    }
+
+    function scanDirectory(handle, options) {
+        options = options || {};
+        var limit = parseInt(options.limit, 10) || 0;
+        var files = [];
+        var completed = true;
+
+        return ensureReadPermission(handle, options.requestPermission === true).then(async function () {
+            if (!handle || typeof handle.values !== 'function') throw folderError('FOLDER_INVALID_HANDLE', 'invalid folder handle');
+            for await (var entry of handle.values()) {
+                if (!entry || entry.kind !== 'file' || !isSupportedImageName(entry.name)) continue;
+                files.push({ name: String(entry.name || '') });
+                if (limit && files.length >= limit) {
+                    completed = false;
+                    break;
+                }
+            }
+            return { files: files, completed: completed };
+        });
+    }
+
+    function scanFirstBatch(handle, limit) {
+        return scanDirectory(handle, { limit: limit || FIRST_BATCH_LIMIT, requestPermission: true });
+    }
+
+    function readImageFile(handle, name) {
+        if (!handle || typeof handle.getFileHandle !== 'function') {
+            return Promise.reject(folderError('FOLDER_INVALID_HANDLE', 'invalid folder handle'));
+        }
+        if (!isSupportedImageName(name)) {
+            return Promise.reject(folderError('FOLDER_UNSUPPORTED_IMAGE', 'unsupported image file'));
+        }
+        return ensureReadPermission(handle, false).then(function () {
+            return handle.getFileHandle(name);
+        }).then(function (fileHandle) {
+            if (!fileHandle || typeof fileHandle.getFile !== 'function') throw folderError('FOLDER_FILE_NOT_FOUND', 'file not found');
+            return fileHandle.getFile();
+        }).then(function (file) {
+            if (!file || !isSupportedImageName(file.name || name)) throw folderError('FOLDER_UNSUPPORTED_IMAGE', 'unsupported image file');
+            return file;
+        }).catch(function (err) {
+            if (err && err.code) throw err;
+            if (err && (err.name === 'NotFoundError' || err.name === 'NotAllowedError')) {
+                throw folderError(err.name === 'NotAllowedError' ? 'FOLDER_PERMISSION_DENIED' : 'FOLDER_FILE_NOT_FOUND', err.message || err.name);
+            }
+            throw err;
+        });
+    }
+
+    function shuffle(values) {
+        var list = values.slice();
+        for (var i = list.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = list[i];
+            list[i] = list[j];
+            list[j] = temp;
+        }
+        return list;
+    }
+
+    function buildShuffleBag(files, currentName) {
+        var seen = {};
+        var names = (Array.isArray(files) ? files : []).map(function (file) {
+            return String(file && file.name || '').trim();
+        }).filter(function (name) {
+            if (!name || name === currentName || seen[name]) return false;
+            seen[name] = true;
+            return true;
+        });
+        return shuffle(names);
+    }
+
+    function preparePreviewFromFile(file, id, blur) {
+        if (!file) return Promise.reject(folderError('FOLDER_FILE_NOT_FOUND', 'file not found'));
+        var url = URL.createObjectURL(file);
+        var normalizedBlur = D && D.normalizeWallpaperBlur ? D.normalizeWallpaperBlur(blur) : 0;
+        var thumbPromise = S.thumbnail(url);
+        var previewPromise = normalizedBlur >= 5 && S.blurredThumbnail ? S.blurredThumbnail(url, normalizedBlur) : thumbPromise;
+
+        return Promise.all([thumbPromise, previewPromise]).then(function (values) {
+            URL.revokeObjectURL(url);
+            var thumb = values[0];
+            var preview = values[1] || thumb;
+            if (!thumb || !preview) throw folderError('FOLDER_THUMBNAIL_FAILED', 'folder thumbnail failed');
+            return { id: id, thumb: thumb, preview: preview };
+        }, function (err) {
+            URL.revokeObjectURL(url);
+            throw err;
+        });
+    }
+
+    function prepareMount(handle, options) {
+        options = options || {};
+        return scanFirstBatch(handle, options.limit || FIRST_BATCH_LIMIT).then(function (scan) {
+            if (!scan.files.length) throw folderError('FOLDER_NO_IMAGES', 'no supported images');
+
+            var usable = [];
+            function tryNext(index) {
+                if (index >= scan.files.length) throw folderError('FOLDER_NO_USABLE_IMAGES', 'no usable images');
+                var name = scan.files[index].name;
+                return readImageFile(handle, name).then(function (file) {
+                    var record = fileRecord(file) || scan.files[index];
+                    var id = D.folderId(record.name);
+                    return preparePreviewFromFile(file, id, options.blur).then(function (prepared) {
+                        usable.push(record);
+                        scan.files.forEach(function (item) {
+                            if (item.name !== record.name) usable.push(item);
+                        });
+                        return {
+                            handle: handle,
+                            pathLabel: String(handle && handle.name || ''),
+                            files: usable,
+                            completed: scan.completed,
+                            firstName: record.name,
+                            firstFile: file,
+                            firstRecord: record,
+                            firstId: id,
+                            preview: prepared.preview,
+                            thumb: prepared.thumb,
+                            shuffleBag: buildShuffleBag(usable, record.name)
+                        };
+                    });
+                }).catch(function () {
+                    return tryNext(index + 1);
+                });
+            }
+
+            return tryNext(0);
+        });
+    }
+
+    function rescan(handle, options) {
+        return scanDirectory(handle, options || {});
+    }
+
+    window.WallpaperFolder = {
+        isSupported: isSupported,
+        pickDirectory: pickDirectory,
+        queryReadPermission: queryReadPermission,
+        requestReadPermission: requestReadPermission,
+        ensureReadPermission: ensureReadPermission,
+        isSupportedImageName: isSupportedImageName,
+        scanDirectory: scanDirectory,
+        scanFirstBatch: scanFirstBatch,
+        readImageFile: readImageFile,
+        fileRecord: fileRecord,
+        buildShuffleBag: buildShuffleBag,
+        prepareMount: prepareMount,
+        preparePreviewFromFile: preparePreviewFromFile,
+        rescan: rescan,
+        error: folderError
+    };
+})();

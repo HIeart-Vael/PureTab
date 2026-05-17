@@ -1,0 +1,7 @@
+interface:
+  display_name: "Bump PlainTab Version"
+  short_description: "Update PlainTab release docs and version files"
+  default_prompt: "Use $bump-version to prepare a PlainTab release."
+
+policy:
+  allow_implicit_invocation: true
