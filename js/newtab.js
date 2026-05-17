@@ -877,12 +877,12 @@
                 if (result && typeof result.catch === 'function') {
                     result.catch(function (e) {
                         warn('Search', 'default search failed: ' + (e && e.message ? e.message : e));
-                        window.open((SEARCH_URLS[SP.getEngine()] || SEARCH_URLS.google) + encodeURIComponent(term), '_self');
                     });
                 }
                 return;
             } catch (e) {
                 warn('Search', 'default search unavailable: ' + (e && e.message ? e.message : e));
+                return;
             }
         }
         window.open((SEARCH_URLS[SP.getEngine()] || SEARCH_URLS.google) + encodeURIComponent(term), '_self');
