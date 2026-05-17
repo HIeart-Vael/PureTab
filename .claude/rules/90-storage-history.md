@@ -1,128 +1,104 @@
 # 存储格式版本变迁
 
-本文档记录 PlainTab 各发布版本中 localStorage 和 IndexedDB 的完整数据格式及变更，为迁移逻辑提供依据。
+本文记录 PlainTab localStorage 和 IndexedDB 结构历史，为迁移和兼容判断提供参考。新代码应优先遵守 `10-storage.md` 和 `js/wallpaper/data.js`。
 
 ## 版本总览
 
-| 产品版本 | LS_VERSION | DB | localStorage key 数 |
-|---------|-----------|-----|-------------------|
-| v3.0.4 | 无（通过 `pt3_` 前缀检测） | PlainTabV3 (v1) | 8 |
-| v3.1.4 | 2 | PlainTab (v1) | 11 |
-| v3.2.0 | 3 | PlainTab (v1) | 8 |
+| 产品阶段 | 存储版本 | DB | localStorage key 数 | 说明 |
+|---------|----------|----|---------------------|------|
+| v3.0.4 | 无明确 schema；旧代码读 `ptab_version` 得 0 | `PlainTabV3` v1 | 8 | `pt3_` 分散 key，本地壁纸单图 |
+| v3.1.4 | `ptab_version = 2` | `PlainTab` v1 | 11 | 多图本地上传，仍是分散 key |
+| v3.2.0 baseline | `ptab_schema_version = 3` | `PlainTab` v1 | 9 | 领域打包模型，五种壁纸来源 |
+
+当前 `data.js` 中的 `migrate()` 只确保 baseline schema version；历史迁移映射保留在本文中作参考，不代表当前存在完整 `MIGRATIONS` 对象。
 
 ---
 
-## v3.0.4（tag: v3.0.4）
+## v3.0.4（历史）
 
-**无 `ptab_version` key。启动时 `parseInt(localStorage.getItem('ptab_version')) || 0` → 0。**
+### localStorage
 
-### localStorage（8 个 key）
+| Key | 内容 |
+|-----|------|
+| `__pt3_thumb` | Bing 缩略图，`url(data:image/...)` |
+| `pt3_lang` | 语言代码 |
+| `pt3_source` | `'bing'` / `'local'` |
+| `pt3_search_mode` | `'always'` / `'hover'` / `'never'` |
+| `pt3_opacity` | 图标透明度 |
+| `pt3_engine` | 搜索引擎 |
+| `pt3_bing_url` | Bing 图片 URL |
+| `pt3_bing_date` | Bing 缓存日期 |
 
-| Key | 类型 | 内容 |
-|-----|------|------|
-| `__pt3_thumb` | String | 壁纸缩略图，格式 `url(data:image/jpeg;base64,...)` |
-| `pt3_lang` | String | 语言代码 |
-| `pt3_source` | String | 壁纸模式：`'bing'` / `'local'` |
-| `pt3_search_mode` | String | 搜索栏模式：`'always'` / `'hover'` / `'never'` |
-| `pt3_opacity` | Number | 图标透明度 0~1 |
-| `pt3_engine` | String | 搜索引擎：`'google'` / `'bing'` / `'baidu'` / `'duckduckgo'` |
-| `pt3_bing_url` | String | Bing 壁纸 URL 缓存 |
-| `pt3_bing_date` | String | Bing 缓存日期 |
+### IndexedDB
 
-### IndexedDB（PlainTabV3，v1，store: wallpaper）
+DB：`PlainTabV3` v1，store：`wallpaper`
 
-| Key | 类型 | 内容 |
-|-----|------|------|
-| `bing_blob` | Blob | Bing 每日壁纸原图（仅 1 张） |
-| `bing_date` | String | Bing 缓存日期 |
-| `local_blob` | Blob | 本地壁纸原图（仅 1 张） |
-| `local_mime` | String | 本地壁纸 MIME 类型 |
-
-特点：本地只存 1 张图，Bing 也是单 blob，无数组概念，无缩略图缓存体系。
+| Key | 内容 |
+|-----|------|
+| `bing_blob` | Bing 原图 Blob |
+| `bing_date` | Bing 日期 |
+| `local_blob` | 本地单图 Blob |
+| `local_mime` | 本地图 MIME |
 
 ---
 
-## v3.1.4（tag: v3.1.4）
+## v3.1.4（历史）
 
-**LS_VERSION = 2，DB_VERSION = 1。通过 MIGRATIONS[1] 从 v3.0.4 迁移而来。**
+### localStorage
 
-### 变更汇总
+| Key | 内容 |
+|-----|------|
+| `ptab_version` | `2` |
+| `ptab_mode` | `'bing'` / `'local'` |
+| `ptab_bing_thumb` | Bing 缩略图 |
+| `ptab_bing_meta` | `{ src, date, provider }` |
+| `ptab_img_order` | 本地图片 ID 列表 |
+| `ptab_img_thumbs` | 本地图片缩略图字典 |
+| `ptab_local_index` | 本地轮换索引 |
+| `ptab_lang` | 语言代码 |
+| `ptab_search_mode` | 搜索栏显示模式 |
+| `ptab_icon_opacity` | 图标透明度 |
+| `ptab_search_engine` | 搜索引擎 |
 
-| 状态 | 数量 | Keys |
-|------|------|------|
-| 🟢 新增 | 5 | `ptab_version`、`ptab_bing_meta`（合并旧 `pt3_bing_url` + `pt3_bing_date`）、`ptab_img_order`、`ptab_img_thumbs`、`ptab_local_index` |
-| 🟡 重命名 | 6 | `pt3_source` → `ptab_mode`、`__pt3_thumb` → `ptab_bing_thumb`（去除 `url()` 包裹）、`pt3_lang` → `ptab_lang`、`pt3_search_mode` → `ptab_search_mode`、`pt3_opacity` → `ptab_icon_opacity`、`pt3_engine` → `ptab_search_engine` |
-| 🔴 删除 | 2 | `pt3_bing_url`、`pt3_bing_date`（值合并入 `ptab_bing_meta`） |
+不同历史构建中可能额外存在 `ptab_img_meta` 和 `ptab_preview_thumb`；迁移兼容时应按实际用户数据容错读取。
 
-净效果：8 → 11（删 2 旧，增 5 新，6 重命名）。
+### IndexedDB
 
-### localStorage（11 个 key）
+DB：`PlainTab` v1，store：`wallpaper`
 
-| Key | 类型 | 内容 | 变更 |
-|-----|------|------|------|
-| `ptab_version` | Number | `2` | 🟢 新增 |
-| `ptab_mode` | String | `'bing'` / `'local'` | 🟡 重命名（原 `pt3_source`） |
-| `ptab_bing_thumb` | String | Bing 缩略图 base64 | 🟡 重命名 + 去除 `url()` 包裹 |
-| `ptab_bing_meta` | JSON | `{src, date, provider}` | 🟢 新增（合并 `pt3_bing_url` + `pt3_bing_date`） |
-| `ptab_img_order` | JSON Array | 本地图片 ID 列表 | 🟢 新增 |
-| `ptab_img_thumbs` | JSON | `{id: "base64"}` | 🟢 新增 |
-| `ptab_local_index` | Number | 本地轮换索引 | 🟢 新增 |
-| `ptab_lang` | String | 语言代码 | 🟡 重命名（原 `pt3_lang`） |
-| `ptab_search_mode` | String | 搜索栏模式 | 🟡 重命名（原 `pt3_search_mode`） |
-| `ptab_icon_opacity` | Number | 图标透明度 0~1 | 🟡 重命名（原 `pt3_opacity`） |
-| `ptab_search_engine` | String | 搜索引擎 | 🟡 重命名（原 `pt3_engine`） |
-
-### IndexedDB（PlainTab，v1，store: wallpaper）
-
-| Key | 类型 | 内容 | 变更 |
-|-----|------|------|------|
-| `ptab_bing_blob` | `{blob, mime, name}` | Bing 壁纸 | 🟡 重命名 + 值升级（原 `bing_blob` 裸 Blob → 对象） |
-| `ptab_img_<id>` | `{blob, mime, name}` | 单张本地壁纸（≤12） | 🟡 拆分（原 `local_blob`+`local_mime` 单图 → 多图独立 key） |
-
-**删除的旧 IDB key：** `bing_blob`、`bing_date`、`local_blob`、`local_mime`
+| Key | 内容 |
+|-----|------|
+| `ptab_bing_blob` | `{ blob, mime, name }` |
+| `ptab_img_<id>` | 本地上传图片 `{ blob, mime, name }` |
 
 ---
 
-## v3.2.0（当前版本，tag: 未发布）
-
-**LS_VERSION = 3，DB_VERSION = 1。**
+## v3.2.0 baseline（当前实现）
 
 ### 变更动因
 
-v3.1.4 壁纸系统只有两模式（Bing / 本地上传），且壁纸、界面、语言等 key 混在同一层命名空间中。扩展 RSS、API、本地文件夹和快捷方式后，如果继续新增零散 key，会很难区分「用户配置」「运行状态」「图片缓存」和「界面偏好」。
+v3.2 将分散 key 改为领域打包：
 
-v3.2.0 改为 **按领域打包存储**：
+- `ptab_wallpaper_preview` 单独作为首屏热路径 key。
+- `ptab_wallpaper` 保存 provider 配置、运行态和缓存索引。
+- 缩略图、模糊缩略图、快捷方式图标单独存，避免小配置读取时解析大对象。
+- UI 偏好和快捷方式模型各自打包。
 
-- 首屏热路径单独保留 1 个 preview key，`preload.js` 只做一次 `getItem`，不解析 JSON。
-- 壁纸主模型打包为一个对象，区分 provider 配置、provider 运行状态、当前活跃缓存索引。
-- 大体积缩略图和快捷方式图标缓存单独存，避免每次读取小配置时解析大字符串。
-- UI 偏好和快捷方式模型各自打包，减少 key 数量并让语义更清楚。
+### localStorage（9 个 key）
 
-### 变更汇总（v3.1.4 → v3.2.0）
+| Key | 类型 | 说明 |
+|-----|------|------|
+| `ptab_schema_version` | Number | 当前为 `3` |
+| `ptab_locale` | String | 用户界面语言 |
+| `ptab_wallpaper` | JSON Object | 壁纸主模型 |
+| `ptab_wallpaper_thumbs` | JSON Object | 普通缩略图池 |
+| `ptab_wallpaper_blur_thumbs` | JSON Object | 模糊缩略图池 |
+| `ptab_wallpaper_preview` | String | 首屏预览图，CSS-ready |
+| `ptab_ui` | JSON Object | 界面偏好 |
+| `ptab_shortcuts` | JSON Object | 快捷方式模型 |
+| `ptab_shortcut_icons` | JSON Object | 快捷方式图标缓存 |
 
-| 状态 | 内容 |
-|------|------|
-| 🟢 新增 / 打包 | `ptab_schema_version`、`ptab_locale`、`ptab_wallpaper`、`ptab_wallpaper_thumbs`、`ptab_wallpaper_preview`、`ptab_ui`、`ptab_shortcuts`、`ptab_shortcut_icons` |
-| 🔴 清理旧 LS key | `ptab_version`、`ptab_mode`、`ptab_bing_thumb`、`ptab_bing_meta`、`ptab_img_order`、`ptab_img_thumbs`、`ptab_img_meta`、`ptab_local_index`、`ptab_preview_thumb`、`ptab_lang`、`ptab_search_mode`、`ptab_icon_opacity`、`ptab_search_engine` |
-| 🟡 DB 重命名 | `ptab_bing_blob` → `ptab_wallpaper_blob_bing`，`ptab_img_<id>` → `ptab_wallpaper_blob_upload_<id>` |
-| ⬜ DB 版本 | 仍为 `PlainTab` v1，不新增 object store |
-
-净效果：11 → 8。v3.2.0 的 8 个 localStorage key 中，壁纸 preview 是首屏热路径专用，其他 key 都按领域打包。
-
-### localStorage（8 个 key）
-
-| Key | 类型 | 默认值 | 说明 |
-|-----|------|--------|------|
-| `ptab_schema_version` | Number | `3` | 存储结构版本。v3.2.0 起替代旧 `ptab_version` |
-| `ptab_locale` | String | 自动检测 | 用户选择的界面语言。替代旧 `ptab_lang` |
-| `ptab_wallpaper` | JSON Object | 见下方结构 | 壁纸主模型：当前源、各源配置、各源运行状态、当前活跃缓存索引 |
-| `ptab_wallpaper_thumbs` | JSON Object | `{}` | 当前活跃壁纸源的缩略图字典。值必须是 CSS-ready 字符串：`url(data:image/jpeg;base64,...)` |
-| `ptab_wallpaper_preview` | String | `null` | 首屏预览图。preload.js 优先读取，必须是 CSS-ready 字符串 |
-| `ptab_ui` | JSON Object | 见下方结构 | 搜索栏、遮罩、图标等界面偏好 |
-| `ptab_shortcuts` | JSON Object | 见下方结构 | 快捷方式模型：条目、最近访问、隐藏列表、面板设置 |
-| `ptab_shortcut_icons` | JSON Object | `{}` | 快捷方式图标缓存，key 为快捷方式 ID |
-
-#### `ptab_wallpaper`
+### `ptab_wallpaper`
 
 ```json
 {
@@ -137,16 +113,55 @@ v3.2.0 改为 **按领域打包存储**：
       "state": {}
     },
     "folder": {
-      "config": { "pathLabel": "", "strategy": "random" },
-      "state": {}
+      "config": { "pathLabel": "", "strategy": "shuffle" },
+      "state": {
+        "status": "idle",
+        "indexedCount": 0,
+        "completed": false,
+        "lastScanAt": 0,
+        "lastError": "",
+        "shuffleBag": [],
+        "currentName": ""
+      }
     },
     "rss": {
-      "config": { "url": "", "strategy": "latest", "refreshIntervalMs": 300000 },
-      "state": { "lastCheckedAt": 0, "lastSuccessAt": 0, "lastImageUrl": "", "lastError": "" }
+      "config": {
+        "sources": [
+          { "id": "nasa-apod", "name": "NASA APOD", "url": "https://apod.nasa.gov/apod.rss", "builtIn": true },
+          { "id": "bing-rsshub", "name": "Bing", "url": "https://rsshub.app/bing", "builtIn": true }
+        ],
+        "activeSourceId": "nasa-apod",
+        "refreshIntervalMs": 86400000,
+        "showSummary": true,
+        "showLink": true,
+        "summaryPosition": "bottom",
+        "summaryMode": "expanded"
+      },
+      "state": {
+        "lastCheckedAt": 0,
+        "lastSuccessAt": 0,
+        "lastImageUrl": "",
+        "lastError": "",
+        "lastTestAt": 0,
+        "lastTestMessage": ""
+      }
     },
     "api": {
-      "config": { "url": "", "jsonPath": "", "refreshIntervalMs": 300000 },
-      "state": { "lastCheckedAt": 0, "lastSuccessAt": 0, "lastImageUrl": "", "lastError": "" }
+      "config": {
+        "apiType": "image",
+        "activeImageSourceId": "",
+        "activeJsonSourceId": "",
+        "refreshIntervalMs": 86400000,
+        "imageSources": [],
+        "jsonSources": []
+      },
+      "state": {
+        "lastCheckedAt": 0,
+        "lastSuccessAt": 0,
+        "lastError": "",
+        "lastSourceId": "",
+        "lastImageUrl": ""
+      }
     }
   },
   "cache": {
@@ -157,25 +172,37 @@ v3.2.0 改为 **按领域打包存储**：
 }
 ```
 
-字段语义：
+#### Source test 结构
 
-- `activeSource`：当前真正生效的壁纸源。允许值：`bing` / `upload` / `folder` / `rss` / `api`。
-- `providers.*.config`：用户配置，切源不删除。例如 RSS URL、API URL、文件夹策略。
-- `providers.*.state`：运行状态，失败和刷新信息存这里，不属于用户配置。
-- `cache`：当前活跃源的缓存窗口。切源成功后重建；切源失败时不覆盖旧缓存。
-- `cache.order` 使用逻辑 ID。Bing 恒为 `["bing"]`，API 恒为 `["api"]`，上传使用 `upload_<id>`，RSS 使用 `rss_<id>`，文件夹使用 `folder:<fileName>`。
-- `cache.index` 替代旧 `ptab_local_index`，所有需要轮换的源共用。
-- `cache.meta` 存轻量元数据，不存 Blob。
+RSS/API source 都使用相同测试结构：
 
-切换源时采用两阶段提交：
+```json
+{
+  "test": {
+    "status": "untested",
+    "fieldHash": "",
+    "testedAt": 0,
+    "imageUrl": "",
+    "error": ""
+  }
+}
+```
 
-1. 用户在设置面板里修改草稿配置。
-2. 面板关闭或用户提交时，目标 provider 先尝试准备一张可显示壁纸。
-3. 成功后写入 `ptab_wallpaper`、`ptab_wallpaper_thumbs`、`ptab_wallpaper_preview`，再清理旧源大文件。
-4. 首次启用 RSS/API/文件夹失败时，写入或保持 `activeSource = "bing"`，加载 Bing 兜底并轻提示用户。
-5. 已经启用的 RSS/API 到期刷新失败时，只更新 `state.lastCheckedAt/lastError`，保持当前缓存，不自动切 Bing。
+只有 `status = "passed"` 且 `fieldHash` 等于当前字段 hash，UI 才显示绿点。
 
-#### `ptab_ui`
+#### cache ID 约定
+
+| 来源 | cache/order/meta ID |
+|------|---------------------|
+| Bing | `bing` |
+| API | `api` |
+| Upload | `upload_<id>` |
+| RSS | `rss_<hash>` |
+| Folder | `folder:<encodeURIComponent(fileName)>` |
+
+`cache.order` 是当前活跃缓存窗口。Bing 常见为 `["bing"]`；API 常见为 `["api"]`；RSS 为 active source 的 `rss_<id>` 列表；Upload 为上传图 ID；Folder 运行时主要依赖 `providers.folder.state` 和 `ptab_wallpaper_folder_files`，但缩略图/meta 使用 `folder:<encodedName>`。
+
+### `ptab_ui`
 
 ```json
 {
@@ -183,11 +210,22 @@ v3.2.0 改为 **按领域打包存储**：
     "visibility": "always",
     "engine": "google",
     "position": "center",
-    "radius": "capsule"
+    "align": "center",
+    "iconPosition": "right",
+    "radius": "capsule",
+    "width": 560,
+    "backgroundOpacity": 0.1,
+    "blur": 24
   },
   "wallpaper": {
     "overlayOpacity": 0,
-    "themeEnabled": false
+    "themeEnabled": false,
+    "fit": "cover",
+    "position": "center",
+    "blur": 0
+  },
+  "appearance": {
+    "radius": "soft"
   },
   "icon": {
     "opacity": 0.45
@@ -198,7 +236,7 @@ v3.2.0 改为 **按领域打包存储**：
 }
 ```
 
-#### `ptab_shortcuts`
+### `ptab_shortcuts`
 
 ```json
 {
@@ -214,108 +252,66 @@ v3.2.0 改为 **按领域打包存储**：
 }
 ```
 
-### IndexedDB（PlainTab，v1，store: wallpaper）
+### IndexedDB（当前）
 
-所有图片值统一为对象，最低字段为 `{blob: Blob, mime: String, name: String}`。允许附带 `source`、`id`、`src`、`createdAt` 等元数据，但业务逻辑不得依赖额外字段一定存在。
+DB：`PlainTab` v1，store：`wallpaper`
 
 | Key | 数量 | 说明 |
 |-----|------|------|
-| `ptab_wallpaper_blob_bing` | 1 | Bing 兜底和 Bing 当前图 |
-| `ptab_wallpaper_blob_api` | 1 | API 固定单图槽，URL 不变时复用 |
+| `ptab_wallpaper_blob_bing` | 1 | Bing 兜底和当前 Bing 图 |
+| `ptab_wallpaper_blob_api` | 1 | API 固定单图槽 |
 | `ptab_wallpaper_blob_upload_<id>` | ≤12 | 本地上传图片 |
-| `ptab_wallpaper_blob_rss_<id>` | ≤12 | RSS 下载图片，超出窗口后按引用清理 |
-| `ptab_wallpaper_folder_handle` | 1 | `FileSystemDirectoryHandle`，跨会话持久化 |
-| `ptab_wallpaper_folder_files` | 1 | 排序后的文件名数组，单值一次 `put` |
+| `ptab_wallpaper_blob_rss_<id>` | ≤12 活跃缓存 | RSS 下载图片 |
+| `ptab_wallpaper_folder_handle` | 1 | `FileSystemDirectoryHandle` |
+| `ptab_wallpaper_folder_files` | 1 | `[{ name, size, lastModified }, ...]` |
 
-删除旧 IDB key：
-
-- `ptab_bing_blob`
-- `ptab_img_<id>`（迁移为 `ptab_wallpaper_blob_upload_<id>` 后删除）
+所有图片值最低兼容 `{ blob, mime, name }`；可附带 `source/id/src/createdAt` 等元数据，但业务逻辑不得依赖这些额外字段一定存在。
 
 ---
 
-## 迁移链
+## 历史迁移参考
 
-```js
-MIGRATIONS = {
-    1: migrate_1_to_2,   // v3.0.4 → v3.1.4
-    2: migrate_2_to_3    // v3.1.4 → v3.2.0
-};
+如果未来重新实现完整旧版本迁移，可参考以下映射。
+
+### v3.0.4 → v3.1.4
+
+```text
+pt3_source            → ptab_mode
+__pt3_thumb           → ptab_bing_thumb
+pt3_lang              → ptab_lang
+pt3_search_mode       → ptab_search_mode
+pt3_opacity           → ptab_icon_opacity
+pt3_engine            → ptab_search_engine
+pt3_bing_url/date     → ptab_bing_meta
+
+PlainTabV3/bing_blob  → PlainTab/ptab_bing_blob
+PlainTabV3/local_blob → PlainTab/ptab_img_<id>
 ```
 
-### MIGRATIONS[1]：v3.0.4 → v3.1.4
+### v3.1.4 → v3.2.0
 
-```
-ls:  pt3_source           → ptab_mode              （值不变）
-     __pt3_thumb          → ptab_bing_thumb        （去除 url() 包裹）
-     pt3_search_mode      → ptab_search_mode
-     pt3_lang             → ptab_lang
-     pt3_opacity          → ptab_icon_opacity
-     pt3_engine           → ptab_search_engine
-     pt3_bing_url + date  → ptab_bing_meta         （合并）
-新增: ptab_version、ptab_img_order、ptab_img_thumbs、ptab_local_index
+```text
+ptab_version       → ptab_schema_version = 3
+ptab_lang          → ptab_locale
+ptab_mode          → ptab_wallpaper.activeSource
+                      local → upload
+ptab_bing_meta     → ptab_wallpaper.providers.bing.state
+ptab_img_order     → ptab_wallpaper.cache.order
+                      local IDs → upload_<id>
+ptab_local_index   → ptab_wallpaper.cache.index
+ptab_img_meta      → ptab_wallpaper.cache.meta
+ptab_img_thumbs    → ptab_wallpaper_thumbs
+ptab_preview_thumb → ptab_wallpaper_preview
+ptab_search_mode   → ptab_ui.search.visibility
+ptab_search_engine → ptab_ui.search.engine
+ptab_icon_opacity  → ptab_ui.icon.opacity
 
-IDB: PlainTabV3  bing_blob     → PlainTab  ptab_bing_blob
-                 local_blob+mime → ptab_img_<id>[]
-```
-
-### MIGRATIONS[2]：v3.1.4 → v3.2.0
-
-```
-ls:
-  ptab_version        → ptab_schema_version = 3
-  ptab_lang           → ptab_locale
-
-  ptab_mode           → ptab_wallpaper.activeSource
-                         ('local' → 'upload')
-  ptab_bing_meta      → ptab_wallpaper.providers.bing.state
-  ptab_img_order      → ptab_wallpaper.cache.order
-                         (local IDs → upload_<id>)
-  ptab_local_index    → ptab_wallpaper.cache.index
-  ptab_img_meta       → ptab_wallpaper.cache.meta
-  ptab_img_thumbs     → ptab_wallpaper_thumbs
-                         (local IDs → upload_<id>)
-  ptab_bing_thumb     → ptab_wallpaper_thumbs["bing"]
-                         (仅 activeSource 为 bing 时作为活跃缩略图)
-  ptab_preview_thumb  → ptab_wallpaper_preview
-
-  ptab_search_mode    → ptab_ui.search.visibility
-  ptab_search_engine  → ptab_ui.search.engine
-  ptab_icon_opacity   → ptab_ui.icon.opacity
-
-新增默认:
-  ptab_wallpaper.providers.folder/rss/api
-  ptab_ui.search.position = "center"
-  ptab_ui.search.radius = "capsule"
-  ptab_ui.wallpaper.overlayOpacity = 0
-  ptab_ui.wallpaper.themeEnabled = false
-  ptab_ui.panel.opacity = 0.88
-  ptab_shortcuts = {items: [], recents: [], hidden: [], settings: {...}}
-  ptab_shortcut_icons = {}
-
-清理旧 LS:
-  ptab_version、ptab_mode、ptab_bing_thumb、ptab_bing_meta、
-  ptab_img_order、ptab_img_thumbs、ptab_img_meta、ptab_local_index、
-  ptab_preview_thumb、ptab_lang、ptab_search_mode、
-  ptab_icon_opacity、ptab_search_engine
-
-IDB:
-  ptab_bing_blob      → ptab_wallpaper_blob_bing
-  ptab_img_<id>       → ptab_wallpaper_blob_upload_<id>
+ptab_bing_blob     → ptab_wallpaper_blob_bing
+ptab_img_<id>      → ptab_wallpaper_blob_upload_<id>
 ```
 
-迁移 preview 选择规则：
+迁移 preview 选择建议：
 
-1. 如果 activeSource 是 `upload`，优先使用旧 `ptab_img_thumbs[oldOrder[index]]`。
-2. 如果 activeSource 是 `bing`，优先使用旧 `ptab_preview_thumb`，再退回 `ptab_bing_thumb`。
-3. 若没有可用缩略图，不写 `ptab_wallpaper_preview`，启动后由 Bing 兜底或当前源重新生成。
-
-### 迁移链总结
-
-| 产品版本 | stored | LS_VERSION | DB | 关键特征 |
-|---------|--------|-----------|-----|---------|
-| v3.0.4 | 0（无 key） | 无 | PlainTabV3 (v1) | `pt3_` 前缀，单图本地，8 ls key，8→6 映射 |
-| v3.1.4 | 2 | 2 | PlainTab (v1) | `ptab_` 前缀，多图本地轮换，11 ls key，+5 新增 |
-| v3.2.0 | 3 | 3 | PlainTab (v1) | 领域打包存储，Provider 框架，8 ls key，Bing/upload 先落地，folder/RSS/API 预留 |
-
-v3.2.0 起优先读取 `ptab_schema_version`。如果不存在，则回退读取旧 `ptab_version`；v3.0.4 用户无版本 key 时，通过 `pt3_source` 指纹检测并设定 stored=1，然后依次执行 MIGRATIONS[1] + MIGRATIONS[2]。
+1. activeSource 为 upload 时，优先使用旧 order 当前索引对应缩略图。
+2. activeSource 为 Bing 时，优先使用旧 preview，再退回 Bing 缩略图。
+3. 没有可用缩略图时不写 preview，由启动流程回退 Bing 或渐变。

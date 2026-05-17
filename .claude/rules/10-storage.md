@@ -2,79 +2,91 @@
 
 ## 行为概述
 
-PlainTab 使用两种存储方式保存数据：
+PlainTab 使用两种存储方式：
 
-- **快速存取**：用于轻量数据——用户设置、缩略图、快捷链接等。读写极快，数据量约 1-2MB。
-- **大文件存取**：用于壁纸原图这类较大的文件，异步读写不阻塞页面。
+- **localStorage**：轻量、同步、首屏可读。保存语言、界面偏好、壁纸轻量模型、缩略图、快捷链接模型等。
+- **IndexedDB**：异步大文件存储。保存壁纸原图 Blob、文件夹目录句柄和文件夹索引。
 
-总数据量远低于浏览器分配给每个网站的存储配额，正常情况下不会存满。
+当前存储入口集中在 `js/wallpaper/data.js` 的 `window.WallpaperData`。UI 和运行时代码不得绕过该模块直接操作壁纸 IDB 数据。
 
-### 存储内容分类
+### 当前 localStorage key（LS_VERSION = 3）
 
-**壁纸系统：** 存储当前壁纸来源、各来源的配置（Bing 市场、文件夹路径、RSS URL、API URL 等）、当前轮换位置、所有缩略图、图片元数据（文件名、大小等）、下一张壁纸的预计算缩略图。文件夹模式额外存目录句柄和全量文件名索引（大文件存储）。
+| Key | 内容 |
+|-----|------|
+| `ptab_schema_version` | 存储结构版本号，当前为 `3` |
+| `ptab_locale` | 用户选择的界面语言 |
+| `ptab_wallpaper` | 壁纸主模型：当前源、各 provider 配置/状态、缓存 order/index/meta |
+| `ptab_wallpaper_thumbs` | 普通缩略图池，值为 CSS-ready `url(data:image/...)` 字符串 |
+| `ptab_wallpaper_blur_thumbs` | 模糊缩略图池，值为 `{ blur, thumb }` |
+| `ptab_wallpaper_preview` | 首屏唯一同步读取的壁纸预览 |
+| `ptab_ui` | 搜索栏、壁纸遮罩/模糊/主题、图标、面板等界面偏好 |
+| `ptab_shortcuts` | 快捷链接、最近访问、隐藏列表、命令面板设置 |
+| `ptab_shortcut_icons` | 快捷链接图标缓存 |
 
-**语言系统：** 存储用户选择的界面语言。
+### 当前 IndexedDB key（DB = `PlainTab`, store = `wallpaper`）
 
-**搜索与界面：** 存储搜索栏显示模式、垂直位置、圆角样式、壁纸遮罩不透明度、图标透明度、搜索引擎选择。
+| Key | 内容 |
+|-----|------|
+| `ptab_wallpaper_blob_bing` | Bing 当前/兜底图，值为 `{ blob, mime, name }` |
+| `ptab_wallpaper_blob_api` | API 固定单图槽，值为 `{ blob, mime, name }` |
+| `ptab_wallpaper_blob_upload_<id>` | 本地上传图片，最多 12 张 |
+| `ptab_wallpaper_blob_rss_<id>` | RSS 下载图片，最多 12 张活跃缓存 |
+| `ptab_wallpaper_folder_handle` | `FileSystemDirectoryHandle`，文件夹授权句柄 |
+| `ptab_wallpaper_folder_files` | 非递归文件索引数组，元素为 `{ name, size, lastModified }` |
 
-**命令面板：** 存储所有快捷链接（名称、网址、使用频率、添加时间）、图标数据、最近访问记录、隐藏的链接列表、两个面板的快捷键、是否显示推荐、视图模式偏好。
+### 数据内容分类
 
-**系统元数据：** 存储数据格式的版本号，用于未来升级时的自动数据迁移。
+**壁纸系统：** `ptab_wallpaper` 存 `activeSource`、`providers.*.config`、`providers.*.state` 和 `cache`。缩略图和预览图单独存，原图在 IDB。文件夹模式额外保存目录句柄和第一层文件索引。
+
+**语言系统：** `ptab_locale` 保存用户选择。未保存时由运行时从浏览器语言检测。
+
+**搜索与界面：** `ptab_ui` 保存搜索栏显示模式、位置、宽度、圆角、图标位置、搜索框背景/模糊、壁纸适配/焦点/遮罩/背景模糊/主题色、图标透明度、面板透明度和界面圆角。
+
+**命令面板：** `ptab_shortcuts` 保存快捷链接、最近访问、隐藏列表、快捷键、推荐开关和视图模式；`ptab_shortcut_icons` 保存图标数据。
 
 ### 数据保存安全原则
 
-整个存储系统遵循一个核心原则来保证数据不丢失：**先保存大的数据，再保存小的引用；要删除时则反过来，先移除引用，再删除数据。**
+大文件和小引用必须按崩溃安全顺序处理：
 
-举个例子：用户上传了一张壁纸。
-1. 系统先把原图（大文件）存入大文件存储
-2. 再把这张图的 ID 记入轮换列表
-3. 接着存缩略图
-4. 最后存图片信息
+1. 新增图片时，先把原图写入 IDB。
+2. 再把图片 ID 写入 `cache.order` 或对应 provider 状态。
+3. 再写缩略图和 meta。
+4. 删除图片时反过来：先移除引用，再删缩略图/meta，最后删 IDB 原图。
 
-如果第 2 步完成后浏览器崩溃了，原图已经安全存储，ID 也在列表中——下次启动一切正常。如果第 1 步后崩溃，原图存了但列表中没记——多了一个孤立文件，但系统会安全忽略它，不影响正常使用。
+如果写入中途崩溃，最多留下孤立 Blob；没有引用的 Blob 不会被运行时选中。
 
-删除时：先从轮换列表中移除 ID（图片立即不会被选到），再删缩略图和图片信息，最后从大文件存储中删除原图。
+### 模型归一化
 
-### 数据读取优化
+读取模型时必须走 `WallpaperData` 的 normalize/merge 逻辑：
 
-常用数据会缓存在内存中，避免每次需要都从存储中重新读取和解析。写入时同步更新缓存。
-
-### 版本升级
-
-系统有一个内部版本号。新版 PlainTab 启动时会检查旧数据的版本号，如果需要，自动执行数据迁移——把旧格式转换为当前格式，然后写入新版本号。这个过程对用户完全透明。
-
----
-
-## 约束清单
-
-### 存储容量
-
-- 快速存储中单条数据不超过浏览器的 5MB 限制
-- 缩略图以压缩格式存储，单张约 300-420KB
-- 缩略图写入失败（容量不足）时静默跳过，不影响主功能
-- 大文件存储中每张壁纸原图独立存储
-
-### 数据完整性
-
-- JSON 格式数据读取失败 → 回退到安全的默认值（空数组、空对象），不报错
-- 大文件存储读取失败或连接断开 → 跳过该文件，清除缓存连接下次重建
-- 用户浏览器的隐私模式下大文件存储可能不持久 → 视为正常，当次会话功能不受影响
-- 新标签页同时写入存储的情况假设不会发生（每个标签页独立）
+- `local` 会兼容为 `upload`。
+- folder `strategy` 只归一为 `shuffle`，旧值 `random` 仅作为兼容别名。
+- RSS/API 的 sources 会限制为最多 5 个，并校验 active source id。
+- API 旧字段 `url/jsonPath` 会归并为 `imageSources/jsonSources`。
+- 背景模糊只允许 `0` 或 `5-15`，`1-4` 归一为 `5`。
 
 ### 源切换时的数据清理
 
-| 切换离开 | 清理内容 |
+`clearWallpaperSourceCache(source)` 只清理被切换离开的旧源缓存，并保留用户配置，方便切回后继续编辑。
+
+| 切换离开 | 当前实现 |
 |---------|---------|
-| Bing | 删除 Bing 缓存的原图，清空壁纸数据区（轮换列表、缩略图、元数据等），保留配置 |
-| 本地上传 | 删除所有上传的原图，清空壁纸数据区，保留配置 |
-| 文件夹 | 删除 `ptab_folder_handle` 和 `ptab_folder_files`，清空壁纸数据区（轮换列表、缩略图），保留配置路径和策略 |
-| RSS | 删除所有 RSS 下载的原图，清空壁纸数据区，保留配置 |
-| API | 删除 API 缓存的原图，清空壁纸数据区，保留配置 |
+| Bing | 不清理。Bing 原图、缩略图和 meta 保留，作为全局兜底 |
+| 本地上传 | 删除 `ptab_wallpaper_blob_upload_*`，清除 upload order/thumbs/blurThumbs/meta，保留 upload 配置 |
+| 文件夹 | 删除 `ptab_wallpaper_folder_handle` 和 `ptab_wallpaper_folder_files`，清除 `folder:<encodedName>` 相关 order/thumbs/blurThumbs/meta/state，保留 `pathLabel/strategy` 配置 |
+| RSS | 删除 `ptab_wallpaper_blob_rss_*`，清除 `rss_<id>` 相关 order/thumbs/blurThumbs/meta，清空 RSS 运行态的错误和最后图片 URL，保留 RSS sources、展示选项和测试状态 |
+| API | 删除 `ptab_wallpaper_blob_api`，清除 `api` thumbs/blurThumbs/meta/order，并重置 API 运行态，保留 API sources、apiType、刷新频率和测试状态 |
 
-各来源的配置（如 RSS URL、文件夹路径、API URL）在切换时保留不删，方便用户切回来时恢复。
+切换离开非 Bing 源且该源存在缓存时，设置面板会先弹出确认；从 Bing 切换到其他来源不确认，因为 Bing 缓存被保留。
 
-### 版本迁移
+### 版本入口
 
-- 启动时比较存储版本号和当前版本号
-- 版本号低于当前 → 执行对应的数据迁移→ 写入新版本号
-- 迁移失败不影响原有数据——旧数据保留不动
+当前 `migrate` 入口只确保 `ptab_schema_version = 3`，并依赖读取时归一化补齐缺失字段。旧版本迁移映射记录在 `90-storage-history.md`，仅作历史参考；新增真实迁移时必须同时更新 `data.js` 和该历史文档。
+
+### 容量与失败策略
+
+- 单个 localStorage 值应保持在浏览器可接受范围内；`ptab_wallpaper_preview` 由 `preload.js` 限制最大约 350KB，超限会被移除。
+- 缩略图写入失败时应静默降级，不影响原图显示。
+- IDB 读取失败或连接断开时跳过当前文件，并允许下次重建连接。
+- 隐私模式或权限失效导致 IDB/文件夹句柄不可持久时视为正常失败路径。
+- 不假设多个新标签页并发写入同一数据结构；如未来引入并发写入，需要增加冲突处理。

@@ -2,245 +2,208 @@
 
 ## 行为概述
 
-打开新标签页时，用户第一眼看到的就是壁纸——不会出现白屏、灰屏或闪烁。这是通过提前准备一张压缩版壁纸实现的：页面还没加载完全之前，压缩图就已经显示在屏幕上了。
+打开新标签页时，第一帧必须已有壁纸或内置渐变背景，不能出现白屏。实现方式是：`#wallpaperBack` 先出现在 DOM 中，随后同步执行 `js/preload.js`，只读取 `ptab_wallpaper_preview` 并写入背景；主运行时稍后再加载高清图和当前来源。
 
-壁纸来源有五种可选：Bing 每日壁纸、本地上传、本地文件夹、RSS 订阅、API 端点。五种来源共享同一套展示方式，切换来源后新来源立即生效。
+壁纸来源有五种：Bing 每日壁纸、本地上传、本地文件夹、RSS 订阅、API 端点。默认来源是 Bing。
 
-### 五种壁纸来源
+### 来源切换交互
 
-| 来源 | 简述 |
-|------|------|
-| Bing 每日壁纸 | 每天自动从 Bing 获取一张新的高清壁纸。离线时会显示昨天缓存的图片 |
-| 本地上传 | 用户自行上传图片，最多 12 张，每次打开新标签页按顺序轮换 |
-| 本地文件夹 | 选择一个本地文件夹，从中读取图片作为壁纸。图片直接从磁盘加载，无需上传 |
-| RSS 订阅 | 提供 RSS Feed 地址，系统自动解析并下载其中的图片，最多 12 张 |
-| API 端点 | 提供 API 地址，系统每次打开新标签页请求该接口并从中提取图片 URL |
+壁纸设置页不是“点选即生效”。当前实现采用草稿模型：
 
-默认来源是 Bing 每日壁纸。
+1. 用户在壁纸 tab 中选择来源或修改配置，只改变内存草稿。
+2. 配置满足校验后，底部 `应用配置` 才可点击。
+3. 点击 `应用配置` 成功后，才写入 `ptab_wallpaper` 并触发壁纸加载。
+4. 关闭模态窗口会丢弃未应用草稿；不需要单独的“取消更改”按钮。
+
+切换来源时，如果离开的旧来源不是 Bing 且存在缓存，应用前会确认“会丢弃当前来源已缓存的壁纸数据”。用户取消则不保存。Bing 缓存永远保留，作为所有来源失败时的兜底。
 
 ### 壁纸切换过程
 
-当需要更换壁纸时（比如新的一天、轮换到下一张、或切换了壁纸来源），过渡是平滑的：新壁纸会在旧壁纸之上缓缓淡入，约 0.2 秒过渡完成后旧壁纸被替换。用户看到的始终是无缝的过渡，不会出现空白帧。
+高清图准备好后通过双层渲染切换：
 
-### 首次加载的优先策略
+- `#wallpaperBack` 保持当前可见图。
+- `#wallpaperFront` 设置新图并淡入。
+- 淡入完成后，front 的背景复制回 back，front 清空。
+- 旧 Blob URL 在不再使用时释放。
 
-打开新标签页时，系统按以下顺序尝试显示壁纸：
+过渡期间至少一层必须有内容。所有来源失败时回退内置深色渐变背景。
 
-1. 上一标签页预先准备好的缩略图（最快）
-2. 本地缓存的当前壁纸缩略图
-3. 本地缓存的完整高清壁纸
-4. 从网络获取新壁纸
-5. 以上全部失败 → 显示内置的深蓝渐变背景
+### 首次加载优先级
 
-### 各来源的具体行为
+1. `preload.js` 同步读取 `ptab_wallpaper_preview`。
+2. 主运行时读取当前 activeSource 的缓存或文件。
+3. 当前来源失败时尝试当天 Bing 缓存。
+4. Bing 缓存不可用时请求 Bing 网络图。
+5. 以上都失败时保持现有背景或使用内置渐变。
 
-**Bing 每日壁纸：**
+`preload.js` 禁止访问 IndexedDB、fetch、canvas、`WallpaperData` 或 `showDirectoryPicker`。
 
-系统同时向两个镜像服务器发出请求（竞速），哪个先返回就用哪个，另一个随即取消。最长等待 8 秒。同一天内多次打开新标签页不重复下载——使用本地缓存。即使当前在用其他壁纸来源，系统也在后台缓存当日 Bing 图，以便切换回来时无需等待。
+## 各来源行为
 
-Bing 的市场区域根据用户当前选择的界面语言自动决定。例如选简体中文则获取中国 Bing 的图片，选日语则获取日本 Bing 的图片。
+### Bing 每日壁纸
 
-**本地上传：**
+Bing 通过两个镜像端点竞速获取 JSON，8 秒超时，先返回者胜出并取消另一路。图片 URL 变化时下载并写入 `ptab_wallpaper_blob_bing`；同一天 URL 不变时复用本地 Blob。
 
-用户通过文件选择器上传图片。支持多选。每张上传的图片自动生成缩略图用于快速预览。轮换方式是顺序循环——每打开一次新标签页切换下一张。上传满 12 张后不再接受新图片。删除最后一张后自动切回 Bing。
+Bing 市场由当前界面语言映射决定，但只有在需要重新请求 Bing 时才使用新的语言市场；切换语言不会立即清空或强制刷新当天 Bing 缓存。
 
-**本地文件夹：**
-
-用户选择一个本地文件夹，浏览器直接从磁盘读取图片当壁纸。这是五来源里唯一不需要下载的——图片本来就在电脑上。
-
-文件夹模式依赖浏览器的文件系统接口（`showDirectoryPicker`）。不支持的话，设置面板的文件夹选项直接置灰，提示「当前浏览器不支持此功能」。
-
-图片格式支持 jpg、jpeg、png、webp、avif、gif、bmp。
-
-—— 轮换方式
-
-只有两种：随机和顺序。随机就是每次打开新标签页临时摇一个。顺序就是按文件名排序后挨个往下走，走到头循环。
-
-—— 工作原理
-
-核心数据结构：
-- `ptab_folder_files`（IDB）：全量文件名数组，可能有数万个
-- `ptab_img_order`（LS）：环形缓冲区，12 个文件名，即"滑动窗口"
-- `ptab_local_index`（LS）：0-11，当前壁纸在 `ptab_img_order` 中的位置
-- `ptab_img_thumbs`（LS）：缩略图字典，key=文件名，value=base64
-- `ptab_preview_thumb`（LS）：预览缩略图，preload.js 用
-
-首次选文件夹发生了什么：
-1. 弹出文件夹选择器 → 拿到「目录通行证」，存到 IDB（`ptab_folder_handle`）
-2. 扫描所有图片文件名，按文件名排序，全量写入 IDB（`ptab_folder_files`）
-3. 初始化环形缓冲区：`ptab_img_order` = [files[0]~files[11]]，index = 0
-4. 显示 files[0]（用 applyWallpaper）
-5. 生成 files[1]~files[11] 的缩略图存入 `ptab_img_thumbs`
-6. `ptab_preview_thumb` = thumbs[files[1]]
-
-每次打开新标签页：
-1. preload.js 用 `ptab_preview_thumb` 显示（零白屏）
-2. index = (index + 1) % 12
-3. 当前文件 = `ptab_img_order`[index]
-4. 读取高清原图，平滑过渡显示
-5. prefetchNext：生成新进入窗口的文件的缩略图 → 更新 `ptab_img_order` 最旧的位置 → 更新 preview
-
-index 永远在 0-11 之间循环，`ptab_img_order` 是环形缓冲区。不管文件夹有多少张图，每次只读 1 张文件、生成 1 张缩略图。
-
-—— 两个关键顺序
-
-先写 index，再盖 preview。如果缩略图生成到一半崩了，下次打开 index 已指向正确的文件，从文件直接读就行。
-文件读失败了 index 不动，下次重试同一张。
-
-—— 文件夹内容变了
-
-重新选文件夹时重新扫描存列表。旧文件不在了就从第一张开始。
-
-—— 画廊
-
-显示 `ptab_img_order` 中除当前外的 11 张缩略图。列数自适应：1 张铺满整行、2 张并排、3 张三列、4 张 2×2、5~12 张三列流式。缩略图从 `ptab_img_thumbs` 读取（key = 文件名），缺失时显示首字母占位。
-
-**RSS 订阅：**
-
-用户提供 RSS Feed 地址。系统解析 Feed 提取图片链接并下载。最多保留 12 张。每次打开新标签页时检查 Feed 是否有新图。轮换模式：最新优先（保留最新 12 张按时间倒序）或随机。
-
-**API 端点：**
-
-用户提供 API URL 和图片在所返回数据中的提取路径（如 `data.image.url`）。系统每次打开新标签页请求该 API，按路径提取图片 URL，下载后设为壁纸。若返回的 URL 与上次相同则直接用缓存。
-
-### 壁纸信息显示
-
-设置面板中显示当前壁纸的简要信息：Bing 显示版权描述和日期，本地上传显示文件名，文件夹显示路径，RSS 显示 Feed 地址，API 显示端点域名。
-
-### 离线行为
-
-断网时：Bing 显示昨天的缓存；本地上传和 RSS 使用已下载的缓存图片；文件夹完全离线可用（图片在本地磁盘）；API 使用上次缓存。
-
----
-
-## 约束清单
-
-### 显示相关
-
-- 打开新标签页时必须立即显示壁纸，不得出现白屏或灰屏
-- 壁纸切换过渡必须平滑，过渡期间不能出现空白帧
-- 所有来源获取壁纸均失败时，回退显示内置深蓝渐变背景
-- 壁纸以覆盖填充模式显示，居中裁剪
-
-### Bing 来源
-
-- 双端点同时请求，取最快响应，另一个取消。最长等待 8 秒
-- 同一天内图片 URL 不变则不重新下载
-- URL 变了（新一天的图）→ 重新下载并缓存
-- 双端点都超时 → 保持当前壁纸不变
-- 拿到图片 URL 但下载失败 → 保持当前壁纸，下次打开新标签页重试
-- 即使切换到其他来源，后台也静默缓存当日 Bing 壁纸
-- Bing 市场区域根据当前界面语言自动选定，具体映射见语言系统规格
+即使当前使用其他来源，运行时也会在后台尝试缓存当天 Bing，以保留兜底能力。
 
 ### 本地上传
 
-- 图片上限 12 张，满额后不再接受新图片
-- 轮换方式：每次打开新标签页顺序切换到下一张，循环往复
-- 每张图片存储一份压缩版缩略图，用于首屏快速显示
-- 图片删除顺序：先从轮换列表中移除，再删除缩略图和元数据，最后删除原图
-- 删除最后一张后自动切回 Bing 壁纸
-- 上传去重：同名且同大小的文件自动跳过
-- 批量上传时串行处理，超过剩余空位的自动跳过
+用户通过一级面板的 `+` 上传图片，最多 12 张。上传成功时：
+
+1. 原图写入 `ptab_wallpaper_blob_upload_<id>`。
+2. ID 写入 `cache.order`。
+3. 缩略图写入 `ptab_wallpaper_thumbs`。
+4. 元数据写入 `cache.meta`。
+
+上传图按 `cache.index` 顺序轮换，每打开新标签页推进一次。删除最后一张上传图时会切回 Bing。切换到 upload 来源并点击 `应用配置` 不会弹出文件选择器；用户仍需回到一级面板点 `+` 添加图片。
 
 ### 本地文件夹
 
-- 支持的图片格式：jpg、jpeg、png、webp、avif、gif、bmp
-- 图片从磁盘直接读取，不存入浏览器存储
-- 轮换模式：随机 / 顺序（默认随机）
-- 浏览器不支持 `showDirectoryPicker` 时 → 文件夹选项置灰，提示不支持
-- 环形缓冲区 `ptab_img_order` 存 12 个文件名，`ptab_local_index` 在 0-11 循环
-- `ptab_img_thumbs` 存缩略图字典（key=文件名），上限 12 张
-- `ptab_img_meta` 不使用——文件自身带元数据
-- 先写 index，再盖 preview——防崩溃
-- 切换离开时清理 IDB（`ptab_folder_handle`、`ptab_folder_files`）
-- 文件读取失败 → 位置不推进，下次重试同一张
-- 预览缩略图丢失但位置有效 → 按文件名从列表取文件 + 临时生成缩略图
-- 文件夹不可达 + 缩略图也丢了 → 回退渐变背景
-- 文件夹重新选择时 → 重新扫描覆盖列表 → 按文件名匹配恢复位置
-- 画廊：单张 16:9 当前壁纸预览，和 Bing 一致
-- 大文件存储新增 key：
-  - `ptab_folder_handle`：目录通行证，跨会话持久化
-  - `ptab_folder_files`：排序后全量文件名数组，单值一次 `put`
+文件夹模式使用 File System Access API 的 `showDirectoryPicker`。是否可用只按浏览器能力检测，不按操作系统判断；不支持时设置项置灰并提示。
 
-### RSS 来源
+支持格式：jpg、jpeg、png、webp、avif、gif、bmp。
 
-- 图片上限 12 张
-- 轮换模式：最新优先 / 随机
-- 从 Feed 中的 enclosure、media:content、description 标签提取图片 URL
-- 每次打开新标签页重新检查 Feed，拉取时间最长 8 秒
-- Feed 拉取失败 → 保持上次下载的图片
-- 新下载的图片超出 12 张上限时清理最旧的
-- Feed URL 必须为 http:// 或 https:// 链接
+文件夹只扫描所选目录第一层，不递归。文件名在该目录内唯一，因此逻辑 ID 为 `folder:<encodeURIComponent(fileName)>`。`pathLabel` 是浏览器提供的友好名称，不是完整真实路径。
 
-### API 来源
+轮换只支持随机洗牌袋：
 
-- API URL 必须为 http:// 或 https:// 链接
-- 图片路径支持点号嵌套（如 `data.image.url`）和数组索引
-- 每次打开新标签页均请求 API 获取最新壁纸
-- API 返回的图片 URL 和上次相同 → 用缓存，不重复下载
-- API 请求超时（8 秒）→ 保持上次壁纸
-- JSON 路径取值失败 → 自动尝试从常见字段（url、image、imageUrl、src 等）获取
+- `strategy` 当前统一为 `shuffle`，旧值 `random` 只作为兼容别名。
+- 从当前索引池生成 `shuffleBag`，一袋内每张最多出现一次。
+- 袋子用完后基于当时的文件索引重新洗牌。
 
-### 数据安全
+选择文件夹时只更新草稿和临时 mount，不立即保存。应用成功时必须按顺序完成：
 
-- 先保存大文件（原图），再保存小引用（轮换列表、缩略图）
-- 删除时先移除引用，再删除大文件
-- 如果保存中途崩溃，系统下次启动可以自动恢复
-- 切换壁纸来源时，清理旧来源数据但保留配置，以便切回来时恢复
+1. 保存 `ptab_wallpaper_folder_handle`。
+2. 保存首批 `ptab_wallpaper_folder_files`。
+3. 写当前图缩略图、meta 和 `ptab_wallpaper_preview`。
+4. 写 `providers.folder.config/state`，状态为 ready。
+5. 写 `activeSource = "folder"` 并触发加载。
 
-### 预览与预加载
+如果文件夹为空、无支持图片、权限被拒绝或首张可用图无法生成预览，应用按钮保持不可用或应用失败，旧壁纸保持不变。
 
-- 每次浏览壁纸后预先计算下一张壁纸的缩略图
-- 下次打开新标签页首先尝试使用预计算的缩略图——最快的显示途径
-- 预计算缩略图和轮换位置同步更新，确保缩略图与实际壁纸一致
+每次打开新标签页：
 
-### 壁纸模糊热路径
+- 先用 preview 首屏显示。
+- 读取目录句柄和文件索引。
+- 从 `shuffleBag` 取候选文件；读取成功并显示后才推进状态。
+- 读取失败不推进；文件不存在则从索引、袋子和缩略图中移除再尝试下一张。
+- 每个会话最多自动低频重扫一次；距离上次完整扫描超过 24 小时可在空闲阶段重扫。
 
-- 壁纸背景模糊不使用全屏实时 CSS `filter: blur(...)`。强模糊必须通过预先生成的模糊缩略图实现，避免大面积 GPU/合成开销拖慢动画。
-- `ptab_wallpaper_preview` 是首屏唯一同步读取的壁纸预览 key。`preload.js` 只能读取这个 key 并立即写入 `#wallpaperBack`，不得在首屏同步解析缩略图池、访问 IndexedDB、生成 canvas 或发起网络请求。
-- `ptab_wallpaper_thumbs` 是普通缩略图池，形态为 `{ id: "url(data:image/...)" }`。它服务于画廊、普通预览 fallback、以及下一次 `ptab_wallpaper_preview` 的生成，不应被 `preload.js` 扫描。
-- `ptab_wallpaper_blur_thumbs` 是模糊缩略图池，形态为 `{ id: { blur: number, thumb: "url(data:image/...)" } }`。开启背景模糊时优先从这里按 `id + blur` 命中，然后写入当前显示层和下一次 `ptab_wallpaper_preview`。
-- 背景模糊值只支持 `0` 或 `5-15`。用户输入 `1-4` 时必须归一化到 `5`，避免过清晰的缩略图被误认为画质问题。
-- 当前页从 `blur=5` 调整到 `blur=8` 时，不能把旧的 `5` 缓存当作 `8` 使用。系统应先查找 `id + 8` 的模糊缩略图；命中则立即显示，未命中则从普通缩略图、当前原图、当前显示图或 IDB 原图生成新的 `8` 模糊缩略图。
-- 拖动模糊滑块时允许即时预览，但过期的异步生成结果不得覆盖最新滑块值。长时间拖动时应尽量只保留最后一次有效生成，避免 canvas 任务堆积造成主线程卡顿。
-- 开启背景模糊时，当前显示应优先停留在模糊缩略图层；不需要额外保留一个全屏原图 front 层来模拟模糊。关闭模糊时再恢复当前原图，且不推进壁纸轮换位置。
-- 模糊缩略图生成应在用户可见反馈之后或空闲阶段补齐下一张预览。不得为了补齐下一张模糊缓存阻塞当前设置面板动画、命令面板动画或新标签页首屏。
+文件夹图片不复制进浏览器存储，原图始终从磁盘读取。
 
-### 图片质量恢复
+### RSS 订阅
 
-- 浏览器在特定情况下可能丢失图片类型信息。系统会检查并在需要时恢复
+RSS 配置为 sources 列表，最多 5 个。默认内置 NASA APOD 和 Bing RSSHub。每个 source 包含 `id/name/url/builtIn/test`，新增 source 初始是未测试状态。
 
-### 资源释放
+设置页显示红/绿连通性点：
 
-- 壁纸切换完成后释放不再使用的旧壁纸占用的内存
-- 切换壁纸来源时释放旧来源占用的所有资源
+- 未测试或测试失败为红点。
+- 当前字段 hash 与最近一次成功测试一致时为绿点。
+- 只有选中的 source 是绿点时，`应用配置` 才可用。
 
-### 网络不可用时的行为
+测试 RSS 只验证 feed 可拉取、可解析并能提取图片条目；它不下载并缓存整批壁纸。应用成功后，运行时按刷新节奏拉取 feed，下载最多 12 张图片，生成缩略图并写入 `ptab_wallpaper_blob_rss_<id>`。
 
-| 来源 | 行为 |
-|------|------|
-| Bing | 显示本地缓存的昨日壁纸 |
-| 本地上传 | 使用已缓存的原图（完全离线可用） |
-| 文件夹 | 完全离线可用（图片在本地磁盘） |
-| RSS | 使用已下载缓存的图片 |
-| API | 使用上次缓存的图片 |
+提取来源包括 `enclosure`、`media:content/media:thumbnail`、`description`、`content:encoded`、`summary` 中的图片。缓存按发布时间倒序保留最多 12 张；旧 RSS Blob 按引用清理。
 
-### LS key 对照（五种来源统一语义）
+刷新间隔：关闭、1 天、3 天、7 天。关闭时不自动刷新；没有成功缓存时会强制尝试一次。
 
-| Key | Bing | Upload | Folder | RSS | API |
-|-----|------|--------|--------|-----|-----|
-| `ptab_local_index` | `0` | 指向 order | 指向文件名数组 | 指向 order | `0` |
-| `ptab_img_order` | `["bing"]` | `[id1,id2]` | 12 个文件名 | `[id1,id2]` | `["api"]` |
-| `ptab_img_thumbs` | `{"bing":"b64"}` | `{id1:"b64"}` | `{"f.jpg":"b64"}` | `{id1:"b64"}` | `{"api":"b64"}` |
-| `ptab_img_meta` | `{"bing":{}}` | `{id1:{}}` | 不使用 | `{id1:{}}` | `{"api":{}}` |
-| `ptab_preview_thumb` | base64 | base64 | base64 | base64 | base64 |
+RSS 可显示图片摘要覆盖层，支持顶部/底部、展开条带/i 按钮，以及是否显示正文链接。
 
-### 大文件存储 key 对照
+### API 端点
+
+API 配置分为互斥的两类横向 tab：
+
+- `image`：图片直链或会重定向到图片的 GET 接口。响应最终必须是 `image/*`。
+- `json`：返回 JSON 的 GET 接口，再通过 JSON 路径或自动字段探测找到图片 URL。
+
+每类最多保存 5 个 source，分别使用 `imageSources` 和 `jsonSources`，活跃项分别为 `activeImageSourceId` / `activeJsonSourceId`。当前实际生效类型是 `apiType: "image" | "json"`。
+
+JSON 路径支持点号和数组索引，例如 `data.image.url` 或 `items[0].url`。如果路径为空或取值失败，会尝试常见字段：`url`、`imageUrl`、`image_url`、`src`、`image`、`wallpaper`。
+
+API 只支持 GET。当前版本没有 header/body/token 管理；401/403 会提示该接口可能需要鉴权，建议只能使用把 token 放在 URL 参数里的 GET 接口。
+
+API 测试会真实请求接口并下载图片，成功后保存测试结果到草稿内存。点击 `应用配置` 时，如果仍有本次测试结果，会复用该 Blob 写入 `ptab_wallpaper_blob_api`，并更新缩略图、preview、meta 和运行态；不会立刻重新请求一次。没有本次测试 Blob 但 source 的测试状态仍为绿色时，应用保存配置，运行时按刷新节奏请求。
+
+API 模式运行时只保留一张图，逻辑 ID 固定为 `api`，新结果会替换旧 `ptab_wallpaper_blob_api`。
+
+刷新间隔：关闭、每次打开、1 天、3 天、7 天。默认 1 天。
+
+## 数据与缓存
+
+### 统一模型
+
+`ptab_wallpaper` 使用 provider 模型：
+
+```js
+{
+  activeSource: "bing|upload|folder|rss|api",
+  providers: {
+    bing: { config: { mkt: "auto" }, state: { src: "", date: "", provider: "" } },
+    upload: { config: { rotation: "sequential" }, state: {} },
+    folder: { config: { pathLabel: "", strategy: "shuffle" }, state: {} },
+    rss: { config: { sources: [], activeSourceId: "", refreshIntervalMs: 86400000 }, state: {} },
+    api: { config: { apiType: "image", imageSources: [], jsonSources: [] }, state: {} }
+  },
+  cache: { order: ["bing"], index: 0, meta: { bing: {} } }
+}
+```
+
+### 常用逻辑 ID
+
+| 来源 | 逻辑 ID |
+|------|---------|
+| Bing | `bing` |
+| API | `api` |
+| Upload | `upload_<id>` |
+| RSS | `rss_<hash>` |
+| Folder | `folder:<encodedName>` |
+
+### 首屏与缩略图 key
+
+| Key | 用途 |
+|-----|------|
+| `ptab_wallpaper_preview` | 首屏唯一同步读取的预览图 |
+| `ptab_wallpaper_thumbs` | 普通缩略图池 |
+| `ptab_wallpaper_blur_thumbs` | 指定 blur 强度的模糊缩略图池 |
+
+背景模糊不使用全屏实时 CSS `filter: blur(...)` 作为热路径。强模糊必须优先使用预生成模糊缩略图；拖动滑块时要防止过期异步结果覆盖最新值。
+
+## 约束清单
+
+### 首屏与渲染
+
+- `#wallpaperBack` 必须先于 `js/preload.js` 存在。
+- `js/preload.js` 必须同步、短小，只读 `ptab_wallpaper_preview`。
+- 壁纸切换只动画 `opacity`，不得在过渡中清空两层。
+- 生成缩略图、模糊缩略图、主题色提取等非首屏任务应放在运行时或空闲阶段。
+
+### 来源应用
+
+- 壁纸 tab 的 source drawer 只修改草稿。
+- `应用配置` 只有在有有效更改并通过当前来源校验时可点。
+- 从 Bing 切到任何来源不提示清缓存；从其他有缓存来源切走必须提示。
+- 应用失败不得覆盖旧 activeSource 或清空当前可见壁纸。
+- 切换成功后清理旧来源缓存，但保留旧来源配置和测试状态。
+
+### 网络失败
+
+| 来源 | 失败行为 |
+|------|----------|
+| Bing | 保持当前图；可用时使用当天/昨日本地缓存 |
+| Upload | 使用已缓存原图；完全离线可用 |
+| Folder | 图片在本地磁盘，网络无关；权限或文件丢失时保留 preview 并提示 |
+| RSS | 使用已下载缓存；刷新失败只写 state.lastError |
+| API | 使用上次 `api` 缓存；刷新失败只写 state.lastError |
+
+### 大文件 key
 
 | Key | 值格式 | 来源 |
 |-----|--------|------|
-| `ptab_img_bing` | `{blob, mime, name}` | Bing |
-| `ptab_img_api` | `{blob, mime, name}` | API |
-| `ptab_img_<id>` | `{blob, mime, name}` | Upload / RSS |
-| `ptab_folder_handle` | `FileSystemDirectoryHandle` | Folder |
-| `ptab_folder_files` | `["a.jpg","b.png",...]` | Folder |
+| `ptab_wallpaper_blob_bing` | `{ blob, mime, name }` | Bing |
+| `ptab_wallpaper_blob_api` | `{ blob, mime, name }` | API |
+| `ptab_wallpaper_blob_upload_<id>` | `{ blob, mime, name }` | Upload |
+| `ptab_wallpaper_blob_rss_<id>` | `{ blob, mime, name }` | RSS |
+| `ptab_wallpaper_folder_handle` | `FileSystemDirectoryHandle` | Folder |
+| `ptab_wallpaper_folder_files` | `[{ name, size, lastModified }, ...]` | Folder |
