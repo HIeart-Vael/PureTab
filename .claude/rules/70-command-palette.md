@@ -55,9 +55,9 @@
 
 ### 命令行为
 
-**add：** 表单包含名称和 URL。URL 为空拒绝；缺少协议自动补 `https://`；必须匹配 http/https host。名称为空时用域名。新增 URL 在全量 links 中去重，不区分普通/隐藏。隐藏面板中新增的链接自动加入 hidden。
+**add：** 表单包含名称和 URL。URL 为空拒绝；缺少协议自动补 `https://`；必须匹配 HTTPS host。名称为空时用域名。新增 URL 在全量 links 中去重，不区分普通/隐藏。隐藏面板中新增的链接自动加入 hidden。
 
-**fetch title：** URL 输入旁的下载按钮会尝试 GET 页面并解析 `<title>`。扩展模式首次使用会请求 `http://*/*` 和 `https://*/*` 可选权限；失败时回退域名。
+**fetch title：** URL 输入旁的下载按钮会尝试 GET HTTPS 页面并解析 `<title>`。扩展模式按当前 URL 的单个 origin 请求可选权限，例如 `https://example.com/*`；失败时回退域名。
 
 **edit：** 在当前面板范围内选择链接，编辑名称和 URL。编辑不改变 hidden 归属。
 
@@ -109,7 +109,7 @@
 
 ### URL 与安全
 
-- 只接受 http/https 链接。
+- 只接受 HTTPS 链接。
 - 缺少协议时自动补 `https://`。
 - 拒绝无法匹配主机名的 URL。
 - 去重基于完整 URL 字符串，跨普通/隐藏全量比较。

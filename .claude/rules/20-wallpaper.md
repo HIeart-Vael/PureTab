@@ -95,7 +95,7 @@ Bing 市场由当前界面语言映射决定，但只有在需要重新请求 Bi
 
 ### RSS 订阅
 
-RSS 配置为 sources 列表，最多 5 个。默认内置 NASA APOD 和 Bing RSSHub。每个 source 包含 `id/name/url/builtIn/test`，新增 source 初始是未测试状态。
+RSS 配置为 sources 列表，最多 5 个。默认内置 NASA APOD 和 Bing RSSHub。每个 source 包含 `id/name/url/builtIn/test`，新增 source 初始是未测试状态。RSS URL 只接受 HTTPS。
 
 设置页显示红/绿连通性点：
 
@@ -122,7 +122,7 @@ API 配置分为互斥的两类横向 tab：
 
 JSON 路径支持点号和数组索引，例如 `data.image.url` 或 `items[0].url`。如果路径为空或取值失败，会尝试常见字段：`url`、`imageUrl`、`image_url`、`src`、`image`、`wallpaper`。
 
-API 只支持 GET。当前版本没有 header/body/token 管理；401/403 会提示该接口可能需要鉴权，建议只能使用把 token 放在 URL 参数里的 GET 接口。
+API 只支持 HTTPS GET。当前版本没有 header/body/token 管理；401/403 会提示该接口可能需要鉴权，建议只能使用把 token 放在 URL 参数里的 GET 接口。
 
 API 测试会真实请求接口并下载图片，成功后保存测试结果到草稿内存。点击 `应用配置` 时，如果仍有本次测试结果，会复用该 Blob 写入 `ptab_wallpaper_blob_api`，并更新缩略图、preview、meta 和运行态；不会立刻重新请求一次。没有本次测试 Blob 但 source 的测试状态仍为绿色时，应用保存配置，运行时按刷新节奏请求。
 

@@ -1244,7 +1244,7 @@
         var code = err && err.code;
         var message = err && err.message ? err.message : String(err || '');
         var map = {
-            INVALID_RSS_URL: tr('rssInvalidUrl', '请输入 http:// 或 https:// 链接'),
+            INVALID_RSS_URL: tr('rssInvalidUrl', '请输入 https:// 链接'),
             NO_RSS_IMAGES: tr('rssNoImages', '测试失败：该 RSS 没有可用图片条目'),
             NO_USABLE_RSS_IMAGES: tr('rssNoUsableImages', '找到图片条目，但图片无法下载或生成缩略图'),
             RSS_PERMISSION_DENIED: tr('rssPermissionDenied', '没有获得该 RSS 地址的访问权限'),
@@ -1331,7 +1331,7 @@
             var name = document.getElementById('rssNameInput').value.trim();
             var url = document.getElementById('rssUrlInput').value.trim();
             if (config.sources.length >= 5) return setRssStatus(tr('rssLimit', '最多 5 个 RSS 源'));
-            if (!F.isHttpUrl(url)) return setRssStatus(tr('rssInvalidUrl', '请输入 http:// 或 https:// 链接'));
+            if (!F.isHttpsUrl(url)) return setRssStatus(tr('rssInvalidUrl', '请输入 https:// 链接'));
             var id = 'custom-' + F.generateId();
             config.sources.push({
                 id: id,
@@ -1435,7 +1435,7 @@
             var pathEl = document.getElementById('apiJsonPathInput');
             var list = apiType === 'json' ? config.jsonSources : config.imageSources;
             if (list.length >= 5) return showApiNotice(tr('apiLimit', '最多 5 个 API 源'), 'error');
-            if (!F.isHttpUrl(url)) return showApiNotice(tr('apiInvalidUrl', '请输入 http:// 或 https:// 链接'), 'error');
+            if (!F.isHttpsUrl(url)) return showApiNotice(tr('apiInvalidUrl', '请输入 https:// 链接'), 'error');
             var id = apiType + '-' + F.generateId();
             var source = {
                 id: id,
@@ -1479,7 +1479,7 @@
 
     function apiErrorMessage(err) {
         var map = {
-            INVALID_API_URL: tr('apiInvalidUrl', '请输入 http:// 或 https:// 链接'),
+            INVALID_API_URL: tr('apiInvalidUrl', '请输入 https:// 链接'),
             API_AUTH_REQUIRED: tr('apiAuthRequired', '该接口可能需要鉴权，当前版本仅支持把 token 放在 URL 参数里的 GET 接口'),
             API_CORS_OR_NETWORK: tr('apiCorsFailed', '请求失败，可能是 CORS、网络或权限限制'),
             API_TIMEOUT: tr('apiTimeout', 'API 请求超时'),

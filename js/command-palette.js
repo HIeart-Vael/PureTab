@@ -142,10 +142,22 @@
 
     function getFaviconUrl(url) {
         try {
-            var host = url.match(/^https?:\/\/([^\/]+)/);
+            var host = url.match(/^https:\/\/([^\/]+)/);
             if (!host) return null;
             return 'https://icons.duckduckgo.com/ip3/' + host[1] + '.ico';
         } catch (e) { return null; }
+    }
+
+    function normalizeHttpsUrl(value) {
+        var url = String(value || '').trim();
+        if (!url) return '';
+        if (!url.match(/^https?:\/\//)) url = 'https://' + url;
+        if (!url.match(/^https:\/\/[^\s\/]+\.[^\s\/]+/)) return '';
+        return url;
+    }
+
+    function urlHostLabel(url) {
+        return String(url || '').replace(/^https?:\/\//, '').replace(/\/.*/, '');
     }
 
     function letterColor(letter) {
@@ -789,16 +801,14 @@
         } catch (e) { callback(null); }
     }
 
-    var _fetchPermRequested = false;
-    var _fetchPermGranted = false;
+    var _fetchPermOrigins = {};
 
     function handleFetchTitle() {
         var urlEl = document.getElementById('cpFormURL');
         var nameEl = document.getElementById('cpFormName');
         var btn = document.getElementById('cpFormFetchBtn');
-        var url = (urlEl && urlEl.value || '').trim();
+        var url = normalizeHttpsUrl(urlEl && urlEl.value);
         if (!url) return;
-        if (!url.match(/^https?:\/\//)) url = 'https://' + url;
 
         var isExt = typeof chrome !== 'undefined' && chrome.permissions && !!chrome.runtime && !!chrome.runtime.id;
         var doFetch = function () {
@@ -812,7 +822,7 @@
                 if (title) {
                     nameEl.value = title;
                 } else {
-                    nameEl.value = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+                    nameEl.value = urlHostLabel(url);
                 }
                 nameEl.focus();
             });
@@ -823,25 +833,33 @@
             return;
         }
 
-        if (_fetchPermGranted) { doFetch(); return; }
-
-        if (!_fetchPermRequested) {
-            _fetchPermRequested = true;
-            chrome.permissions.request({
-                origins: ['https://*/*', 'http://*/*']
-            }, function (granted) {
-                _fetchPermGranted = granted;
-                if (granted) {
-                    doFetch();
-                } else {
-                    nameEl.value = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
-                    nameEl.focus();
-                }
-            });
-        } else {
-            nameEl.value = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+        var origin;
+        try {
+            origin = new URL(url).origin + '/*';
+        } catch (e) {
+            nameEl.value = urlHostLabel(url);
             nameEl.focus();
+            return;
         }
+
+        if (_fetchPermOrigins[origin]) { doFetch(); return; }
+
+        chrome.permissions.contains({ origins: [origin] }, function (hasPermission) {
+            if (hasPermission) {
+                _fetchPermOrigins[origin] = true;
+                doFetch();
+                return;
+            }
+            chrome.permissions.request({ origins: [origin] }, function (granted) {
+                if (granted) {
+                    _fetchPermOrigins[origin] = true;
+                    doFetch();
+                    return;
+                }
+                nameEl.value = urlHostLabel(url);
+                nameEl.focus();
+            });
+        });
     }
 
     function doAddOrEditSubmit(isEdit, editId) {
@@ -852,15 +870,15 @@
         var url = (urlEl && urlEl.value || '').trim();
 
         if (!url) { errorEl.textContent = t('urlRequired'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return; }
-        if (!url.match(/^https?:\/\//)) url = 'https://' + url;
-        if (!url.match(/^https?:\/\/[^\s\/]+\.[^\s\/]+/)) { errorEl.textContent = t('urlRequired'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return; }
+        url = normalizeHttpsUrl(url);
+        if (!url) { errorEl.textContent = t('urlRequired'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return; }
 
         var shortcuts = loadShortcuts();
         if (shortcuts.some(function (s) { return s.url.toLowerCase() === url.toLowerCase() && (!isEdit || s.id !== editId); })) {
             errorEl.textContent = t('duplicateURL'); errorEl.style.display = 'block'; urlEl.classList.add('error'); return;
         }
 
-        if (!name) name = url.replace(/^https?:\/\//, '').replace(/\/.*/, '');
+        if (!name) name = urlHostLabel(url);
 
         if (isEdit) {
             for (var i = 0; i < shortcuts.length; i++) {

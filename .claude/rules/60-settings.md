@@ -141,7 +141,7 @@ Bing 无额外配置。说明当前语言会决定后续 Bing 市场。
 - 摘要位置、摘要展示方式、显示摘要、显示正文链接。
 - 状态/测试提示。
 
-新增 source 初始为红点；测试通过后变绿。URL 必须是 http/https。删除最后一个 RSS source 时恢复默认内置 sources。
+新增 source 初始为红点；测试通过后变绿。URL 必须是 HTTPS。删除最后一个 RSS source 时恢复默认内置 sources。
 
 ### API 配置区
 

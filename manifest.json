@@ -8,8 +8,7 @@
         "newtab": "index.html"
     },
     "optional_host_permissions": [
-        "https://*/*",
-        "http://*/*"
+        "https://*/*"
     ],
     "icons": {
         "16": "icon/icon16.png",
@@ -20,6 +19,6 @@
         "search"
     ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' https: http: data: blob:; style-src 'self'"
+        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' https: data: blob:; style-src 'self'"
     }
 }

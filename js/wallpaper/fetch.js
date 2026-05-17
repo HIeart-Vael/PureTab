@@ -98,10 +98,10 @@
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
 
-    function isHttpUrl(value) {
+    function isHttpsUrl(value) {
         try {
             var url = new URL(String(value || '').trim());
-            return url.protocol === 'http:' || url.protocol === 'https:';
+            return url.protocol === 'https:';
         } catch (e) {
             return false;
         }
@@ -194,7 +194,7 @@
         var preferred = ['url', 'imageUrl', 'image_url', 'src', 'image', 'wallpaper'];
 
         function valid(value) {
-            return typeof value === 'string' && isHttpUrl(value) && /\.(avif|bmp|gif|jpe?g|png|webp)(\?|#|$)/i.test(value);
+            return typeof value === 'string' && isHttpsUrl(value) && /\.(avif|bmp|gif|jpe?g|png|webp)(\?|#|$)/i.test(value);
         }
 
         function walk(value, depth) {
@@ -233,7 +233,7 @@
     }
 
     function fetchApiResponse(url, timeoutMs) {
-        if (!isHttpUrl(url)) return Promise.reject(apiError('INVALID_API_URL', 'invalid url'));
+        if (!isHttpsUrl(url)) return Promise.reject(apiError('INVALID_API_URL', 'invalid url'));
         return fetchWithWebFallback(url, timeoutMs || 8000, function (response) {
             return response;
         }).catch(function (err) {
@@ -326,7 +326,7 @@
         ];
         for (var i = 0; i < candidates.length; i++) {
             var abs = absolutizeUrl(candidates[i], baseUrl);
-            if (isHttpUrl(abs)) return abs;
+            if (isHttpsUrl(abs)) return abs;
         }
         return '';
     }
@@ -357,7 +357,7 @@
                 stableKey: source.id + ':' + (link || imageUrl || title || index)
             };
         }).filter(function (item) {
-            return isHttpUrl(item.imageUrl);
+            return isHttpsUrl(item.imageUrl);
         }).sort(function (a, b) {
             return (b.publishedAt || 0) - (a.publishedAt || 0);
         }).slice(0, 12);
@@ -432,7 +432,7 @@
     }
 
     function testRssSource(source) {
-        if (!source || !isHttpUrl(source.url)) return Promise.reject(rssError('INVALID_RSS_URL', 'invalid url'));
+        if (!source || !isHttpsUrl(source.url)) return Promise.reject(rssError('INVALID_RSS_URL', 'invalid url'));
         return fetchText(source.url, 8000).then(function (text) {
             var items = parseRssItems(text, source.url, source);
             if (!items.length) throw rssError('NO_RSS_IMAGES', 'no image entries');
@@ -441,7 +441,7 @@
     }
 
     function refreshRssSource(source) {
-        if (!source || !isHttpUrl(source.url)) return Promise.reject(rssError('INVALID_RSS_URL', 'invalid url'));
+        if (!source || !isHttpsUrl(source.url)) return Promise.reject(rssError('INVALID_RSS_URL', 'invalid url'));
         return fetchText(source.url, 8000).then(function (text) {
             var items = parseRssItems(text, source.url, source);
             if (!items.length) throw rssError('NO_RSS_IMAGES', 'no image entries');
@@ -450,7 +450,7 @@
     }
 
     function testApiSource(source, apiType) {
-        if (!source || !isHttpUrl(source.url)) return Promise.reject(apiError('INVALID_API_URL', 'invalid url'));
+        if (!source || !isHttpsUrl(source.url)) return Promise.reject(apiError('INVALID_API_URL', 'invalid url'));
         apiType = apiType === 'json' ? 'json' : 'image';
         if (apiType === 'image') {
             return fetchApiResponse(source.url, 8000).then(function (response) {
@@ -467,7 +467,7 @@
                 throw apiError('API_JSON_PARSE_FAILED', 'json parse failed');
             }
             var imageUrl = resolveJsonPath(data, source.jsonPath || '') || findApiImageUrl(data);
-            if (!imageUrl || !isHttpUrl(imageUrl)) throw apiError('API_JSON_PATH_FAILED', 'image url not found');
+            if (!imageUrl || !isHttpsUrl(imageUrl)) throw apiError('API_JSON_PATH_FAILED', 'image url not found');
             return fetchApiResponse(imageUrl, 8000).then(function (imageResponse) {
                 return blobFromImageResponse(imageResponse, imageUrl);
             });
@@ -535,7 +535,7 @@
         downloadBingBlob: downloadBingBlob,
         cacheBingBlob: cacheBingBlob,
         generateId: generateId,
-        isHttpUrl: isHttpUrl,
+        isHttpsUrl: isHttpsUrl,
         apiError: apiError,
         resolveJsonPath: resolveJsonPath,
         findApiImageUrl: findApiImageUrl,
