@@ -117,6 +117,16 @@
     color: var(--text-primary);
 }
 
+.cp-pinned-btn:focus-visible,
+.cp-form-fetch-btn:focus-visible,
+.cp-form-submit:focus-visible,
+.cp-clear-btn-yes:focus-visible,
+.cp-clear-btn-no:focus-visible {
+    outline: none;
+    border-color: rgba(var(--accent-rgb), 0.70);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
+}
+
 .cp-pinned-btn:active {
     background: var(--cp-row-active);
     border-color: rgba(var(--accent-rgb), 0.30);
@@ -146,9 +156,9 @@
 }
 
 .cp-search-input:focus {
-    border-color: rgba(var(--accent-rgb), 0.42);
+    border-color: rgba(var(--accent-rgb), 0.70);
     background: var(--cp-field-bg-hover);
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.16);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
     outline: none;
 }
 
@@ -365,9 +375,9 @@
 }
 
 .cp-form-input:focus {
-    border-color: rgba(var(--accent-rgb), 0.42);
+    border-color: rgba(var(--accent-rgb), 0.70);
     background: var(--cp-field-bg-hover);
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.16);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
 }
 
 .cp-form-input::placeholder {
@@ -447,14 +457,14 @@
 .cp-form-submit {
     width: 100%;
     margin-top: 4px;
-    background: rgba(var(--accent-rgb), 0.16);
-    border: 1px solid rgba(var(--accent-rgb), 0.34);
+    background: rgba(var(--accent-rgb), 0.18);
+    border: 1px solid rgba(var(--accent-rgb), 0.52);
     color: var(--text-primary);
 }
 
 .cp-form-submit:hover {
-    background: rgba(var(--accent-rgb), 0.24);
-    border-color: rgba(var(--accent-rgb), 0.48);
+    background: rgba(var(--accent-rgb), 0.26);
+    border-color: rgba(var(--accent-rgb), 0.72);
 }
 
 .cp-form-submit:active,

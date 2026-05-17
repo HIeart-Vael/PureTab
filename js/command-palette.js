@@ -155,28 +155,6 @@
         return colors[idx];
     }
 
-    function renderIconEl(iconData, name, cls) {
-        cls = cls || 'cp-item-icon';
-        var el = document.createElement('div');
-        el.className = cls;
-        if (iconData && iconData.indexOf('LETTER:') !== 0) {
-            var img = document.createElement('img');
-            img.src = iconData;
-            img.onerror = function () {
-                var letter = (name || '?')[0].toUpperCase();
-                el.style.background = letterColor(letter);
-                el.textContent = letter;
-                img.remove();
-            };
-            el.appendChild(img);
-        } else {
-            var letter = (name || '?')[0].toUpperCase();
-            el.style.background = letterColor(letter);
-            el.textContent = letter;
-        }
-        return el;
-    }
-
     function isDDGPlaceholder(img) {
         if (img.naturalWidth !== 48 || img.naturalHeight !== 48) return false;
         try {
@@ -207,7 +185,7 @@
         cpPinnedBar.innerHTML = '';
         var homeBtn = document.createElement('span');
         homeBtn.className = 'cp-pinned-btn cp-home-btn';
-        homeBtn.title = '返回主列表';
+        homeBtn.title = t('backToList');
         homeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 5.5L7 1l5.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4.5V13h3.2V8.5h1.6V13H11V4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         homeBtn.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -229,7 +207,7 @@
         });
         var toggleBtn = document.createElement('span');
         toggleBtn.className = 'cp-pinned-btn cp-view-toggle';
-        toggleBtn.title = '切换视图模式';
+        toggleBtn.title = t('toggleView');
         if (cpViewMode === 'icon') {
             toggleBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0.5" y="0.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/><rect x="8" y="0.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/><rect x="0.5" y="8" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/><rect x="8" y="8" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.9"/></svg>';
         } else {
@@ -255,16 +233,43 @@
         cpPinnedBar.scrollLeft += e.deltaY;
     }
 
+    function shortcutIsHidden(shortcut, hidden) {
+        return hidden.indexOf(shortcut.id) !== -1;
+    }
+
+    function shortcutsForHiddenMode(hiddenMode) {
+        var hidden = loadHidden();
+        return loadShortcuts().filter(function (shortcut) {
+            return hiddenMode ? shortcutIsHidden(shortcut, hidden) : !shortcutIsHidden(shortcut, hidden);
+        });
+    }
+
+    function shortcutsForCurrentMode() {
+        return shortcutsForHiddenMode(isHiddenMode);
+    }
+
+    function shortcutsForGridMode(mode) {
+        if (mode === 'hide') return shortcutsForHiddenMode(false);
+        if (mode === 'unhide') return shortcutsForHiddenMode(true);
+        return shortcutsForCurrentMode();
+    }
+
+    function filterShortcutsByTerm(shortcuts, term) {
+        term = (term || '').toLowerCase();
+        if (!term) return shortcuts;
+        return shortcuts.filter(function (shortcut) {
+            return shortcut.name.toLowerCase().indexOf(term) !== -1 ||
+                shortcut.url.toLowerCase().indexOf(term) !== -1;
+        });
+    }
+
+    function shortcutById(id) {
+        return loadShortcuts().find(function (shortcut) { return shortcut.id === id; });
+    }
+
     function renderShortcutList(filter) {
         filter = (filter || '').toLowerCase();
-        var hidden = loadHidden();
-        var allShortcuts = loadShortcuts();
-        var shortcuts;
-        if (isHiddenMode) {
-            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
-        } else {
-            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
-        }
+        var shortcuts = shortcutsForCurrentMode();
         var icons = loadIcons();
         var showRec = !filter && !isHiddenMode && loadRecommend();
 
@@ -280,12 +285,9 @@
         rest.sort(function (a, b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()); });
 
         if (filter) {
-            var allFiltered = shortcuts.filter(function (s) {
-                return s.name.toLowerCase().indexOf(filter) !== -1 || s.url.toLowerCase().indexOf(filter) !== -1;
-            });
             recommended = [];
             recommendedIds = {};
-            rest = allFiltered;
+            rest = filterShortcutsByTerm(shortcuts, filter);
         }
 
         var html = '';
@@ -338,27 +340,31 @@
         cpKeyIndex = 0;
     }
 
-    function buildGridIconHTML(s, iconData) {
+    function buildGridIconHTML(s, iconData, actionClass) {
         var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
         var letter = isLetter ? (iconData ? iconData.replace('LETTER:', '') : s.name[0].toUpperCase()) : s.name[0].toUpperCase();
         var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-        return '<div class="cp-grid-item has-label" data-id="' + s.id + '">' +
+        var action = actionClass ? '<button class="' + actionClass + '" data-id="' + escapeHTML(s.id) + '"></button>' : '';
+        return '<div class="cp-grid-item has-label" data-id="' + escapeHTML(s.id) + '">' +
             '<div class="cp-grid-item-icon-wrap">' +
             '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>' +
+            action +
             '</div>' +
             '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>' +
             '</div>';
     }
 
-    function buildItemHTML(s, iconData, extraClass) {
+    function buildItemHTML(s, iconData, extraClass, actionClass) {
         extraClass = extraClass || '';
         var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
         var letter = isLetter ? (iconData ? iconData.replace('LETTER:', '') : s.name[0].toUpperCase()) : s.name[0].toUpperCase();
         var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-        return '<div class="cp-item' + (extraClass ? ' ' + extraClass : '') + '" data-id="' + s.id + '">' +
+        var action = actionClass ? '<button class="' + actionClass + '" data-id="' + escapeHTML(s.id) + '"></button>' : '';
+        return '<div class="cp-item' + (extraClass ? ' ' + extraClass : '') + '" data-id="' + escapeHTML(s.id) + '">' +
             '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>' +
             '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>' +
             '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>' +
+            action +
             '</div>';
     }
 
@@ -454,14 +460,7 @@
     }
 
     function renderGrid(mode, page) {
-        var allShortcuts = loadShortcuts();
-        var hidden = loadHidden();
-        var shortcuts;
-        if (isHiddenMode) {
-            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
-        } else {
-            shortcuts = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
-        }
+        var shortcuts = shortcutsForCurrentMode();
         var icons = loadIcons();
         var totalPages = 1;
         var items = shortcuts;
@@ -489,18 +488,7 @@
             html += '<div class="cp-grid">';
             for (var i = 0; i < cpItemsPerPage; i++) {
                 if (i < items.length) {
-                    var s = items[i];
-                    var letter = s.name[0].toUpperCase();
-                    var iconData = icons[s.id];
-                    var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
-                    var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-                    html += '<div class="cp-grid-item has-label" data-id="' + s.id + '">';
-                    html += '<div class="cp-grid-item-icon-wrap">';
-                    html += '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
-                    if (mode === 'delete') html += '<button class="cp-grid-item-del" data-id="' + s.id + '"></button>';
-                    html += '</div>';
-                    html += '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>';
-                    html += '</div>';
+                    html += buildGridIconHTML(items[i], icons[items[i].id], mode === 'delete' ? 'cp-grid-item-del' : '');
                 } else {
                     html += '<div class="cp-grid-item has-label empty"></div>';
                 }
@@ -508,18 +496,7 @@
             html += '</div>';
         } else {
             items.forEach(function (s) {
-                var letter = s.name[0].toUpperCase();
-                var iconData = icons[s.id];
-                var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
-                var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-                html += '<div class="cp-item' + (mode === 'edit' ? '' : '') + '" data-id="' + s.id + '">';
-                html += '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
-                html += '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>';
-                html += '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>';
-                if (mode === 'delete') {
-                    html += '<button class="cp-item-del" data-id="' + s.id + '"></button>';
-                }
-                html += '</div>';
+                html += buildItemHTML(s, icons[s.id], '', mode === 'delete' ? 'cp-item-del' : '');
             });
         }
 
@@ -641,9 +618,7 @@
         recents.forEach(function (rid) {
             var s = allShortcuts.find(function (sc) { return sc.id === rid; });
             if (!s) return;
-            var isHiddenItem = hidden.indexOf(s.id) !== -1;
-            if (isHiddenMode) { if (isHiddenItem) items.push(s); }
-            else { if (!isHiddenItem) items.push(s); }
+            if (shortcutIsHidden(s, hidden) === isHiddenMode) items.push(s);
         });
         if (!items.length) {
             html += '<div class="cp-empty">' + t('noRecentShortcuts') + '</div>';
@@ -932,8 +907,7 @@
     }
 
     function handleEditClick(id) {
-        var shortcuts = loadShortcuts();
-        var item = shortcuts.find(function (s) { return s.id === id; });
+        var item = shortcutById(id);
         if (!item) return;
         cpCurrentMode = 'add';
         cpEditTarget = id;
@@ -961,18 +935,7 @@
         var modeMap = { 'deleteGrid': 'delete', 'editGrid': 'edit', 'hideGrid': 'hide', 'unhideGrid': 'unhide' };
         var mode = modeMap[cpCurrentMode];
         if (!mode) return;
-        var allShortcuts = loadShortcuts();
-        var hidden = loadHidden();
-        var filtered;
-        if (cpCurrentMode === 'unhideGrid') {
-            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
-        } else if (cpCurrentMode === 'hideGrid') {
-            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
-        } else if (isHiddenMode) {
-            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
-        } else {
-            filtered = allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
-        }
+        var filtered = shortcutsForGridMode(mode);
         var totalPages = Math.max(1, Math.ceil(filtered.length / cpItemsPerPage));
         if (e.deltaY > 0 && cpCurrentPage < totalPages) {
             cpCurrentPage++;
@@ -988,16 +951,7 @@
     }
 
     function handleIconPageScroll(e) {
-        var hidden = loadHidden();
-        var allShortcuts = loadShortcuts();
-        var visible = isHiddenMode
-            ? allShortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; })
-            : allShortcuts.filter(function (s) { return hidden.indexOf(s.id) === -1; });
-        if (cpSearchTerm) {
-            visible = visible.filter(function (s) {
-                return s.name.toLowerCase().indexOf(cpSearchTerm) !== -1 || s.url.toLowerCase().indexOf(cpSearchTerm) !== -1;
-            });
-        }
+        var visible = filterShortcutsByTerm(shortcutsForCurrentMode(), cpSearchTerm);
         if (!cpSearchTerm && !isHiddenMode && loadRecommend()) {
             var byFreq = visible.slice().sort(function (a, b) { return (b.freq || 0) - (a.freq || 0); });
             var recIds = {};
@@ -1045,8 +999,7 @@
     }
 
     function handleShortcutClick(id) {
-        var shortcuts = loadShortcuts();
-        var item = shortcuts.find(function (s) { return s.id === id; });
+        var item = shortcutById(id);
         if (!item) return;
         recordAccess(id);
         window.open(item.url, '_self');
@@ -1119,8 +1072,7 @@
     }
 
     function renderHideGrid(page) {
-        var hidden = loadHidden();
-        var shortcuts = loadShortcuts().filter(function (s) { return hidden.indexOf(s.id) === -1; });
+        var shortcuts = shortcutsForHiddenMode(false);
         var icons = loadIcons();
         var totalPages, start, items, sectionTitle;
 
@@ -1142,35 +1094,15 @@
         var html = '<div class="cp-section-title">' + sectionTitle + '</div>';
         if (cpViewMode === 'icon') {
             html += '<div class="cp-grid">';
-            for (var i = 0; i < (cpViewMode === 'icon' ? cpItemsPerPage : items.length); i++) {
+            for (var i = 0; i < cpItemsPerPage; i++) {
                 if (i < items.length) {
-                    var s = items[i];
-                    var letter = s.name[0].toUpperCase();
-                    var iconData = icons[s.id];
-                    var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
-                    var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-                    html += '<div class="cp-grid-item has-label" data-id="' + s.id + '">';
-                    html += '<div class="cp-grid-item-icon-wrap">';
-                    html += '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
-                    html += '<button class="cp-grid-item-del cp-hide-btn" data-id="' + s.id + '"></button>';
-                    html += '</div>';
-                    html += '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>';
-                    html += '</div>';
-                } else if (cpViewMode === 'icon') { html += '<div class="cp-grid-item has-label empty"></div>'; }
+                    html += buildGridIconHTML(items[i], icons[items[i].id], 'cp-grid-item-del cp-hide-btn');
+                } else { html += '<div class="cp-grid-item has-label empty"></div>'; }
             }
             html += '</div>';
         } else {
             items.forEach(function (s) {
-                var letter = s.name[0].toUpperCase();
-                var iconData = icons[s.id];
-                var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
-                var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-                html += '<div class="cp-item" data-id="' + s.id + '">';
-                html += '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
-                html += '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>';
-                html += '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>';
-                html += '<button class="cp-item-del cp-hide-btn" data-id="' + s.id + '"></button>';
-                html += '</div>';
+                html += buildItemHTML(s, icons[s.id], '', 'cp-item-del cp-hide-btn');
             });
         }
         if (cpViewMode === 'icon' && totalPages > 1) html += renderPaginationHTML(cpCurrentPage, totalPages);
@@ -1190,10 +1122,8 @@
     }
 
     function renderUnhideGrid(page) {
-        var shortcuts = loadShortcuts();
-        var hidden = loadHidden();
         var icons = loadIcons();
-        var hiddenItems = shortcuts.filter(function (s) { return hidden.indexOf(s.id) !== -1; });
+        var hiddenItems = shortcutsForHiddenMode(true);
         var totalPages, start, items;
 
         if (cpViewMode === 'icon') {
@@ -1215,33 +1145,13 @@
             html += '<div class="cp-grid">';
             for (var i = 0; i < cpItemsPerPage; i++) {
                 if (i < items.length) {
-                    var s = items[i];
-                    var letter = s.name[0].toUpperCase();
-                    var iconData = icons[s.id];
-                    var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
-                    var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-                    html += '<div class="cp-grid-item has-label" data-id="' + s.id + '">';
-                    html += '<div class="cp-grid-item-icon-wrap">';
-                    html += '<div class="cp-grid-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
-                    html += '<button class="cp-grid-item-del unhide cp-unhide-btn" data-id="' + s.id + '"></button>';
-                    html += '</div>';
-                    html += '<div class="cp-grid-item-label">' + escapeHTML(s.name) + '</div>';
-                    html += '</div>';
+                    html += buildGridIconHTML(items[i], icons[items[i].id], 'cp-grid-item-del unhide cp-unhide-btn');
                 } else { html += '<div class="cp-grid-item has-label empty"></div>'; }
             }
             html += '</div>';
         } else {
             items.forEach(function (s) {
-                var letter = s.name[0].toUpperCase();
-                var iconData = icons[s.id];
-                var isLetter = !iconData || iconData.indexOf('LETTER:') === 0;
-                var inner = !isLetter ? '<img src="' + iconData + '">' : letter;
-                html += '<div class="cp-item" data-id="' + s.id + '">';
-                html += '<div class="cp-item-icon" data-letter="' + letter + '" data-letter-color="' + letterColor(letter) + '">' + inner + '</div>';
-                html += '<span class="cp-item-name">' + escapeHTML(s.name) + '</span>';
-                html += '<span class="cp-item-url">' + escapeHTML(s.url.replace(/^https?:\/\//, '')) + '</span>';
-                html += '<button class="cp-item-del cp-unhide-btn unhide" data-id="' + s.id + '"></button>';
-                html += '</div>';
+                html += buildItemHTML(s, icons[s.id], '', 'cp-item-del cp-unhide-btn unhide');
             });
         }
         if (cpViewMode === 'icon' && totalPages > 1) html += renderPaginationHTML(cpCurrentPage, totalPages);

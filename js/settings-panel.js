@@ -40,6 +40,7 @@
     var DEFAULT_WALLPAPER_BLUR = 0;
     var DEFAULT_WALLPAPER_BLUR_MAX = 15;
     var DEFAULT_UI_RADIUS = 'soft';
+    var BACKUP_KDF_ITERATIONS = 150000;
 
     var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id;
 
@@ -131,13 +132,11 @@
     var isRecording = null;
     var isHydratingSettings = false;
     var _keepGalleryOpen = false;
-    var wallpaperBlurApplyTimer = null;
     var wallpaperBlurSaveTimer = null;
     var wallpaperBlurPreviewToken = 0;
     var activeCustomSelect = null;
     var fullInitialized = false;
     var useBootstrapShell = false;
-    var pendingRssWallpaperApply = false;
     var wallpaperDraft = null;
     var wallpaperDraftOriginal = '';
     var wallpaperDraftApiTestResult = null;
@@ -589,10 +588,6 @@
             wrapper.appendChild(menu);
             syncCustomSelect(wrapper);
         });
-    }
-
-    function unavailableSourceHTML(message) {
-        return '<p class="source-config-note">' + message + '</p>';
     }
 
     function clonePlain(value) {
@@ -1131,18 +1126,6 @@
         button.disabled = !!testing;
         button.classList.toggle('testing', !!testing);
         button.textContent = testing ? tr('rssTesting', '正在测试...') : button.dataset.idleLabel;
-    }
-
-    function markRssWallpaperApplyPending() {
-        pendingRssWallpaperApply = true;
-    }
-
-    function applyPendingRssWallpaper() {
-        if (!pendingRssWallpaperApply) return;
-        pendingRssWallpaperApply = false;
-        if (D.compatMode(D.getActiveSource()) === 'rss' && window.reloadWallpaper) {
-            window.reloadWallpaper();
-        }
     }
 
     function folderStatusText() {
@@ -1720,7 +1703,7 @@
         var bytes = new TextEncoder().encode(json);
         var salt = crypto.getRandomValues(new Uint8Array(16));
         var iv = crypto.getRandomValues(new Uint8Array(12));
-        var iterations = 150000;
+        var iterations = BACKUP_KDF_ITERATIONS;
         compressBackupBytes(bytes).then(function (compressed) {
             return deriveBackupKey(pass, salt, iterations).then(function (key) {
                 return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, compressed.bytes).then(function (cipherBuffer) {
@@ -1753,7 +1736,7 @@
         var salt = base64ToBytes(wrapper.salt);
         var iv = base64ToBytes(wrapper.iv);
         var cipher = base64ToBytes(wrapper.data);
-        var iterations = parseInt(wrapper.iterations, 10) || 150000;
+        var iterations = parseInt(wrapper.iterations, 10) || BACKUP_KDF_ITERATIONS;
         return deriveBackupKey(passphrase, salt, iterations).then(function (key) {
             return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, cipher);
         }).then(function (plainBuffer) {
@@ -1907,15 +1890,6 @@
         saveAllSettings();
     }
 
-    function applySearchAlign(align) {
-        var current = searchPositionParts(searchPosition, searchAlign);
-        searchAlign = validValue(align, ['left', 'center', 'right'], DEFAULT_SEARCH_ALIGN);
-        searchPosition = current.value;
-        searchBar.setAttribute('data-position', searchPosition);
-        searchBar.setAttribute('data-align', searchAlign);
-        saveAllSettings();
-    }
-
     function applySearchIconPosition(value) {
         searchIconPosition = validValue(value, ['left', 'right'], DEFAULT_SEARCH_ICON_POSITION);
         searchBar.setAttribute('data-icon-position', searchIconPosition);
@@ -1977,14 +1951,6 @@
         }
     }
 
-    function queueWallpaperBlurApply() {
-        clearTimeout(wallpaperBlurApplyTimer);
-        wallpaperBlurApplyTimer = setTimeout(function () {
-            setWallpaperBlurCss(wallpaperBlur);
-            wallpaperBlurApplyTimer = null;
-        }, 120);
-    }
-
     function queueWallpaperBlurSave() {
         clearTimeout(wallpaperBlurSaveTimer);
         wallpaperBlurSaveTimer = setTimeout(function () {
@@ -2006,9 +1972,7 @@
             queueWallpaperBlurSave();
             return;
         }
-        clearTimeout(wallpaperBlurApplyTimer);
         clearTimeout(wallpaperBlurSaveTimer);
-        wallpaperBlurApplyTimer = null;
         wallpaperBlurSaveTimer = null;
         setWallpaperBlurCss(wallpaperBlur);
         syncWallpaperBlurPerformanceMode();
@@ -3126,29 +3090,6 @@
         return D.idbDelete(D.imgKey(id)).then(function () {
             refreshGallery();
         }).catch(function (e) { warn('Local', 'delete blob failed: ' + (e && e.message)); });
-    }
-
-    function resetToBing() {
-        var order = D.loadOrder();
-        var count = order.length;
-        if (count > 1 && !confirm(t('resetConfirm'))) return;
-
-        currentMode = 'bing';
-        removeGallery();
-        D.savePreview(null);
-        D.saveThumbs({});
-        if (D.saveBlurThumbs) D.saveBlurThumbs({});
-        D.clearCaches();
-        D.saveMeta({ bing: {} });
-        D.saveOrder([]);
-        D.saveActiveIndex(0);
-        D.setActiveSource('bing');
-
-        return D.idbDeleteMany(order.map(function (id) { return D.imgKey(id); })).then(function () {
-            if (window.reloadWallpaper) window.reloadWallpaper();
-        }).then(function () {
-            closeSettings();
-        }).catch(function () { closeSettings(); });
     }
 
     // ================================================================

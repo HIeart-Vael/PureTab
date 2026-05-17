@@ -43,6 +43,12 @@
     // ================================================================
 
     var IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id;
+    var SEARCH_URLS = {
+        google: 'https://www.google.com/search?q=',
+        bing: 'https://www.bing.com/search?q=',
+        baidu: 'https://www.baidu.com/s?wd=',
+        duckduckgo: 'https://duckduckgo.com/?q='
+    };
 
     // ================================================================
     // DOM 元素
@@ -860,10 +866,9 @@
     var doSearch = function (query) {
         var term = String(query || '').trim();
         if (!term) return;
-        var urls = { google: 'https://www.google.com/search?q=', bing: 'https://www.bing.com/search?q=', baidu: 'https://www.baidu.com/s?wd=', duckduckgo: 'https://duckduckgo.com/?q=' };
         if (D && D.addSearchHistory) D.addSearchHistory(term);
         hideSearchHistory();
-        window.open(urls[SP.getEngine()] + encodeURIComponent(term), '_self');
+        window.open((SEARCH_URLS[SP.getEngine()] || SEARCH_URLS.google) + encodeURIComponent(term), '_self');
     };
 
     // ================================================================

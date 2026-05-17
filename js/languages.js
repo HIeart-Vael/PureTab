@@ -756,7 +756,9 @@ window.I18N = {
         normalModeHint: 'Normal mode — press Esc to close then Ctrl+Shift+K',
         hideShortcutTitle: 'Hide Shortcuts',
         hiddenShortcuts: 'Hidden',
-        noHiddenShortcuts: 'No hidden shortcuts'
+        noHiddenShortcuts: 'No hidden shortcuts',
+        backToList: 'Back to list',
+        toggleView: 'Toggle view'
     };
     var zhCN = {
         recommend: '推荐',
@@ -802,7 +804,9 @@ window.I18N = {
         normalModeHint: '当前普通模式 — 请按 Esc 关闭后再按 Ctrl+Shift+K',
         hideShortcutTitle: '隐藏快捷链接',
         hiddenShortcuts: '已隐藏',
-        noHiddenShortcuts: '没有隐藏的快捷链接'
+        noHiddenShortcuts: '没有隐藏的快捷链接',
+        backToList: '返回主列表',
+        toggleView: '切换视图模式'
     };
     for (var lang in window.I18N) {
         var base = (lang === 'zh-CN') ? zhCN : newKeys;
