@@ -868,6 +868,23 @@
         if (!term) return;
         if (D && D.addSearchHistory) D.addSearchHistory(term);
         hideSearchHistory();
+        if (IS_EXTENSION && typeof chrome !== 'undefined' && chrome.search && typeof chrome.search.query === 'function') {
+            try {
+                var result = chrome.search.query({
+                    text: term,
+                    disposition: 'CURRENT_TAB'
+                });
+                if (result && typeof result.catch === 'function') {
+                    result.catch(function (e) {
+                        warn('Search', 'default search failed: ' + (e && e.message ? e.message : e));
+                        window.open((SEARCH_URLS[SP.getEngine()] || SEARCH_URLS.google) + encodeURIComponent(term), '_self');
+                    });
+                }
+                return;
+            } catch (e) {
+                warn('Search', 'default search unavailable: ' + (e && e.message ? e.message : e));
+            }
+        }
         window.open((SEARCH_URLS[SP.getEngine()] || SEARCH_URLS.google) + encodeURIComponent(term), '_self');
     };
 
