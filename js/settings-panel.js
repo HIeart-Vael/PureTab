@@ -680,7 +680,7 @@
     }
 
     function buildRssConfigHTML() {
-        var config = D.loadRssConfig();
+        var config = currentWallpaperDraft().providers.rss.config;
         var state = D.loadWallpaper().providers.rss.state || {};
         function selected(value, current) { return String(value) === String(current) ? ' selected' : ''; }
         var rows = config.sources.map(function (source) {
@@ -898,40 +898,12 @@
                 if (e.target.closest('button, input, label')) return;
                 var drawer = header.parentElement;
                 var clickedSource = drawer.dataset.source;
-
-                modalContent.querySelectorAll('.source-drawer').forEach(function (d) { d.classList.remove('active'); });
-
-                var nextMode = clickedSource === 'upload' ? 'local' : clickedSource;
-
-                if (nextMode !== currentMode) {
-                    if (nextMode !== 'bing' && nextMode !== 'local' && nextMode !== 'rss') {
-                        drawer.classList.add('active');
-                        return;
-                    }
-                    if (nextMode === 'rss') {
-                        currentMode = 'rss';
-                        D.setActiveSource('rss');
-                        markRssWallpaperApplyPending();
-                        drawer.classList.add('active');
-                        refreshGallery();
-                        return;
-                    }
-                    if (nextMode === 'bing' && currentMode === 'local' && D.loadOrder().length) {
-                        drawer.classList.add('active');
-                        resetToBing();
-                        return;
-                    }
-                    currentMode = nextMode;
-                    if (D && (nextMode === 'bing' || nextMode === 'local')) {
-                        D.setActiveSource(nextMode);
-                    }
-                    drawer.classList.add('active');
-                    refreshGallery();
-                    if (nextMode === 'local' && !D.loadOrder().length) return;
-                    if (window.reloadWallpaper) window.reloadWallpaper();
-                } else {
-                    drawer.classList.add('active');
-                }
+                var draft = currentWallpaperDraft();
+                draft.activeSource = clickedSource === 'upload' ? 'upload' : clickedSource;
+                modalContent.querySelectorAll('.source-drawer').forEach(function (d) {
+                    d.classList.toggle('active', d.dataset.source === clickedSource);
+                });
+                refreshWallpaperApplyFooter();
             });
         });
         bindRssConfigEvents();
@@ -1017,7 +989,7 @@
     function bindRssConfigEvents() {
         var root = modalContent.querySelector('.rss-config');
         if (!root) return;
-        var config = D.loadRssConfig();
+        var config = currentWallpaperDraft().providers.rss.config;
         var interval = root.querySelector('#rssRefreshInterval');
         var position = root.querySelector('#rssSummaryPosition');
         var mode = root.querySelector('#rssSummaryMode');
@@ -1031,37 +1003,34 @@
 
         root.querySelectorAll('input[name="rssSource"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                var next = D.loadRssConfig();
+                var next = currentWallpaperDraft().providers.rss.config;
                 next.activeSourceId = radio.value;
-                D.saveRssConfig(next);
                 root.querySelectorAll('.rss-source-row').forEach(function (row) {
                     row.classList.toggle('selected', row.dataset.rssSource === radio.value);
                 });
-                setRssStatus(rssStatusText(D.loadRssConfig(), D.loadWallpaper().providers.rss.state || {}));
-                markRssWallpaperApplyPending();
+                setRssStatus(rssStatusText(next, D.loadWallpaper().providers.rss.state || {}));
+                refreshWallpaperApplyFooter();
             });
         });
 
         [interval, position, mode].forEach(function (el) {
             if (!el) return;
             el.addEventListener('change', function () {
-                var next = D.loadRssConfig();
+                var next = currentWallpaperDraft().providers.rss.config;
                 if (el === interval) next.refreshIntervalMs = parseInt(el.value, 10) || 0;
                 if (el === position) next.summaryPosition = el.value;
                 if (el === mode) next.summaryMode = el.value;
-                D.saveRssConfig(next);
-                markRssWallpaperApplyPending();
+                refreshWallpaperApplyFooter();
             });
         });
 
         [showSummary, showLink].forEach(function (el) {
             if (!el) return;
             el.addEventListener('change', function () {
-                var next = D.loadRssConfig();
+                var next = currentWallpaperDraft().providers.rss.config;
                 if (el === showSummary) next.showSummary = el.checked;
                 if (el === showLink) next.showLink = el.checked;
-                D.saveRssConfig(next);
-                markRssWallpaperApplyPending();
+                refreshWallpaperApplyFooter();
             });
         });
         syncCustomSelects(root);
@@ -1071,17 +1040,21 @@
 
     function onRssConfigClick(e) {
         var target = e.target;
-        var config = D.loadRssConfig();
+        var config = currentWallpaperDraft().providers.rss.config;
         if (target.id === 'rssAddBtn') {
             var name = document.getElementById('rssNameInput').value.trim();
             var url = document.getElementById('rssUrlInput').value.trim();
             if (config.sources.length >= 5) return setRssStatus(tr('rssLimit', '最多 5 个 RSS 源'));
             if (!F.isHttpUrl(url)) return setRssStatus(tr('rssInvalidUrl', '请输入 http:// 或 https:// 链接'));
             var id = 'custom-' + F.generateId();
-            config.sources.push({ id: id, name: name || url, url: url, builtIn: false });
+            config.sources.push({
+                id: id,
+                name: name || url,
+                url: url,
+                builtIn: false,
+                test: { status: 'untested', fieldHash: '', testedAt: 0, imageUrl: '', error: '' }
+            });
             config.activeSourceId = id;
-            D.saveRssConfig(config);
-            markRssWallpaperApplyPending();
             invalidateWallpaperTab();
             return;
         }
@@ -1093,8 +1066,6 @@
             config.sources = config.sources.filter(function (item) { return item.id !== source.id; });
             if (!config.sources.length) config.sources = D.defaultRssConfig().sources;
             if (!config.sources.some(function (item) { return item.id === config.activeSourceId; })) config.activeSourceId = config.sources[0].id;
-            D.saveRssConfig(config);
-            markRssWallpaperApplyPending();
             invalidateWallpaperTab();
             return;
         }
@@ -1104,18 +1075,31 @@
             setRssStatus(tr('rssTesting', '正在测试...'));
             showRssNotice(tr('rssTesting', '正在测试...'), 'info');
             F.testRssSource(source).then(function (result) {
-                D.updateWallpaper(function (model) {
-                    model.providers.rss.state.lastTestAt = Date.now();
-                    model.providers.rss.state.lastTestMessage = 'OK: ' + result.count;
-                    model.providers.rss.state.lastError = '';
-                });
+                source.test = {
+                    status: 'passed',
+                    fieldHash: D.rssFieldHash(source),
+                    testedAt: Date.now(),
+                    imageUrl: result.first && result.first.imageUrl || '',
+                    error: ''
+                };
+                wallpaperDraftRssTestResult = result;
                 var message = tr('rssTestOk', '测试通过，可用图片条目：') + result.count;
                 setRssStatus(message);
                 showRssNotice(message, 'success');
+                refreshWallpaperApplyFooter();
             }).catch(function (err) {
                 var message = rssErrorMessage(err);
+                source.test = {
+                    status: 'failed',
+                    fieldHash: D.rssFieldHash(source),
+                    testedAt: Date.now(),
+                    imageUrl: '',
+                    error: message
+                };
+                wallpaperDraftRssTestResult = null;
                 setRssStatus(message);
                 showRssNotice(message, 'error');
+                refreshWallpaperApplyFooter();
             }).finally(function () {
                 setRssTestButtonState(testButton, false);
             });
