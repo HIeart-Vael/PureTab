@@ -13,6 +13,7 @@
     var D = window.WallpaperData;
     var S = window.WallpaperShow;
     var F = window.WallpaperFetch;
+    var WF = window.WallpaperFolder;
     var SP = null; // window.SettingsPanel — 在 init() 中可用
 
     // ================================================================
@@ -60,6 +61,7 @@
     var isMouseInSearchZone = false;
     var searchHideTimer = null;
     var paletteLoadPromise = null;
+    var folderRescannedThisSession = false;
 
     // ================================================================
     // 壁纸 — 主加载流程（编排层）
@@ -163,6 +165,14 @@
     function activeApiSource() {
         var config = D.loadApiConfig();
         return D.activeApiSource ? D.activeApiSource(config) : null;
+    }
+
+    function updateFolderState(mutator) {
+        D.updateWallpaper(function (next) {
+            var state = next.providers.folder.state || {};
+            mutator(state);
+            next.providers.folder.state = state;
+        });
     }
 
     function isRssRefreshDue(config, state) {
@@ -283,6 +293,233 @@
                 }
                 return img;
             });
+        });
+    }
+
+    function folderPreviewForName(name, blur) {
+        var id = D.folderId(name);
+        return blur >= 5 && D.blurThumbFor ? D.blurThumbFor(id, blur) : D.loadThumbs()[id];
+    }
+
+    function saveFolderNextPreview(name, blur) {
+        if (!name) return;
+        var preview = folderPreviewForName(name, blur);
+        if (preview) D.savePreview(preview);
+    }
+
+    function scheduleFolderNextPreview(handle, name, blur) {
+        if (!handle || !name || !WF || !WF.readImageFile || !WF.preparePreviewFromFile) return;
+        var id = D.folderId(name);
+        var existing = folderPreviewForName(name, blur);
+        if (existing) {
+            D.savePreview(existing);
+            return;
+        }
+
+        var run = function () {
+            WF.readImageFile(handle, name).then(function (file) {
+                return WF.preparePreviewFromFile(file, id, blur);
+            }).then(function (prepared) {
+                var thumbs = D.loadThumbs();
+                if (prepared.thumb) thumbs[id] = prepared.thumb;
+                D.saveThumbs(thumbs);
+                if (blur >= 5 && prepared.preview && D.saveBlurThumb) D.saveBlurThumb(id, blur, prepared.preview);
+                if (prepared.preview) D.savePreview(prepared.preview);
+            }).catch(function () { });
+        };
+
+        if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 1800 });
+        else setTimeout(run, 300);
+    }
+
+    function normalizeFolderFiles(files) {
+        var seen = {};
+        return (Array.isArray(files) ? files : []).filter(function (file) {
+            if (!file || !file.name || seen[file.name]) return false;
+            seen[file.name] = true;
+            return true;
+        });
+    }
+
+    function removeFolderName(files, name) {
+        var id = D.folderId(name);
+        var thumbs = D.loadThumbs();
+        var meta = D.loadMeta();
+        delete thumbs[id];
+        delete meta[id];
+        if (D.deleteBlurThumb) D.deleteBlurThumb(id);
+        D.saveThumbs(thumbs);
+        D.saveMeta(meta);
+        return files.filter(function (file) { return file && file.name !== name; });
+    }
+
+    function folderNextCandidate(files, state) {
+        files = normalizeFolderFiles(files);
+        state = D.normalizeFolderState ? D.normalizeFolderState(state) : (state || {});
+        var bag = (state.shuffleBag || []).filter(function (name) {
+            return files.some(function (file) { return file.name === name; });
+        });
+        if (!bag.length && WF && WF.buildShuffleBag) bag = WF.buildShuffleBag(files, state.currentName);
+        if (!bag.length && files.length) bag = [files[0].name];
+        return { name: bag[0] || '', remaining: bag.slice(1), files: files };
+    }
+
+    function updateFolderMeta(id, file, pathLabel) {
+        var meta = D.loadMeta();
+        meta[id] = {
+            source: 'folder',
+            name: file.name,
+            size: file.size || 0,
+            lastModified: file.lastModified || 0,
+            pathLabel: pathLabel || '',
+            fetchedAt: Date.now()
+        };
+        D.saveMeta(meta);
+    }
+
+    function refreshFolderIndexInBackground(handle, force) {
+        if (!WF || !WF.scanDirectory || !handle) return;
+        var state = D.loadFolderState ? D.loadFolderState() : {};
+        var now = Date.now();
+        if (!force) {
+            if (folderRescannedThisSession) return;
+            if (state.lastScanAt && now - state.lastScanAt < 86400000) return;
+        }
+        folderRescannedThisSession = true;
+
+        var run = function () {
+            WF.scanDirectory(handle, { requestPermission: false }).then(function (scan) {
+                return D.saveFolderFiles(scan.files).then(function () {
+                    updateFolderState(function (next) {
+                        next.status = scan.files.length ? 'ready' : 'empty';
+                        next.indexedCount = scan.files.length;
+                        next.completed = scan.completed !== false;
+                        next.lastScanAt = Date.now();
+                        next.lastError = '';
+                        next.shuffleBag = (next.shuffleBag || []).filter(function (name) {
+                            return scan.files.some(function (file) { return file.name === name; });
+                        });
+                    });
+                });
+            }).catch(function (err) {
+                updateFolderState(function (next) {
+                    next.status = err && err.code === 'FOLDER_PERMISSION_DENIED' ? 'needs-permission' : 'error';
+                    next.lastError = err && err.message ? err.message : String(err || 'folder scan failed');
+                });
+            });
+        };
+
+        if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 3000 });
+        else setTimeout(run, 1200);
+    }
+
+    function tryLoadFolderCandidate(handle, files, state, attempt) {
+        if (!files.length || attempt > Math.min(files.length + 1, 12)) return Promise.resolve(false);
+        var blur = getWallpaperBlur();
+        var candidate = folderNextCandidate(files, state);
+        var name = candidate.name;
+        if (!name) return Promise.resolve(false);
+
+        return WF.readImageFile(handle, name).then(function (file) {
+            var record = WF.fileRecord ? WF.fileRecord(file) : { name: name, size: file.size || 0, lastModified: file.lastModified || 0 };
+            if (!record) throw WF.error ? WF.error('FOLDER_UNSUPPORTED_IMAGE', 'unsupported image file') : new Error('unsupported image file');
+            var id = D.folderId(record.name);
+            var pathLabel = D.loadFolderConfig ? D.loadFolderConfig().pathLabel : '';
+            var url = URL.createObjectURL(file);
+            return applyWallpaperRespectingBlur(url, id).then(function () {
+                var nextFiles = candidate.files.map(function (item) {
+                    return item.name === record.name ? record : item;
+                });
+                D.saveFolderFiles(nextFiles).catch(function () { });
+                updateFolderMeta(id, record, pathLabel);
+                updateFolderState(function (next) {
+                    next.status = 'ready';
+                    next.indexedCount = nextFiles.length;
+                    next.completed = next.completed === true;
+                    next.lastError = '';
+                    next.currentName = record.name;
+                    next.shuffleBag = candidate.remaining;
+                });
+                D.updateWallpaper(function (model) {
+                    model.cache.order = ['bing', id];
+                    model.cache.index = 1;
+                    if (!model.cache.meta) model.cache.meta = {};
+                    model.cache.meta[id] = {
+                        source: 'folder',
+                        name: record.name,
+                        size: record.size || 0,
+                        lastModified: record.lastModified || 0,
+                        pathLabel: pathLabel || '',
+                        fetchedAt: Date.now()
+                    };
+                });
+                var nextName = candidate.remaining[0] || (WF.buildShuffleBag ? WF.buildShuffleBag(nextFiles, record.name)[0] : '');
+                saveFolderNextPreview(nextName, blur);
+                scheduleFolderNextPreview(handle, nextName, blur);
+                cacheBingInBackground();
+                log('Folder', 'image ' + record.name);
+                return true;
+            });
+        }).catch(function (err) {
+            if (err && err.code === 'FOLDER_PERMISSION_DENIED') {
+                updateFolderState(function (next) {
+                    next.status = 'needs-permission';
+                    next.lastError = err.message || 'folder permission denied';
+                });
+                return !!D.loadPreview();
+            }
+            var remainingFiles = removeFolderName(candidate.files, name);
+            state.shuffleBag = candidate.remaining.filter(function (item) { return item !== name; });
+            D.saveFolderFiles(remainingFiles).catch(function () { });
+            updateFolderState(function (next) {
+                next.indexedCount = remainingFiles.length;
+                next.shuffleBag = state.shuffleBag;
+                next.lastError = err && err.message ? err.message : String(err || '');
+                if (!remainingFiles.length) next.status = 'empty';
+            });
+            return tryLoadFolderCandidate(handle, remainingFiles, state, attempt + 1);
+        });
+    }
+
+    function tryLoadFolderWallpaper() {
+        if (!WF || !WF.ensureReadPermission) return Promise.resolve(false);
+        hideRssOverlay();
+        SP.setCurrentMode('folder');
+
+        return D.loadFolderHandle().then(function (handle) {
+            if (!handle) return false;
+            return WF.ensureReadPermission(handle, false).then(function () {
+                return D.loadFolderFiles().then(function (files) {
+                    if (files && files.length) return files;
+                    return WF.scanFirstBatch(handle).then(function (scan) {
+                        return D.saveFolderFiles(scan.files).then(function () {
+                            updateFolderState(function (state) {
+                                state.status = scan.files.length ? 'ready' : 'empty';
+                                state.indexedCount = scan.files.length;
+                                state.completed = scan.completed !== false;
+                                state.lastScanAt = Date.now();
+                            });
+                            return scan.files;
+                        });
+                    });
+                }).then(function (files) {
+                    refreshFolderIndexInBackground(handle, false);
+                    return tryLoadFolderCandidate(handle, normalizeFolderFiles(files), D.loadFolderState(), 0);
+                });
+            }, function (err) {
+                updateFolderState(function (state) {
+                    state.status = 'needs-permission';
+                    state.lastError = err && err.message ? err.message : String(err || 'folder permission denied');
+                });
+                return !!D.loadPreview();
+            });
+        }).catch(function (err) {
+            warn('Folder', 'load failed: ' + (err && err.message ? err.message : err));
+            updateFolderState(function (state) {
+                state.status = err && err.code === 'FOLDER_PERMISSION_DENIED' ? 'needs-permission' : 'error';
+                state.lastError = err && err.message ? err.message : String(err || 'folder load failed');
+            });
+            return !!D.loadPreview();
         });
     }
 
@@ -469,6 +706,15 @@
                     if (loaded) return;
                     return tryLoadCachedBing(bingBlob, meta, today).then(function (loaded) {
                         if (!loaded) return loadBingFromNetwork(meta, today);
+                    });
+                });
+            }
+
+            if (lastMode === 'folder') {
+                return tryLoadFolderWallpaper().then(function (loaded) {
+                    if (loaded) return;
+                    return tryLoadCachedBing(bingBlob, meta, today).then(function (loadedBing) {
+                        if (!loadedBing) return loadBingFromNetwork(meta, today);
                     });
                 });
             }
