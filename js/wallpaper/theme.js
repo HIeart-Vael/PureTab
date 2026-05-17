@@ -5,7 +5,22 @@
 (function () {
     'use strict';
 
-    var SIZE = 36;
+    var ANALYSIS_SIZE = 96;
+    var TOP_LIMIT = 32;
+    var WASM_RESULT_HEADER = 27;
+    var WASM_ABI_VERSION = 2;
+    var _current = null;
+    var _enginePromise = null;
+    var _engineDisabled = false;
+    var WASM_URL = resolveWasmUrl();
+
+    function resolveWasmUrl() {
+        var scriptUrl = document.currentScript && document.currentScript.src;
+        if (scriptUrl) {
+            try { return new URL('theme_engine.wasm', scriptUrl).href; } catch (e) { }
+        }
+        return 'js/wallpaper/theme_engine.wasm';
+    }
 
     function lum(r, g, b) { return 0.299 * r + 0.587 * g + 0.114 * b; }
     function clamp(v) { return Math.max(0, Math.min(255, v)); }
@@ -26,7 +41,7 @@
     function lift(c, amount) {
         return mix(c, { r: 255, g: 255, b: 255 }, amount);
     }
-    function sat(c, l) {
+    function sat(c) {
         var max = Math.max(c.r, c.g, c.b), min = Math.min(c.r, c.g, c.b);
         return max === 0 ? 0 : (max - min) / max;
     }
@@ -123,74 +138,219 @@
         return adjusted;
     }
 
-    // 当前壁纸的主题色（内存变量，跨新标签页不保留）
-    var _current = null;
+    function readImageDataAtSize(img, size) {
+        var canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return null;
+        ctx.drawImage(img, 0, 0, size, size);
+        var imageData = ctx.getImageData(0, 0, size, size);
+        canvas.width = 0;
+        canvas.height = 0;
+        return imageData;
+    }
+
+    function readImageData(img) {
+        return readImageDataAtSize(img, ANALYSIS_SIZE);
+    }
+
+    function getExport(exports, name) {
+        return exports[name] || exports['_' + name] || null;
+    }
+
+    function initEngine() {
+        if (_engineDisabled || !window.WebAssembly || !window.fetch) return Promise.resolve(null);
+        if (!_enginePromise) {
+            _enginePromise = fetch(WASM_URL).then(function (response) {
+                if (!response || !response.ok) throw new Error('theme engine wasm unavailable');
+                return response.arrayBuffer();
+            }).then(function (bytes) {
+                return WebAssembly.instantiate(bytes, {});
+            }).then(function (result) {
+                var exports = result.instance && result.instance.exports;
+                var input = getExport(exports, 'theme_input_buffer');
+                var output = getExport(exports, 'theme_result_buffer');
+                var analyze = getExport(exports, 'theme_analyze');
+                var maxPixels = getExport(exports, 'theme_max_pixels');
+                var resultInts = getExport(exports, 'theme_result_ints');
+                var abiVersion = getExport(exports, 'theme_abi_version');
+                if (!exports.memory || !input || !output || !analyze || !maxPixels || !resultInts || !abiVersion) {
+                    throw new Error('theme engine exports missing');
+                }
+                if (abiVersion() !== WASM_ABI_VERSION) throw new Error('theme engine abi mismatch');
+                return {
+                    memory: exports.memory,
+                    inputPtr: input(),
+                    resultPtr: output(),
+                    analyze: analyze,
+                    maxPixels: maxPixels(),
+                    resultInts: resultInts()
+                };
+            }).catch(function () {
+                _engineDisabled = true;
+                return null;
+            });
+        }
+        return _enginePromise;
+    }
+
+    function decodeColor(values, offset) {
+        var n = values[offset + 3] || 0;
+        if (n <= 0) return null;
+        return {
+            r: values[offset],
+            g: values[offset + 1],
+            b: values[offset + 2],
+            n: n
+        };
+    }
+
+    function decodeWasmPalette(engine) {
+        var values = new Int32Array(engine.memory.buffer, engine.resultPtr, engine.resultInts);
+        var topCount = Math.min(TOP_LIMIT, Math.max(0, values[26] || 0));
+        var top = [];
+        for (var i = 0; i < topCount; i++) {
+            var color = decodeColor(values, WASM_RESULT_HEADER + i * 4);
+            if (color) top.push(color);
+        }
+        return {
+            count: values[0] || 0,
+            avgL: values[1] || 0,
+            dominant: decodeColor(values, 2),
+            mood: decodeColor(values, 6),
+            vibrant: decodeColor(values, 10),
+            muted: decodeColor(values, 14),
+            dark: decodeColor(values, 18),
+            light: decodeColor(values, 22),
+            top: top,
+            source: 'wasm'
+        };
+    }
+
+    function analyzeWithWasm(imageData) {
+        return initEngine().then(function (engine) {
+            if (!engine) return null;
+            var data = imageData.data;
+            var pixelCount = Math.min(Math.floor(data.length / 4), engine.maxPixels);
+            var byteCount = pixelCount * 4;
+            try {
+                new Uint8Array(engine.memory.buffer, engine.inputPtr, byteCount).set(data.subarray(0, byteCount));
+                if (engine.analyze(imageData.width, imageData.height, TOP_LIMIT) <= 0) return null;
+                return decodeWasmPalette(engine);
+            } catch (e) {
+                _engineDisabled = true;
+                return null;
+            }
+        });
+    }
+
+    function binColor(bin) {
+        return {
+            r: (((bin >> 8) & 15) << 4) + 8,
+            g: (((bin >> 4) & 15) << 4) + 8,
+            b: ((bin & 15) << 4) + 8
+        };
+    }
+
+    function analyzeWithJs(data) {
+        var freq = {};
+        var totalL = 0;
+        var count = 0;
+
+        for (var i = 0; i < data.length; i += 4) {
+            if (data[i + 3] < 128) continue;
+            var l = lum(data[i], data[i + 1], data[i + 2]);
+            if (l < 12 || l > 245) continue;
+            var bin = (data[i] >> 4 << 8) | (data[i + 1] >> 4 << 4) | (data[i + 2] >> 4);
+            freq[bin] = (freq[bin] || 0) + 1;
+            totalL += l;
+            count++;
+        }
+
+        if (count === 0) return null;
+
+        var sorted = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; });
+        var top = sorted.slice(0, TOP_LIMIT).map(function (key) {
+            var color = binColor(Number(key));
+            color.n = freq[key];
+            return color;
+        });
+        if (!top.length) return null;
+
+        return {
+            count: count,
+            avgL: totalL / count,
+            dominant: top[0],
+            mood: weightedAverage(top, 16),
+            top: top,
+            source: 'js'
+        };
+    }
+
+    function pushCandidate(items, candidate) {
+        if (candidate && candidate.n > 0) items.push(candidate);
+    }
+
+    function themeFromPalette(palette) {
+        if (!palette || !palette.count || !palette.top || !palette.top.length) return fallback();
+
+        var top = palette.top;
+        var avgL = palette.avgL;
+        var white = { r: 255, g: 255, b: 255 };
+        var black = { r: 0, g: 0, b: 0 };
+        var dominant = palette.dominant || top[0];
+        var mood = palette.mood || weightedAverage(top, 16);
+        var isLight = avgL > 150;
+
+        var surfaceBase = isLight ? mix(mood, white, 0.62) : mix(mood, { r: 14, g: 16, b: 21 }, 0.82);
+        var surfaceElevated = isLight ? mix(mood, white, 0.84) : mix(mood, { r: 34, g: 37, b: 45 }, 0.66);
+        surfaceBase = isLight ? fitLum(surfaceBase, 166, 214) : fitLum(surfaceBase, 16, 34);
+        surfaceElevated = isLight ? fitLum(surfaceElevated, 190, 232) : fitLum(surfaceElevated, 34, 62);
+        surfaceElevated = ensureContrast(surfaceBase, surfaceElevated, 14, true);
+
+        var tint = isLight ? mix(dominant, white, 0.54) : mix(dominant, white, 0.24);
+        tint = isLight ? fitLum(tint, 156, 220) : fitLum(tint, 82, 150);
+
+        var accentItems = [];
+        pushCandidate(accentItems, palette.vibrant);
+        pushCandidate(accentItems, palette.muted);
+        accentItems = accentItems.concat(top);
+        var accent = selectAccent(accentItems, mood, avgL, isLight);
+
+        var text = textFor(surfaceBase);
+        var stroke = isLight ? mix(surfaceBase, black, 0.24) : mix(surfaceElevated, white, 0.18);
+
+        return {
+            surfaceBase: rgb(surfaceBase),
+            surfaceElevated: rgb(surfaceElevated),
+            tint: rgb(tint),
+            stroke: rgb(stroke),
+            onSurface: rgb(text.primary),
+            onSurfaceMuted: rgb(text.muted),
+            accent: rgb(accent),
+            accentContrast: rgb(text.accentContrast)
+        };
+    }
 
     function extract(img) {
         try {
-            var SHIFT = 4;
-            var canvas = document.createElement('canvas');
-            canvas.width = SIZE; canvas.height = SIZE;
-            var ctx = canvas.getContext('2d', { willReadFrequently: true });
-            ctx.drawImage(img, 0, 0, SIZE, SIZE);
-            var data = ctx.getImageData(0, 0, SIZE, SIZE).data;
-
-            var freq = {}, totalL = 0, count = 0;
-
-            for (var i = 0; i < data.length; i += 4) {
-                var r = data[i] >> SHIFT << SHIFT;
-                var g = data[i + 1] >> SHIFT << SHIFT;
-                var b = data[i + 2] >> SHIFT << SHIFT;
-                var l = lum(r, g, b);
-                if (l < 12 || l > 245) continue;
-                freq[r + ',' + g + ',' + b] = (freq[r + ',' + g + ',' + b] || 0) + 1;
-                totalL += l; count++;
+            var imageData = readImageData(img);
+            if (!imageData) {
+                _current = fallback();
+                return Promise.resolve(_current);
             }
 
-            if (count === 0) { _current = fallback(); return _current; }
-
-            var sorted = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; });
-            function parse(k) {
-                var p = k.split(',').map(Number);
-                return { r: p[0], g: p[1], b: p[2], n: freq[k] };
-            }
-            var top = sorted.slice(0, 28).map(parse);
-            var avgL = totalL / count;
-
-            var white = { r: 255, g: 255, b: 255 };
-            var black = { r: 0, g: 0, b: 0 };
-            var dominant = top[0];
-            var mood = weightedAverage(top, 12);
-            var isLight = avgL > 150;
-
-            var surfaceBase = isLight ? mix(mood, white, 0.62) : mix(mood, { r: 14, g: 16, b: 21 }, 0.82);
-            var surfaceElevated = isLight ? mix(mood, white, 0.84) : mix(mood, { r: 34, g: 37, b: 45 }, 0.66);
-            surfaceBase = isLight ? fitLum(surfaceBase, 166, 214) : fitLum(surfaceBase, 16, 34);
-            surfaceElevated = isLight ? fitLum(surfaceElevated, 190, 232) : fitLum(surfaceElevated, 34, 62);
-            surfaceElevated = ensureContrast(surfaceBase, surfaceElevated, 14, true);
-
-            var tint = isLight ? mix(dominant, white, 0.54) : mix(dominant, white, 0.24);
-            tint = isLight ? fitLum(tint, 156, 220) : fitLum(tint, 82, 150);
-
-            var accent = selectAccent(top, mood, avgL, isLight);
-
-            var text = textFor(surfaceBase);
-            var stroke = isLight ? mix(surfaceBase, black, 0.24) : mix(surfaceElevated, white, 0.18);
-
-            _current = {
-                surfaceBase: rgb(surfaceBase),
-                surfaceElevated: rgb(surfaceElevated),
-                tint: rgb(tint),
-                stroke: rgb(stroke),
-                onSurface: rgb(text.primary),
-                onSurfaceMuted: rgb(text.muted),
-                accent: rgb(accent),
-                accentContrast: rgb(text.accentContrast)
-            };
-            return _current;
+            return analyzeWithWasm(imageData).then(function (palette) {
+                _current = themeFromPalette(palette || analyzeWithJs(imageData.data));
+                return _current;
+            }, function () {
+                _current = themeFromPalette(analyzeWithJs(imageData.data));
+                return _current;
+            });
         } catch (e) {
             _current = fallback();
-            return _current;
+            return Promise.resolve(_current);
         }
     }
 

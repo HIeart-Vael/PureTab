@@ -96,12 +96,14 @@
     }
 
     function applyExtractedTheme(img) {
-        if (!img) return;
-        ensureThemeModule().then(function (theme) {
-            if (!theme) return;
-            theme.extract(img);
-            if (theme.hasCurrent()) theme.applyCurrent();
-        }).catch(function () { });
+        if (!img) return Promise.resolve(false);
+        return ensureThemeModule().then(function (theme) {
+            if (!theme) return false;
+            return Promise.resolve(theme.extract(img)).then(function () {
+                if (theme.hasCurrent()) theme.applyCurrent();
+                return true;
+            });
+        }).catch(function () { return false; });
     }
 
     function scheduleThemeExtraction(img) {
@@ -125,8 +127,7 @@
             return new Promise(function (resolve) {
                 afterAnimationFrame(function () {
                     scheduleIdle(function () {
-                        applyExtractedTheme(img);
-                        resolve(true);
+                        applyExtractedTheme(img).then(resolve);
                     });
                 });
             });
