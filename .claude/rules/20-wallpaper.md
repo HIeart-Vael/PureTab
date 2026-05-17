@@ -170,6 +170,12 @@ API 模式运行时只保留一张图，逻辑 ID 固定为 `api`，新结果会
 
 背景模糊不使用全屏实时 CSS `filter: blur(...)` 作为热路径。强模糊必须优先使用预生成模糊缩略图；拖动滑块时要防止过期异步结果覆盖最新值。
 
+### 主题色引擎
+
+主题色提取属于非首屏任务，必须继续在壁纸显示后的运行时/空闲阶段执行。当前实现优先懒加载 `js/wallpaper/theme_engine.wasm`，由 `wasm/theme_engine.cpp` 编译生成；C++/WASM 只负责像素分析、空间/颜色质量加权、颜色量化、调色板候选与 Top 色统计，DOM、Canvas 读取、CSS 变量应用仍留在 `js/wallpaper/theme.js`。
+
+WASM 加载、编译或执行失败时必须回退到 JS 路径，不得影响壁纸显示和新标签页可用性。扩展页 CSP 需要保留 `script-src 'self' 'wasm-unsafe-eval'`；独立 `file://` 打开时如果浏览器拒绝 fetch 本地 wasm，也必须继续使用 JS fallback。
+
 ## 约束清单
 
 ### 首屏与渲染
