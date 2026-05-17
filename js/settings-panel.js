@@ -2343,16 +2343,72 @@
         }];
     }
 
-    function folderGalleryItems() {
-        var order = D.loadWallpaper().cache.order || [];
+    function visibleFolderNames() {
+        var state = D.loadFolderState ? D.loadFolderState() : {};
+        var names = [];
+        if (state.currentName) names.push(state.currentName);
+        (state.shuffleBag || []).forEach(function (name) {
+            if (names.length >= 6) return;
+            if (names.indexOf(name) === -1) names.push(name);
+        });
+        if (!names.length) {
+            (D.loadWallpaper().cache.order || []).filter(function (id) { return D.isFolderId && D.isFolderId(id); }).forEach(function (id) {
+                var name = D.folderNameFromId ? D.folderNameFromId(id) : id;
+                if (names.indexOf(name) === -1) names.push(name);
+            });
+        }
+        return names.slice(0, 6);
+    }
+
+    function scheduleVisibleFolderThumbs(names) {
+        if (!WF || !WF.readImageFile || !WF.preparePreviewFromFile || !names || !names.length) return;
         var thumbs = D.loadThumbs();
-        var visible = order.filter(function (id) { return id !== 'bing' && id !== 'api'; }).slice(0, 12);
-        if (!visible.length) return singleGalleryItems('folder');
-        return visible.map(function (id) {
+        var missing = names.filter(function (name) {
+            return !thumbs[D.folderId(name)];
+        }).slice(0, 4);
+        if (!missing.length) return;
+
+        var run = function () {
+            D.loadFolderHandle().then(function (handle) {
+                var chain = Promise.resolve(false);
+                missing.forEach(function (name) {
+                    chain = chain.then(function (changed) {
+                        var id = D.folderId(name);
+                        if (D.loadThumbs()[id]) return changed;
+                        return WF.readImageFile(handle, name).then(function (file) {
+                            return WF.preparePreviewFromFile(file, id, 0);
+                        }).then(function (prepared) {
+                            var nextThumbs = D.loadThumbs();
+                            if (prepared.thumb) {
+                                nextThumbs[id] = prepared.thumb;
+                                D.saveThumbs(nextThumbs);
+                                return true;
+                            }
+                            return changed;
+                        }).catch(function () { return changed; });
+                    });
+                });
+                return chain;
+            }).then(function (changed) {
+                if (changed && isOpen && currentMode === 'folder') refreshGallery();
+            }).catch(function () { });
+        };
+
+        if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 1600 });
+        else setTimeout(run, 300);
+    }
+
+    function folderGalleryItems() {
+        var names = visibleFolderNames();
+        var thumbs = D.loadThumbs();
+        if (!names.length) return singleGalleryItems('folder');
+        scheduleVisibleFolderThumbs(names);
+        return names.map(function (name) {
+            var id = D.folderId(name);
             return {
                 id: id,
                 source: 'folder',
-                title: id,
+                title: name,
                 bg: thumbs[id] || '',
                 deletable: false,
                 draggable: false
