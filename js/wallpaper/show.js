@@ -56,11 +56,63 @@
         return _themeLoadPromise;
     }
 
+    function afterAnimationFrame(callback) {
+        requestAnimationFrame(function () {
+            requestAnimationFrame(callback);
+        });
+    }
+
+    function scheduleIdle(callback) {
+        if (window.requestIdleCallback) {
+            requestIdleCallback(callback, { timeout: 1200 });
+            return;
+        }
+        setTimeout(callback, 0);
+    }
+
+    function applyExtractedTheme(img) {
+        if (!img) return;
+        ensureThemeModule().then(function (theme) {
+            if (!theme) return;
+            theme.extract(img);
+            if (theme.hasCurrent()) theme.applyCurrent();
+        }).catch(function () { });
+    }
+
+    function scheduleThemeExtraction(img) {
+        afterAnimationFrame(function () {
+            scheduleIdle(function () {
+                applyExtractedTheme(img);
+            });
+        });
+    }
+
+    function refreshThemeFromCurrentWallpaper(force) {
+        if (!(window.WallpaperData && window.WallpaperData.loadUI)) return Promise.resolve(false);
+        if (force !== true && window.WallpaperData.loadUI().wallpaper.themeEnabled !== true) return Promise.resolve(false);
+
+        var background = wallpaperBackEl && wallpaperBackEl.style.backgroundImage;
+        var match = background && background.match(/^url\(["']?(.*?)["']?\)$/);
+        if (!match || !match[1]) return Promise.resolve(false);
+
+        return preloadImage(match[1]).then(function (img) {
+            if (!img) return false;
+            return new Promise(function (resolve) {
+                afterAnimationFrame(function () {
+                    scheduleIdle(function () {
+                        applyExtractedTheme(img);
+                        resolve(true);
+                    });
+                });
+            });
+        }).catch(function () { return false; });
+    }
+
     /**
      * 应用壁纸并执行双层交叉淡入过渡。
      */
     function applyWallpaper(url, transitionMs) {
-        if (transitionMs === undefined) transitionMs = 200;
+        if (typeof transitionMs !== 'number' || !isFinite(transitionMs)) transitionMs = 200;
         var isBlobUrl = url.indexOf('blob:') === 0;
 
         return preloadImage(url).then(function (img) {
@@ -69,11 +121,7 @@
                 themeEnabled = window.WallpaperData.loadUI().wallpaper.themeEnabled === true;
             }
             if (img && themeEnabled) {
-                ensureThemeModule().then(function (theme) {
-                    if (!theme) return;
-                    theme.extract(img);
-                    if (theme.hasCurrent()) theme.applyCurrent();
-                }).catch(function () { });
+                scheduleThemeExtraction(img);
             }
             wallpaperFrontEl.style.backgroundImage = 'url(' + url + ')';
             void wallpaperFrontEl.offsetWidth;
@@ -81,8 +129,14 @@
             wallpaperFrontEl.classList.add('active');
 
             return new Promise(function (resolve) {
+                var done = false;
                 function onTransitionEnd(e) {
                     if (e.propertyName !== 'opacity') return;
+                    finishTransition();
+                }
+                function finishTransition() {
+                    if (done) return;
+                    done = true;
                     wallpaperBackEl.style.backgroundImage = wallpaperFrontEl.style.backgroundImage;
                     wallpaperFrontEl.classList.remove('active');
                     wallpaperFrontEl.style.backgroundImage = '';
@@ -90,6 +144,7 @@
                     resolve(img);
                 }
                 wallpaperFrontEl.addEventListener('transitionend', onTransitionEnd);
+                window.setTimeout(finishTransition, transitionMs + 100);
             });
         }).then(function (img) {
             if (isBlobUrl) {
@@ -166,6 +221,7 @@
         thumbnail: generateThumbnail,
         preloadImage: preloadImage,
         ensureTheme: ensureThemeModule,
+        refreshTheme: refreshThemeFromCurrentWallpaper,
 
         get currentBlobUrl() { return _currentWallpaperBlobUrl; },
         set currentBlobUrl(v) { _currentWallpaperBlobUrl = v; },

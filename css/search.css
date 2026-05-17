@@ -11,15 +11,38 @@
     gap: 12px;
     padding: 10px 22px;
     background: rgba(255, 255, 255, var(--search-bg-opacity, 0.1));
-    backdrop-filter: blur(var(--search-blur, 24px));
-    -webkit-backdrop-filter: blur(var(--search-blur, 24px));
+    backdrop-filter: blur(var(--search-hover-blur, var(--search-blur, 24px)));
+    -webkit-backdrop-filter: blur(var(--search-hover-blur, var(--search-blur, 24px)));
     border-radius: 28px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     z-index: 50;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.search-bar[data-visibility="hover"] {
+    --search-hover-blur: 0px;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.3s ease;
+}
+
+.search-bar[data-visibility="hover"]:hover,
+.search-bar[data-visibility="hover"].visible {
+    --search-hover-blur: var(--search-blur, 24px);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.search-bar[data-visibility="never"] {
+    --search-hover-blur: 0px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .search-bar[data-position="edge-top"] {
@@ -87,6 +110,7 @@
 .search-bar.visible {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .search-bar input {

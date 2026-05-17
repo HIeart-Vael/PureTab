@@ -139,10 +139,8 @@
             root.setProperty('--accent-contrast-rgb', 'var(--theme-accent-contrast-rgb)');
             root.setProperty('--glass-bg', 'rgba(var(--surface-base-rgb), var(--panel-opacity))');
             root.setProperty('--glass-tint', 'linear-gradient(180deg, rgba(var(--tint-rgb), 0.24), rgba(var(--surface-elevated-rgb), 0.10))');
-            if (window.WallpaperShow && window.WallpaperShow.ensureTheme) {
-                window.WallpaperShow.ensureTheme().then(function (theme) {
-                    if (theme && theme.hasCurrent()) theme.applyCurrent();
-                }).catch(function () { });
+            if (window.WallpaperShow && window.WallpaperShow.refreshTheme) {
+                window.WallpaperShow.refreshTheme(true);
             }
         } else {
             [
@@ -186,6 +184,7 @@
         searchMode = search.visibility || DEFAULT_SEARCH_MODE;
         currentEngine = search.engine || DEFAULT_ENGINE;
         searchBar.classList.toggle('visible', searchMode === 'always');
+        searchBar.setAttribute('data-visibility', searchMode);
         searchBar.setAttribute('data-position', parts.value);
         searchBar.setAttribute('data-align', parts.align);
         searchBar.setAttribute('data-icon-position', search.iconPosition || DEFAULT_SEARCH_ICON_POSITION);
@@ -444,6 +443,7 @@
         hideCorners: hideCorners,
         isExtension: IS_EXTENSION,
         refresh: function () {
+            applyUi(D.loadUI());
             updateLangUI();
             if (window.SettingsPanelFull && window.SettingsPanelFull.refresh) window.SettingsPanelFull.refresh();
         },

@@ -885,6 +885,7 @@
     function applySearchMode(mode) {
         searchMode = validValue(mode, ['hover', 'always', 'never'], DEFAULT_SEARCH_MODE);
         searchBar.classList.toggle('visible', searchMode === 'always');
+        searchBar.setAttribute('data-visibility', searchMode);
         saveAllSettings();
     }
 
@@ -1082,10 +1083,8 @@
             root.setProperty('--glass-border', '1px solid rgba(var(--stroke-rgb), 0.78)');
             if (window.WallpaperTheme && window.WallpaperTheme.hasCurrent()) {
                 window.WallpaperTheme.applyCurrent();
-            } else if (window.WallpaperShow && window.WallpaperShow.ensureTheme) {
-                window.WallpaperShow.ensureTheme().then(function (theme) {
-                    if (theme && theme.hasCurrent()) theme.applyCurrent();
-                }).catch(function () { });
+            } else if (window.WallpaperShow && window.WallpaperShow.refreshTheme) {
+                window.WallpaperShow.refreshTheme(true);
             }
         } else {
             root.removeProperty('--surface-base-rgb');
@@ -2070,7 +2069,11 @@
         showCorners: showCorners,
         hideCorners: hideCorners,
         isExtension: IS_EXTENSION,
-        refresh: refreshGallery,
+        refresh: function () {
+            loadSettings();
+            updateLangUI();
+            refreshGallery();
+        },
         pickUpload: pickUpload
     };
 

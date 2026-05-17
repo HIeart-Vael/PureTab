@@ -188,9 +188,12 @@
     // 搜索栏显隐
     // ================================================================
 
-    function isInCenter(x, y) {
-        var w = window.innerWidth, h = window.innerHeight;
-        return x > w * 0.3 && x < w * 0.7 && y > h * 0.42 && y < h * 0.58;
+    function canRevealSearch() {
+        return SP.getSearchMode() !== 'never';
+    }
+
+    function canFocusSearchFromWallpaper() {
+        return SP.getSearchMode() === 'always';
     }
 
     function showSearch() {
@@ -291,7 +294,7 @@
     function bindGlobalEvents() {
         // --- 全局鼠标跟踪 ---
 
-        var _lastMouseX = 0, _lastMouseY = 0, _mouseRafPending = false, _wasInCorner = false, _wasInCenter = false;
+        var _lastMouseX = 0, _lastMouseY = 0, _mouseRafPending = false, _wasInCorner = false;
         document.addEventListener('mousemove', function (e) {
             _lastMouseX = e.clientX;
             _lastMouseY = e.clientY;
@@ -303,18 +306,21 @@
                 if (inCorner && !_wasInCorner) SP.showCorners();
                 else if (!inCorner && _wasInCorner && !SP.isOpen() && !SP.isLangPanelOpen()) SP.hideCorners();
                 _wasInCorner = inCorner;
-                var inCenter = isInCenter(_lastMouseX, _lastMouseY);
-                if (inCenter && !_wasInCenter) showSearch();
-                else if (!inCenter && _wasInCenter) hideSearch();
-                _wasInCenter = inCenter;
             });
         });
 
         // --- 搜索栏 ---
 
-        searchBar.addEventListener('mouseenter', function () { isMouseInSearchZone = true; clearTimeout(searchHideTimer); });
+        searchBar.addEventListener('mouseenter', function () { isMouseInSearchZone = true; clearTimeout(searchHideTimer); showSearch(); });
         searchBar.addEventListener('mouseleave', function () { isMouseInSearchZone = false; hideSearch(); });
-        searchInput.addEventListener('focus', function () { searchBar.classList.add('visible'); clearTimeout(searchHideTimer); });
+        searchInput.addEventListener('focus', function () {
+            if (!canRevealSearch()) {
+                searchInput.blur();
+                return;
+            }
+            searchBar.classList.add('visible');
+            clearTimeout(searchHideTimer);
+        });
         searchInput.addEventListener('blur', function () { hideSearch(); });
 
         // --- 键盘快捷键 ---
@@ -369,7 +375,7 @@
             var paletteOpen = window.Palette && window.Palette.isOpen;
             if (!paletteOpen && !SP.isOpen() && !SP.isLangPanelOpen() && document.activeElement !== searchInput) {
                 if (e.target === document.body || e.target === wallpaperBackEl || e.target === wallpaperFrontEl || !e.target.closest('button, input, select, .settings-panel, .language-panel, .cmd-palette-overlay')) {
-                    searchInput.focus();
+                    if (canFocusSearchFromWallpaper()) searchInput.focus();
                 }
             }
 
