@@ -160,10 +160,22 @@
         return config.sources.filter(function (source) { return source.id === config.activeSourceId; })[0] || config.sources[0] || null;
     }
 
+    function activeApiSource() {
+        var config = D.loadApiConfig();
+        return D.activeApiSource ? D.activeApiSource(config) : null;
+    }
+
     function isRssRefreshDue(config, state) {
         if (!config.refreshIntervalMs) return false;
         if (!state.lastSuccessAt) return true;
         return Date.now() - state.lastSuccessAt >= config.refreshIntervalMs;
+    }
+
+    function isApiRefreshDue(config, state) {
+        var interval = parseInt(config.refreshIntervalMs, 10);
+        if (interval === 0) return false;
+        if (interval === -1) return true;
+        return !state.lastSuccessAt || Date.now() - state.lastSuccessAt >= interval;
     }
 
     function cleanupOldRssBlobs(activeOrder) {
@@ -375,6 +387,39 @@
         });
     }
 
+    function tryLoadApiWallpaper() {
+        hideRssOverlay();
+        SP.setCurrentMode('api');
+        var thumbs = D.loadThumbs();
+        if (thumbs.api) D.savePreview(thumbs.api);
+        return D.idbGet(D.DB.API_BLOB).then(function (record) {
+            if (!record || !record.blob) return false;
+            var blob = record.blob;
+            if ((!blob.type || blob.type === '') && record.mime) {
+                try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+            }
+            return applyWallpaperRespectingBlur(URL.createObjectURL(blob), 'api').then(function () {
+                if (thumbs.api) D.savePreview(thumbs.api);
+                cacheBingInBackground();
+                return true;
+            });
+        });
+    }
+
+    function refreshApiInBackground(force) {
+        var config = D.loadApiConfig();
+        var state = D.loadWallpaper().providers.api.state || {};
+        if (!force && !isApiRefreshDue(config, state)) return Promise.resolve(false);
+        var source = activeApiSource();
+        if (!source) return Promise.resolve(false);
+        return F.refreshApiSource(source, config.apiType).then(function () {
+            return true;
+        }).catch(function (err) {
+            warn('API', 'refresh failed: ' + (err && err.message ? err.message : err));
+            return false;
+        });
+    }
+
     function tryLoadCachedBing(bingBlob, meta, today) {
         if (!bingBlob || meta.date !== today) return Promise.resolve(false);
 
@@ -435,6 +480,18 @@
                     });
                     if (loaded) return;
                     hideRssOverlay();
+                    return tryLoadCachedBing(bingBlob, meta, today).then(function (loadedBing) {
+                        if (!loadedBing) return loadBingFromNetwork(meta, today);
+                    });
+                });
+            }
+
+            if (lastMode === 'api') {
+                return tryLoadApiWallpaper().then(function (loaded) {
+                    refreshApiInBackground(!loaded).then(function (updated) {
+                        if (updated && D.compatMode(D.getActiveSource()) === 'api') loadWallpaper();
+                    });
+                    if (loaded) return;
                     return tryLoadCachedBing(bingBlob, meta, today).then(function (loadedBing) {
                         if (!loadedBing) return loadBingFromNetwork(meta, today);
                     });
