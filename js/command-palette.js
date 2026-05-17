@@ -801,6 +801,67 @@
         } catch (e) { callback(null); }
     }
 
+    function fetchPageTitleInTempTab(url, callback) {
+        var done = false;
+        var tabId = null;
+        var timer = null;
+
+        function finish(title) {
+            if (done) return;
+            done = true;
+            if (timer) clearTimeout(timer);
+            try { chrome.tabs.onUpdated.removeListener(onUpdated); } catch (e) { }
+            if (tabId !== null && chrome.tabs && chrome.tabs.remove) {
+                try { chrome.tabs.remove(tabId, function () { }); } catch (e) { }
+            }
+            callback(title || null);
+        }
+
+        function readTitle() {
+            if (tabId === null || !chrome.scripting || !chrome.scripting.executeScript) {
+                finish(null);
+                return;
+            }
+            var injection = chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                func: function () { return document.title || ''; }
+            });
+            Promise.resolve(injection).then(function (results) {
+                var title = results && results[0] && results[0].result;
+                finish(typeof title === 'string' ? title.trim() : '');
+            }).catch(function () {
+                finish(null);
+            });
+        }
+
+        function onUpdated(updatedTabId, changeInfo) {
+            if (updatedTabId !== tabId || !changeInfo || changeInfo.status !== 'complete') return;
+            setTimeout(readTitle, 120);
+        }
+
+        try {
+            chrome.tabs.create({
+                url: url,
+                active: false
+            }, function (tab) {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                    finish(null);
+                    return;
+                }
+                tabId = tab && tab.id !== undefined ? tab.id : null;
+                if (tabId === null) {
+                    finish(null);
+                    return;
+                }
+                chrome.tabs.onUpdated.addListener(onUpdated);
+                if (tab && tab.status === 'complete') setTimeout(readTitle, 120);
+                timer = setTimeout(readTitle, 8000);
+            });
+        } catch (e) {
+            finish(null);
+        }
+    }
+
     var _fetchPermOrigins = {};
 
     function handleFetchTitle() {
@@ -815,7 +876,8 @@
             btn.classList.add('loading');
             btn.disabled = true;
             nameEl.placeholder = t('fetchingTitle');
-            fetchPageTitle(url, function (title) {
+            var fetcher = isExt ? fetchPageTitleInTempTab : fetchPageTitle;
+            fetcher(url, function (title) {
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 nameEl.placeholder = t('shortcutName');

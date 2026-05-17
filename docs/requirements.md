@@ -90,7 +90,7 @@ Chrome/Edge 浏览器新标签页扩展（Manifest V3），同时支持 Cloudfla
 - **双运行时**：`typeof chrome !== 'undefined' && chrome.runtime && !!chrome.runtime.id` 判断扩展/网页模式
 - **CORS**：Bing 图片下载需 CORS 模式才能存入 IDB
 - **Blob MIME**：IDB 取出的 blob 可能丢失 MIME type，存时记录 `mime` 字段恢复
-- **扩展权限**：常驻权限仅 `search`；HTTPS 壁纸源和快捷链接标题抓取按用户配置的单个 origin 请求可选 host 权限
+- **扩展权限**：常驻权限为 `search`、`tabs`、`scripting`；HTTPS 壁纸源和快捷链接标题抓取按用户配置的单个 origin 请求可选 host 权限
 
 ---
 

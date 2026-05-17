@@ -57,7 +57,7 @@
 
 **add：** 表单包含名称和 URL。URL 为空拒绝；缺少协议自动补 `https://`；必须匹配 HTTPS host。名称为空时用域名。新增 URL 在全量 links 中去重，不区分普通/隐藏。隐藏面板中新增的链接自动加入 hidden。
 
-**fetch title：** URL 输入旁的下载按钮会尝试 GET HTTPS 页面并解析 `<title>`。扩展模式按当前 URL 的单个 origin 请求可选权限，例如 `https://example.com/*`；失败时回退域名。
+**fetch title：** URL 输入旁的下载按钮会尝试获取 HTTPS 页面标题。网页模式使用 `fetch()` 读取 HTML 并解析 `<title>`；扩展模式按当前 URL 的单个 origin 请求可选权限，例如 `https://example.com/*`，再创建 `active:false` 临时 tab，用 `chrome.scripting.executeScript()` 读取 `document.title`，读取完成或失败后关闭临时 tab 并回退域名。
 
 **edit：** 在当前面板范围内选择链接，编辑名称和 URL。编辑不改变 hidden 归属。
 

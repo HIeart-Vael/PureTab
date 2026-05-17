@@ -16,7 +16,9 @@
         "128": "icon/icon128.png"
     },
     "permissions": [
-        "search"
+        "search",
+        "tabs",
+        "scripting"
     ],
     "content_security_policy": {
         "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' https: data: blob:; style-src 'self'"
