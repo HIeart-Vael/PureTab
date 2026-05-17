@@ -611,6 +611,28 @@
         return !!(id && id.indexOf('rss_') === 0);
     }
 
+    function isUploadId(id) {
+        return !!(id && id !== 'bing' && id !== 'api' && !isRssId(id) && String(id).indexOf('folder:') !== 0);
+    }
+
+    function isFolderId(id) {
+        return !!(id && String(id).indexOf('folder:') === 0);
+    }
+
+    function hasSourceCache(source) {
+        source = normalizeSource(source);
+        var model = loadWallpaper();
+        var order = model.cache.order || [];
+        var thumbs = loadThumbs();
+        var blurThumbs = loadBlurThumbs();
+        var meta = model.cache.meta || {};
+        if (source === 'upload') return order.some(isUploadId) || Object.keys(thumbs).some(isUploadId) || Object.keys(blurThumbs).some(isUploadId) || Object.keys(meta).some(isUploadId);
+        if (source === 'folder') return order.some(isFolderId) || Object.keys(thumbs).some(isFolderId) || Object.keys(blurThumbs).some(isFolderId) || !!(model.providers.folder.state && model.providers.folder.state.status);
+        if (source === 'rss') return order.some(isRssId) || Object.keys(thumbs).some(isRssId) || Object.keys(blurThumbs).some(isRssId) || Object.keys(meta).some(isRssId);
+        if (source === 'api') return !!(thumbs.api || blurThumbs.api || meta.api || (model.providers.api.state && model.providers.api.state.lastImageUrl));
+        return false;
+    }
+
     function rssBlobKey(id) {
         return DB.RSS_PREFIX + String(id || '').replace(/^rss_/, '');
     }
@@ -621,6 +643,74 @@
         var meta = loadMeta();
         return (loadWallpaper().cache.order || []).filter(isRssId).filter(function (id) {
             return !activeSourceId || !meta[id] || meta[id].sourceId === activeSourceId;
+        });
+    }
+
+    function clearWallpaperSourceCache(source) {
+        source = normalizeSource(source);
+        if (source === 'bing') return Promise.resolve(false);
+
+        var model = loadWallpaper();
+        var order = model.cache.order || [];
+        var meta = model.cache.meta || {};
+        var thumbs = loadThumbs();
+        var blurThumbs = loadBlurThumbs();
+        var idbDeletes = [];
+        var idbDeletePromise = null;
+
+        function deleteEntry(id) {
+            delete thumbs[id];
+            delete blurThumbs[id];
+            delete meta[id];
+        }
+
+        function deleteMatching(predicate) {
+            Object.keys(thumbs).forEach(function (id) { if (predicate(id)) deleteEntry(id); });
+            Object.keys(blurThumbs).forEach(function (id) { if (predicate(id)) deleteEntry(id); });
+            Object.keys(meta).forEach(function (id) { if (predicate(id)) deleteEntry(id); });
+        }
+
+        if (source === 'upload') {
+            order.filter(isUploadId).forEach(function (id) {
+                deleteEntry(id);
+            });
+            deleteMatching(isUploadId);
+            model.cache.order = order.filter(function (id) { return !isUploadId(id); });
+            idbDeletePromise = idbDeleteMatching(function (key) {
+                return String(key).indexOf(DB.UPLOAD_PREFIX) === 0;
+            });
+        } else if (source === 'folder') {
+            deleteMatching(isFolderId);
+            model.cache.order = order.filter(function (id) { return !isFolderId(id); });
+            model.providers.folder.state = {};
+            idbDeletes.push(DB.FOLDER_HANDLE, DB.FOLDER_FILES);
+        } else if (source === 'rss') {
+            deleteMatching(isRssId);
+            model.cache.order = order.filter(function (id) { return !isRssId(id); });
+            model.providers.rss.state.lastImageUrl = '';
+            model.providers.rss.state.lastError = '';
+            idbDeletePromise = idbDeleteMatching(function (key) {
+                return String(key).indexOf(DB.RSS_PREFIX) === 0;
+            });
+        } else if (source === 'api') {
+            deleteEntry('api');
+            model.cache.order = order.filter(function (id) { return id !== 'api'; });
+            model.providers.api.state = mergeDefaults({}, DEFAULT_WALLPAPER.providers.api.state);
+            idbDeletes.push(DB.API_BLOB);
+        } else {
+            return Promise.resolve(false);
+        }
+
+        if (!model.cache.order.length) model.cache.order = ['bing'];
+        model.cache.index = Math.min(model.cache.index || 0, Math.max(model.cache.order.length - 1, 0));
+        model.cache.meta = meta;
+        saveWallpaper(model);
+        saveThumbs(thumbs);
+        saveBlurThumbs(blurThumbs);
+
+        return (idbDeletePromise || idbDeleteMany(idbDeletes)).then(function () {
+            clearCaches();
+            return true;
         });
     }
 
@@ -788,6 +878,10 @@
         activeApiSource: activeApiSource,
         normalizeApiConfig: normalizeApiConfig,
         isRssId: isRssId,
+        isUploadId: isUploadId,
+        isFolderId: isFolderId,
+        hasSourceCache: hasSourceCache,
+        clearWallpaperSourceCache: clearWallpaperSourceCache,
         rssBlobKey: rssBlobKey,
         activeRssOrder: activeRssOrder,
         resetWallpaperDefaults: resetWallpaperDefaults,

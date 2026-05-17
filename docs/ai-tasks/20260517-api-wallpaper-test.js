@@ -49,6 +49,7 @@
         assert('WallpaperData.loadApiConfig exists', !!(D && D.loadApiConfig));
         assert('WallpaperData.saveApiConfig exists', !!(D && D.saveApiConfig));
         assert('WallpaperData.apiFieldHash exists', !!(D && D.apiFieldHash));
+        assert('WallpaperData.hasSourceCache exists', !!(D && D.hasSourceCache));
         assert('WallpaperData.clearWallpaperSourceCache exists', !!(D && D.clearWallpaperSourceCache));
         assert('WallpaperFetch.resolveJsonPath exists', !!(F && F.resolveJsonPath));
         assert('WallpaperFetch.findApiImageUrl exists', !!(F && F.findApiImageUrl));
@@ -131,6 +132,55 @@
             } finally {
                 if (beforeWallpaper === null) localStorage.removeItem(D.KEYS.WALLPAPER);
                 else localStorage.setItem(D.KEYS.WALLPAPER, beforeWallpaper);
+                D.clearCaches();
+            }
+        }
+
+        if (D && D.hasSourceCache && D.clearWallpaperSourceCache && D.idbPut && D.idbGet && D.idbDelete && D.imageRecord && D.clearCaches && D.KEYS && D.DB) {
+            var cacheBeforeWallpaper = null;
+            var cacheBeforeThumbs = null;
+            var cacheBeforeBlurThumbs = null;
+            var cacheBeforeApiRecord = null;
+            try {
+                cacheBeforeWallpaper = localStorage.getItem(D.KEYS.WALLPAPER);
+                cacheBeforeThumbs = localStorage.getItem(D.KEYS.WALLPAPER_THUMBS);
+                cacheBeforeBlurThumbs = localStorage.getItem(D.KEYS.WALLPAPER_BLUR_THUMBS);
+                cacheBeforeApiRecord = await D.idbGet(D.DB.API_BLOB);
+
+                localStorage.setItem(D.KEYS.WALLPAPER, JSON.stringify({
+                    activeSource: 'api',
+                    providers: {
+                        api: {
+                            state: { lastCheckedAt: 1, lastSuccessAt: 1, lastError: '', lastSourceId: 'demo', lastImageUrl: 'https://example.com/api.png' }
+                        }
+                    },
+                    cache: { order: ['bing', 'api'], index: 1, meta: { bing: {}, api: { imageUrl: 'https://example.com/api.png' } } }
+                }));
+                localStorage.setItem(D.KEYS.WALLPAPER_THUMBS, JSON.stringify({ bing: 'bing-thumb', api: 'api-thumb' }));
+                localStorage.setItem(D.KEYS.WALLPAPER_BLUR_THUMBS, JSON.stringify({ api: { blur: 5, thumb: 'api-blur' } }));
+                D.clearCaches();
+                var apiCacheBlob = await colorBlob('#224466');
+                await D.idbPut(D.DB.API_BLOB, D.imageRecord(apiCacheBlob, 'api'));
+
+                assert('API source cache detection sees cached state', D.hasSourceCache('api') === true);
+                var clearedApi = await D.clearWallpaperSourceCache('api');
+                var clearedApiRecord = await D.idbGet(D.DB.API_BLOB);
+                assert('API source cache cleanup clears single-image cache', clearedApi === true &&
+                    D.hasSourceCache('api') === false &&
+                    D.loadThumbs().api === undefined &&
+                    !clearedApiRecord, JSON.stringify({ thumbs: D.loadThumbs(), record: !!clearedApiRecord }));
+                assert('Bing source cleanup is a no-op', await D.clearWallpaperSourceCache('bing') === false);
+            } catch (err) {
+                assert('API source cache cleanup clears single-image cache', false, err && (err.code || err.message || String(err)));
+            } finally {
+                if (cacheBeforeWallpaper === null) localStorage.removeItem(D.KEYS.WALLPAPER);
+                else localStorage.setItem(D.KEYS.WALLPAPER, cacheBeforeWallpaper);
+                if (cacheBeforeThumbs === null) localStorage.removeItem(D.KEYS.WALLPAPER_THUMBS);
+                else localStorage.setItem(D.KEYS.WALLPAPER_THUMBS, cacheBeforeThumbs);
+                if (cacheBeforeBlurThumbs === null) localStorage.removeItem(D.KEYS.WALLPAPER_BLUR_THUMBS);
+                else localStorage.setItem(D.KEYS.WALLPAPER_BLUR_THUMBS, cacheBeforeBlurThumbs);
+                if (cacheBeforeApiRecord) await D.idbPut(D.DB.API_BLOB, cacheBeforeApiRecord);
+                else await D.idbDelete(D.DB.API_BLOB);
                 D.clearCaches();
             }
         }
