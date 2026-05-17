@@ -153,8 +153,16 @@
                 state: {}
             },
             folder: {
-                config: { pathLabel: '', strategy: 'random' },
-                state: {}
+                config: { pathLabel: '', strategy: 'shuffle' },
+                state: {
+                    status: 'idle',
+                    indexedCount: 0,
+                    completed: false,
+                    lastScanAt: 0,
+                    lastError: '',
+                    shuffleBag: [],
+                    currentName: ''
+                }
             },
             rss: {
                 config: {
@@ -293,6 +301,17 @@
 
     function legacyUploadId(id) {
         return id && id.indexOf('upload_') === 0 ? id.slice(7) : id;
+    }
+
+    function folderId(name) {
+        return 'folder:' + encodeURIComponent(String(name || ''));
+    }
+
+    function folderNameFromId(id) {
+        var raw = String(id || '');
+        if (raw.indexOf('folder:') !== 0) return raw;
+        try { return decodeURIComponent(raw.slice(7)); }
+        catch (e) { return raw.slice(7); }
     }
 
     function imgKey(id) {
@@ -460,10 +479,56 @@
         return merged;
     }
 
+    function normalizeFolderConfig(config) {
+        var defaults = clone(DEFAULT_WALLPAPER.providers.folder.config);
+        var merged = mergeDefaults(config || {}, defaults);
+        merged.pathLabel = String(merged.pathLabel || '').trim().slice(0, 180);
+        merged.strategy = merged.strategy === 'shuffle' || merged.strategy === 'random' ? 'shuffle' : 'shuffle';
+        return merged;
+    }
+
+    function normalizeFolderState(state) {
+        var defaults = clone(DEFAULT_WALLPAPER.providers.folder.state);
+        var merged = mergeDefaults(state || {}, defaults);
+        var allowed = ['idle', 'indexing', 'ready', 'needs-permission', 'empty', 'error'];
+        if (allowed.indexOf(merged.status) === -1) merged.status = 'idle';
+        merged.indexedCount = Math.max(0, parseInt(merged.indexedCount, 10) || 0);
+        merged.completed = merged.completed === true;
+        merged.lastScanAt = Math.max(0, parseInt(merged.lastScanAt, 10) || 0);
+        merged.lastError = String(merged.lastError || '').slice(0, 240);
+        merged.currentName = String(merged.currentName || '');
+        merged.shuffleBag = (Array.isArray(merged.shuffleBag) ? merged.shuffleBag : []).map(function (name) {
+            return String(name || '').trim();
+        }).filter(Boolean);
+        return merged;
+    }
+
+    function normalizeFolderFileRecord(file) {
+        file = file || {};
+        var name = String(file.name || '').trim();
+        if (!name) return null;
+        return {
+            name: name,
+            size: Math.max(0, parseInt(file.size, 10) || 0),
+            lastModified: Math.max(0, parseInt(file.lastModified, 10) || 0)
+        };
+    }
+
+    function normalizeFolderFiles(files) {
+        var seen = {};
+        return (Array.isArray(files) ? files : []).map(normalizeFolderFileRecord).filter(function (file) {
+            if (!file || seen[file.name]) return false;
+            seen[file.name] = true;
+            return true;
+        });
+    }
+
     function loadWallpaper() {
         if (_wallpaperCache !== null) return _wallpaperCache;
         _wallpaperCache = mergeDefaults(readJSON(KEYS.WALLPAPER, DEFAULT_WALLPAPER), DEFAULT_WALLPAPER);
         _wallpaperCache.activeSource = normalizeSource(_wallpaperCache.activeSource);
+        _wallpaperCache.providers.folder.config = normalizeFolderConfig(_wallpaperCache.providers.folder.config);
+        _wallpaperCache.providers.folder.state = normalizeFolderState(_wallpaperCache.providers.folder.state);
         _wallpaperCache.providers.rss.config = normalizeRssConfig(_wallpaperCache.providers.rss.config);
         _wallpaperCache.providers.api.config = normalizeApiConfig(_wallpaperCache.providers.api.config);
         return _wallpaperCache;
@@ -472,6 +537,8 @@
     function saveWallpaper(model) {
         _wallpaperCache = mergeDefaults(model, DEFAULT_WALLPAPER);
         _wallpaperCache.activeSource = normalizeSource(_wallpaperCache.activeSource);
+        _wallpaperCache.providers.folder.config = normalizeFolderConfig(_wallpaperCache.providers.folder.config);
+        _wallpaperCache.providers.folder.state = normalizeFolderState(_wallpaperCache.providers.folder.state);
         _wallpaperCache.providers.rss.config = normalizeRssConfig(_wallpaperCache.providers.rss.config);
         _wallpaperCache.providers.api.config = normalizeApiConfig(_wallpaperCache.providers.api.config);
         return writeJSON(KEYS.WALLPAPER, _wallpaperCache);
@@ -502,6 +569,47 @@
         updateWallpaper(function (model) {
             model.providers.api.config = normalizeApiConfig(config);
         });
+    }
+
+    function loadFolderConfig() {
+        return loadWallpaper().providers.folder.config;
+    }
+
+    function saveFolderConfig(config) {
+        updateWallpaper(function (model) {
+            model.providers.folder.config = normalizeFolderConfig(config);
+        });
+    }
+
+    function loadFolderState() {
+        return loadWallpaper().providers.folder.state;
+    }
+
+    function saveFolderState(state) {
+        updateWallpaper(function (model) {
+            model.providers.folder.state = normalizeFolderState(state);
+        });
+    }
+
+    function loadFolderHandle() {
+        return idbGet(DB.FOLDER_HANDLE);
+    }
+
+    function saveFolderHandle(handle) {
+        if (!handle) return Promise.reject(new Error('missing folder handle'));
+        return idbPut(DB.FOLDER_HANDLE, handle);
+    }
+
+    function loadFolderFiles() {
+        return idbGet(DB.FOLDER_FILES).then(normalizeFolderFiles);
+    }
+
+    function saveFolderFiles(files) {
+        return idbPut(DB.FOLDER_FILES, normalizeFolderFiles(files));
+    }
+
+    function clearFolderHandleAndIndex() {
+        return idbDeleteMany([DB.FOLDER_HANDLE, DB.FOLDER_FILES]);
     }
 
     function activeApiSource(config) {
@@ -627,7 +735,14 @@
         var blurThumbs = loadBlurThumbs();
         var meta = model.cache.meta || {};
         if (source === 'upload') return order.some(isUploadId) || Object.keys(thumbs).some(isUploadId) || Object.keys(blurThumbs).some(isUploadId) || Object.keys(meta).some(isUploadId);
-        if (source === 'folder') return order.some(isFolderId) || Object.keys(thumbs).some(isFolderId) || Object.keys(blurThumbs).some(isFolderId) || !!(model.providers.folder.state && model.providers.folder.state.status);
+        if (source === 'folder') {
+            var folderState = model.providers.folder.state || {};
+            return order.some(isFolderId) ||
+                Object.keys(thumbs).some(isFolderId) ||
+                Object.keys(blurThumbs).some(isFolderId) ||
+                Object.keys(meta).some(isFolderId) ||
+                ['indexing', 'ready', 'needs-permission', 'empty', 'error'].indexOf(folderState.status) !== -1;
+        }
         if (source === 'rss') return order.some(isRssId) || Object.keys(thumbs).some(isRssId) || Object.keys(blurThumbs).some(isRssId) || Object.keys(meta).some(isRssId);
         if (source === 'api') return !!(thumbs.api || blurThumbs.api || meta.api || (model.providers.api.state && model.providers.api.state.lastImageUrl));
         return false;
@@ -841,6 +956,8 @@
 
         // 本地图片
         imgKey: imgKey,
+        folderId: folderId,
+        folderNameFromId: folderNameFromId,
         imageBlob: imageBlob,
         imageRecord: imageRecord,
         loadOrder: loadOrder,
@@ -877,6 +994,17 @@
         saveApiConfig: saveApiConfig,
         activeApiSource: activeApiSource,
         normalizeApiConfig: normalizeApiConfig,
+        normalizeFolderConfig: normalizeFolderConfig,
+        normalizeFolderState: normalizeFolderState,
+        loadFolderConfig: loadFolderConfig,
+        saveFolderConfig: saveFolderConfig,
+        loadFolderState: loadFolderState,
+        saveFolderState: saveFolderState,
+        loadFolderHandle: loadFolderHandle,
+        saveFolderHandle: saveFolderHandle,
+        loadFolderFiles: loadFolderFiles,
+        saveFolderFiles: saveFolderFiles,
+        clearFolderHandleAndIndex: clearFolderHandleAndIndex,
         isRssId: isRssId,
         isUploadId: isUploadId,
         isFolderId: isFolderId,
