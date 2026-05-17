@@ -497,8 +497,10 @@
         merged.lastScanAt = Math.max(0, parseInt(merged.lastScanAt, 10) || 0);
         merged.lastError = String(merged.lastError || '').slice(0, 240);
         merged.currentName = String(merged.currentName || '');
-        merged.shuffleBag = (Array.isArray(merged.shuffleBag) ? merged.shuffleBag : []).map(function (name) {
-            return String(name || '').trim();
+        merged.shuffleBag = (Array.isArray(merged.shuffleBag) ? merged.shuffleBag : []).filter(function (name) {
+            return typeof name === 'string';
+        }).map(function (name) {
+            return name.trim();
         }).filter(Boolean);
         return merged;
     }

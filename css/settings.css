@@ -1267,6 +1267,86 @@ input[type="file"] {
     border: 1px solid rgba(var(--stroke-rgb), 0.42);
 }
 
+.folder-config {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.folder-current {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--stroke-rgb), 0.40);
+    background: rgba(var(--surface-base-rgb), 0.20);
+}
+
+.folder-current div,
+.folder-strategy-readonly {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.folder-current span,
+.folder-strategy-readonly span {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.folder-current strong,
+.folder-strategy-readonly strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.folder-strategy-readonly {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--stroke-rgb), 0.32);
+    background: rgba(var(--surface-elevated-rgb), 0.16);
+}
+
+.folder-notice,
+.folder-status {
+    min-height: 34px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--stroke-rgb), 0.42);
+    background: rgba(var(--surface-base-rgb), 0.18);
+    color: var(--text-muted);
+    font-size: 11.5px;
+}
+
+.folder-notice[hidden] {
+    display: none;
+}
+
+.folder-notice[data-type="info"] {
+    border-color: rgba(234, 179, 8, 0.34);
+    background: rgba(234, 179, 8, 0.10);
+    color: var(--text-primary);
+}
+
+.folder-notice[data-type="success"] {
+    border-color: rgba(34, 197, 94, 0.34);
+    background: rgba(34, 197, 94, 0.10);
+    color: #86efac;
+}
+
+.folder-notice[data-type="error"] {
+    border-color: rgba(248, 113, 113, 0.36);
+    background: rgba(248, 113, 113, 0.10);
+    color: #fca5a5;
+}
+
 .source-drawer .config-row {
     display: flex;
     gap: 8px;
@@ -1916,6 +1996,10 @@ input[type="file"] {
     .api-source-row,
     .api-add-row,
     .api-config[data-api-type="json"] .api-add-row {
+        grid-template-columns: 1fr;
+    }
+
+    .folder-current {
         grid-template-columns: 1fr;
     }
 

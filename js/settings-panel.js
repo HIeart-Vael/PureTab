@@ -12,6 +12,7 @@
     var D = window.WallpaperData;
     var S = window.WallpaperShow;
     var F = window.WallpaperFetch;
+    var WF = window.WallpaperFolder;
     var I18N = window.I18N || {};
     var LanguageList = window.LanguageList || [];
 
@@ -139,6 +140,7 @@
     var wallpaperDraftOriginal = '';
     var wallpaperDraftApiTestResult = null;
     var wallpaperDraftRssTestResult = null;
+    var wallpaperDraftFolderMount = null;
 
     // ================================================================
     // 语言面板
@@ -594,6 +596,7 @@
         wallpaperDraftOriginal = JSON.stringify(wallpaperDraft);
         wallpaperDraftApiTestResult = null;
         wallpaperDraftRssTestResult = null;
+        wallpaperDraftFolderMount = null;
         return wallpaperDraft;
     }
 
@@ -602,6 +605,7 @@
         wallpaperDraftOriginal = '';
         wallpaperDraftApiTestResult = null;
         wallpaperDraftRssTestResult = null;
+        wallpaperDraftFolderMount = null;
     }
 
     function currentWallpaperDraft() {
@@ -633,7 +637,11 @@
         var source = D.compatMode ? D.compatMode(draft.activeSource) : draft.activeSource;
         if (!wallpaperDraftChanged()) return { valid: false, reason: tr('wallpaperApplyNoChanges', '没有未应用更改') };
         if (source === 'bing' || source === 'local') return { valid: true, reason: '' };
-        if (source === 'folder') return { valid: false, reason: tr('folderNeedsValidSelection', '请选择有效文件夹') };
+        if (source === 'folder') {
+            if (!WF || !WF.isSupported || !WF.isSupported()) return { valid: false, reason: tr('folderUnsupported', '当前浏览器不支持文件夹壁纸') };
+            if (!wallpaperDraftFolderMount) return { valid: false, reason: tr('folderNeedsValidSelection', '请选择有效文件夹') };
+            return { valid: true, reason: '' };
+        }
         if (source === 'rss') {
             var rss = selectedDraftRssSource();
             if (!rss) return { valid: false, reason: tr('rssNeedsSource', '请添加并选择 RSS 源') };
@@ -718,7 +726,50 @@
             return reloadAfterApply();
         }
 
+        function saveDraftAfterFolderMount() {
+            var mount = wallpaperDraftFolderMount;
+            var folderId = mount.firstId;
+            var thumbs = D.loadThumbs();
+            var meta = D.loadMeta();
+            thumbs[folderId] = mount.thumb;
+            meta[folderId] = {
+                source: 'folder',
+                name: mount.firstName,
+                size: mount.firstRecord && mount.firstRecord.size || 0,
+                lastModified: mount.firstRecord && mount.firstRecord.lastModified || 0,
+                pathLabel: mount.pathLabel || '',
+                fetchedAt: Date.now()
+            };
+            D.saveThumbs(thumbs);
+            D.saveMeta(meta);
+            D.savePreview(mount.preview || mount.thumb);
+            draft.activeSource = 'folder';
+            draft.providers.folder.config = D.normalizeFolderConfig({
+                pathLabel: mount.pathLabel || '',
+                strategy: 'shuffle'
+            });
+            draft.providers.folder.state = D.normalizeFolderState({
+                status: 'ready',
+                indexedCount: mount.files.length,
+                completed: mount.completed === true,
+                lastScanAt: Date.now(),
+                lastError: '',
+                shuffleBag: [mount.firstName].concat(mount.shuffleBag || []),
+                currentName: ''
+            });
+            draft.cache.order = ['bing', folderId];
+            draft.cache.index = 1;
+            draft.cache.meta = meta;
+            D.saveWallpaper(draft);
+            return reloadAfterApply();
+        }
+
         function finishApply() {
+            if (nextSource === 'folder' && wallpaperDraftFolderMount) {
+                return D.saveFolderHandle(wallpaperDraftFolderMount.handle).then(function () {
+                    return D.saveFolderFiles(wallpaperDraftFolderMount.files);
+                }).then(saveDraftAfterFolderMount);
+            }
             if (nextSource === 'api' && wallpaperDraftApiTestResult) {
                 var apiConfig = draft.providers.api.config;
                 var apiSource = selectedDraftApiSource();
@@ -985,11 +1036,10 @@
 
         var draftSource = draftActiveSource();
         var activeSource = draftSource === 'local' ? 'upload' : draftSource;
-        var pendingSourceText = tr('sourcePendingHint', '这个来源的配置正在接入中，当前还不会改变壁纸。');
         var configs = {
             bing:   '<p>' + (t('bingConfigHint') || '根据当前界面语言自动选择 Bing 市场区域。') + '</p>',
             upload: '<p>' + (t('uploadConfigHint') || '在一级面板中使用「+」按钮上传图片。支持多选，单张上限 12 张。') + '</p>',
-            folder: unavailableSourceHTML(pendingSourceText + ' ' + tr('folderPendingHint', '文件夹读取需要先完成目录授权和轮换策略。')),
+            folder: buildFolderConfigHTML(),
             rss:    buildRssConfigHTML(),
             api:    buildApiConfigHTML()
         };
@@ -1027,6 +1077,7 @@
                 refreshWallpaperApplyFooter();
             });
         });
+        bindFolderConfigEvents();
         bindRssConfigEvents();
         bindApiConfigEvents();
         var applyBtn = modalContent.querySelector('#wallpaperApplyBtn');
@@ -1074,6 +1125,118 @@
         if (D.compatMode(D.getActiveSource()) === 'rss' && window.reloadWallpaper) {
             window.reloadWallpaper();
         }
+    }
+
+    function folderStatusText() {
+        var draft = currentWallpaperDraft();
+        var config = draft.providers.folder.config || {};
+        var state = draft.providers.folder.state || {};
+        if (!WF || !WF.isSupported || !WF.isSupported()) return tr('folderUnsupported', '当前浏览器不支持文件夹壁纸');
+        if (wallpaperDraftFolderMount) {
+            return tr('folderReady', '已准备文件夹：') + (wallpaperDraftFolderMount.pathLabel || tr('sourceFolder', '本地文件夹')) + ' · ' + wallpaperDraftFolderMount.files.length + ' ' + tr('folderImagesUnit', '张图片');
+        }
+        if (state.status === 'needs-permission') return tr('folderNeedsPermission', '需要重新授权文件夹');
+        if (state.status === 'ready' && config.pathLabel) return tr('folderSaved', '已保存文件夹：') + config.pathLabel + (state.indexedCount ? (' · ' + state.indexedCount + ' ' + tr('folderImagesUnit', '张图片')) : '');
+        if (state.status === 'empty') return tr('folderEmpty', '未找到支持的图片');
+        if (state.status === 'error' && state.lastError) return state.lastError;
+        return tr('noFolderSelected', '未选择文件夹');
+    }
+
+    function showFolderNotice(message, type) {
+        var el = document.getElementById('folderNotice');
+        if (!el) return;
+        el.textContent = message || '';
+        el.dataset.type = type || 'info';
+        el.hidden = !message;
+    }
+
+    function setFolderStatus(message) {
+        var el = document.getElementById('folderStatus');
+        if (el) el.textContent = message || folderStatusText();
+    }
+
+    function setFolderButtonState(button, busy) {
+        if (!button) return;
+        if (!button.dataset.idleLabel) button.dataset.idleLabel = button.textContent;
+        button.disabled = !!busy;
+        button.classList.toggle('testing', !!busy);
+        button.textContent = busy ? tr('folderPreparing', '正在读取...') : button.dataset.idleLabel;
+    }
+
+    function buildFolderConfigHTML() {
+        var supported = !!(WF && WF.isSupported && WF.isSupported());
+        var draft = currentWallpaperDraft();
+        var config = draft.providers.folder.config || {};
+        var label = wallpaperDraftFolderMount ? wallpaperDraftFolderMount.pathLabel : (config.pathLabel || tr('noFolderSelected', '未选择文件夹'));
+        return '<div class="folder-config">' +
+            '<div class="folder-current">' +
+            '<div><span>' + tr('sourceFolder', '本地文件夹') + '</span><strong>' + escapeHtml(label) + '</strong></div>' +
+            '<button id="folderChooseBtn" class="primary-action" type="button"' + (supported ? '' : ' disabled') + '>' + tr('chooseFolder', '选择文件夹') + '</button>' +
+            '</div>' +
+            '<div class="folder-strategy-readonly"><span>' + tr('folderRotation', '轮换方式') + '</span><strong>' + tr('strategyRandom', '随机') + '</strong></div>' +
+            '<div class="folder-notice" id="folderNotice" hidden></div>' +
+            '<div class="folder-status" id="folderStatus">' + escapeHtml(folderStatusText()) + '</div>' +
+            '</div>';
+    }
+
+    function folderErrorMessage(err) {
+        var map = {
+            FOLDER_UNSUPPORTED: tr('folderUnsupported', '当前浏览器不支持文件夹壁纸'),
+            FOLDER_PERMISSION_DENIED: tr('folderNeedsPermission', '需要重新授权文件夹'),
+            FOLDER_NO_IMAGES: tr('folderEmpty', '未找到支持的图片'),
+            FOLDER_NO_USABLE_IMAGES: tr('folderNoUsableImages', '找到图片，但无法读取可用壁纸'),
+            FOLDER_THUMBNAIL_FAILED: tr('folderPreviewFailed', '无法生成文件夹壁纸预览')
+        };
+        return map[err && err.code] || (err && err.message ? err.message : String(err || 'Folder failed'));
+    }
+
+    function bindFolderConfigEvents() {
+        var root = modalContent.querySelector('.folder-config');
+        if (!root) return;
+        var choose = root.querySelector('#folderChooseBtn');
+        if (!choose) return;
+        choose.addEventListener('click', function () {
+            if (!WF || !WF.pickDirectory || !WF.prepareMount) {
+                showFolderNotice(tr('folderUnsupported', '当前浏览器不支持文件夹壁纸'), 'error');
+                refreshWallpaperApplyFooter();
+                return;
+            }
+            setFolderButtonState(choose, true);
+            showFolderNotice(tr('folderPreparing', '正在读取...'), 'info');
+            WF.pickDirectory().then(function (handle) {
+                return WF.prepareMount(handle, { blur: wallpaperBlur });
+            }).then(function (mount) {
+                wallpaperDraftFolderMount = mount;
+                var draft = currentWallpaperDraft();
+                draft.activeSource = 'folder';
+                draft.providers.folder.config = D.normalizeFolderConfig({
+                    pathLabel: mount.pathLabel || '',
+                    strategy: 'shuffle'
+                });
+                draft.providers.folder.state = D.normalizeFolderState({
+                    status: 'ready',
+                    indexedCount: mount.files.length,
+                    completed: mount.completed === true,
+                    lastScanAt: Date.now(),
+                    lastError: '',
+                    shuffleBag: [mount.firstName].concat(mount.shuffleBag || []),
+                    currentName: ''
+                });
+                showFolderNotice(tr('folderReady', '已准备文件夹：') + (mount.pathLabel || tr('sourceFolder', '本地文件夹')), 'success');
+                invalidateWallpaperTab();
+            }).catch(function (err) {
+                if (err && err.name === 'AbortError') {
+                    showFolderNotice('', 'info');
+                    return;
+                }
+                var message = folderErrorMessage(err);
+                showFolderNotice(message, 'error');
+                setFolderStatus(message);
+                refreshWallpaperApplyFooter();
+            }).finally(function () {
+                setFolderButtonState(choose, false);
+            });
+        });
     }
 
     function rssErrorMessage(err) {
