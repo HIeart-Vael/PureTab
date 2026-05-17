@@ -577,6 +577,90 @@ input[type="file"] {
 }
 
 /* ========== 设置项 ========== */
+.wallpaper-tab-shell {
+    height: 100%;
+    min-height: 0;
+    padding: 0 34px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.wallpaper-tab-header {
+    position: relative;
+    z-index: 3;
+    padding: 30px 0 20px;
+    border-bottom: 1px solid rgba(var(--stroke-rgb), 0.66);
+    background: rgba(var(--surface-elevated-rgb), var(--panel-opacity));
+}
+
+.wallpaper-tab-header p {
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.wallpaper-tab-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.wallpaper-tab-body::-webkit-scrollbar {
+    display: none;
+}
+
+.wallpaper-apply-footer {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0 18px;
+    border-top: 1px solid rgba(var(--stroke-rgb), 0.66);
+    background: rgba(var(--surface-elevated-rgb), var(--panel-opacity));
+}
+
+.wallpaper-apply-status {
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.primary-action {
+    min-height: 36px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--accent-rgb), 0.52);
+    background: rgba(var(--accent-rgb), 0.18);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.primary-action:hover {
+    border-color: rgba(var(--accent-rgb), 0.72);
+    background: rgba(var(--accent-rgb), 0.26);
+}
+
+.primary-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.primary-action:disabled:hover {
+    border-color: rgba(var(--accent-rgb), 0.52);
+    background: rgba(var(--accent-rgb), 0.18);
+}
+
 .setting-stack {
     display: flex;
     flex-direction: column;
@@ -1566,16 +1650,28 @@ input[type="file"] {
         border-radius: 2px 2px 0 0;
     }
 
+    .wallpaper-tab-shell,
     .settings-page-shell {
         padding: 0 18px;
     }
 
+    .wallpaper-tab-header,
     .settings-page-header {
         padding-top: 22px;
     }
 
+    .wallpaper-tab-body,
     .settings-page-body {
         padding-bottom: 24px;
+    }
+
+    .wallpaper-apply-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .wallpaper-apply-footer .primary-action {
+        width: 100%;
     }
 
     .modal-content h2 {

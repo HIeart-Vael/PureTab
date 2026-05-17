@@ -651,6 +651,27 @@
         return { valid: false, reason: tr('sourcePendingHint', '这个来源的配置正在接入中') };
     }
 
+    function wallpaperApplyFooterHTML() {
+        var validation = validateWallpaperDraft();
+        return '<div class="wallpaper-apply-footer">' +
+            '<div class="wallpaper-apply-status" id="wallpaperApplyStatus">' + escapeHtml(validation.reason || tr('wallpaperApplyReady', '可以应用配置')) + '</div>' +
+            '<button id="wallpaperApplyBtn" class="primary-action" type="button"' + (validation.valid ? '' : ' disabled') + '>' + tr('wallpaperApply', '应用配置') + '</button>' +
+            '</div>';
+    }
+
+    function refreshWallpaperApplyFooter() {
+        var status = document.getElementById('wallpaperApplyStatus');
+        var button = document.getElementById('wallpaperApplyBtn');
+        if (!status || !button) return;
+        var validation = validateWallpaperDraft();
+        status.textContent = validation.reason || tr('wallpaperApplyReady', '可以应用配置');
+        button.disabled = !validation.valid;
+    }
+
+    function applyWallpaperDraft() {
+        refreshWallpaperApplyFooter();
+    }
+
     function rssStatusText(config, state) {
         var count = D.activeRssOrder ? D.activeRssOrder(config.activeSourceId).length : 0;
         if (state.lastError) return tr('rssStatusError', 'RSS 状态：') + state.lastError;
@@ -864,7 +885,11 @@
                 '</div>';
         }).join('');
 
-        return buildPageShell(tr('tabWallpaper', '壁纸来源'), modalCopy('modalSubtitleWallpaper', '五个来源保持各自的识别色，当前来源展开配置。'), '<div class="source-accordion">' + drawers + '</div><div class="wallpaper-reset-row"><button class="danger-action" id="wallpaperResetBtn" type="button">' + tr('wallpaperResetDefaults', '恢复默认壁纸设置') + '</button></div>');
+        return '<div class="wallpaper-tab-shell">' +
+            '<div class="wallpaper-tab-header"><h2>' + tr('tabWallpaper', '壁纸来源') + '</h2><p>' + modalCopy('modalSubtitleWallpaper', '五个来源保持各自的识别色，当前来源展开配置。') + '</p></div>' +
+            '<div class="wallpaper-tab-body"><div class="source-accordion">' + drawers + '</div><div class="wallpaper-reset-row"><button class="danger-action" id="wallpaperResetBtn" type="button">' + tr('wallpaperResetDefaults', '恢复默认壁纸设置') + '</button></div></div>' +
+            wallpaperApplyFooterHTML() +
+            '</div>';
     }
 
     function bindWallpaperEvents() {
@@ -910,6 +935,8 @@
             });
         });
         bindRssConfigEvents();
+        var applyBtn = modalContent.querySelector('#wallpaperApplyBtn');
+        if (applyBtn) applyBtn.addEventListener('click', applyWallpaperDraft);
         var reset = modalContent.querySelector('#wallpaperResetBtn');
         if (reset) reset.addEventListener('click', function () {
             if (!confirm(tr('wallpaperResetConfirm', '这会清理上传、RSS、API 和文件夹壁纸缓存，并切回 Bing。继续吗？'))) return;
