@@ -774,6 +774,7 @@ input[type="file"] {
 /* ========== 表单元素 ========== */
 .setting-item select,
 .setting-item input[type="text"],
+.setting-item input[type="password"],
 .setting-item input[type="number"],
 .source-drawer input[type="text"],
 .hotkey-input {
@@ -790,6 +791,7 @@ input[type="file"] {
 
 .setting-item select:hover,
 .setting-item input[type="text"]:hover,
+.setting-item input[type="password"]:hover,
 .setting-item input[type="number"]:hover,
 .source-drawer input[type="text"]:hover,
 .hotkey-input:hover {
@@ -799,6 +801,7 @@ input[type="file"] {
 
 .setting-item select:focus-visible,
 .setting-item input[type="text"]:focus-visible,
+.setting-item input[type="password"]:focus-visible,
 .setting-item input[type="number"]:focus-visible,
 .source-drawer input[type="text"]:focus-visible,
 .hotkey-input:focus-visible {
@@ -1825,6 +1828,60 @@ input[type="file"] {
     color: #f87171;
 }
 
+/* ========== 数据分页 ========== */
+.data-inline-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-inline-control input {
+    width: 150px;
+}
+
+.data-file-name {
+    max-width: 180px;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.data-status {
+    min-height: 36px;
+    margin-top: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--stroke-rgb), 0.42);
+    background: rgba(var(--surface-base-rgb), 0.18);
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.data-status[hidden] {
+    display: none;
+}
+
+.data-status[data-type="info"] {
+    border-color: rgba(var(--accent-rgb), 0.34);
+    background: rgba(var(--accent-rgb), 0.10);
+    color: var(--text-primary);
+}
+
+.data-status[data-type="success"] {
+    border-color: rgba(34, 197, 94, 0.34);
+    background: rgba(34, 197, 94, 0.10);
+    color: #86efac;
+}
+
+.data-status[data-type="error"] {
+    border-color: rgba(248, 113, 113, 0.36);
+    background: rgba(248, 113, 113, 0.10);
+    color: #fca5a5;
+}
+
 /* ========== 关于分页 ========== */
 .about-section {
     text-align: center;
@@ -1965,6 +2022,7 @@ input[type="file"] {
     .setting-item select,
     .custom-select,
     .setting-item input[type="text"],
+    .setting-item input[type="password"],
     .hotkey-input {
         width: 100%;
     }
@@ -2009,6 +2067,19 @@ input[type="file"] {
     .api-source-row button,
     .api-add-row button {
         width: 100%;
+    }
+
+    .data-inline-control {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .data-inline-control input,
+    .data-inline-control button,
+    .data-file-name {
+        width: 100%;
+        max-width: none;
     }
 
     .settings-panel {

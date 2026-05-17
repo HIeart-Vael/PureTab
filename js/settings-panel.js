@@ -34,6 +34,7 @@
     var DEFAULT_SEARCH_WIDTH = 560;
     var DEFAULT_SEARCH_BG_OPACITY = 0.1;
     var DEFAULT_SEARCH_BLUR = 24;
+    var DEFAULT_SEARCH_HISTORY_LIMIT = 5;
     var DEFAULT_WALLPAPER_FIT = 'cover';
     var DEFAULT_WALLPAPER_POSITION = 'center';
     var DEFAULT_WALLPAPER_BLUR = 0;
@@ -115,6 +116,7 @@
     var searchWidth = DEFAULT_SEARCH_WIDTH;
     var searchBackgroundOpacity = DEFAULT_SEARCH_BG_OPACITY;
     var searchBlur = DEFAULT_SEARCH_BLUR;
+    var searchHistoryLimit = DEFAULT_SEARCH_HISTORY_LIMIT;
     var overlayOpacity = DEFAULT_OVERLAY_OPACITY;
     var searchRadius = DEFAULT_SEARCH_RADIUS;
     var panelOpacity = DEFAULT_PANEL_OPACITY;
@@ -301,6 +303,7 @@
         if (activeTab === 'appearance' && !_tabEventBound.appearance) { bindAppearanceEvents(); _tabEventBound.appearance = true; }
         if (activeTab === 'wallpaper' && !_tabEventBound.wallpaper) { bindWallpaperEvents(); _tabEventBound.wallpaper = true; }
         if (activeTab === 'shortcuts' && !_tabEventBound.shortcuts) { bindShortcutsEvents(); _tabEventBound.shortcuts = true; }
+        if (activeTab === 'data' && !_tabEventBound.data) { bindDataEvents(); _tabEventBound.data = true; }
     }
 
     function ensureTabPage(tabName) {
@@ -310,6 +313,7 @@
             appearance: buildAppearanceHTML,
             wallpaper: buildWallpaperHTML,
             shortcuts: buildShortcutsHTML,
+            data: buildDataHTML,
             about: buildAboutHTML
         };
         var builder = builders[tabName] || builders.appearance;
@@ -394,8 +398,10 @@
             modalSubtitleAppearance: 'Search, overlay, theme, and panel texture live here.',
             modalSubtitleWallpaper: 'The five sources keep their own signal colors, with the current source expanded.',
             modalSubtitleShortcuts: 'Shortcuts stay lightweight and focused on frequent entry points.',
+            modalSubtitleData: 'Export or restore the full PlainTab configuration.',
             modalSubtitleAbout: 'PlainTab stays quietly behind your new tab page.',
             modalDescSearchMode: 'Choose when the search box should appear.',
+            modalDescSearchHistory: 'Keep recent searches available below the search bar.',
             modalDescSearchPosition: 'Choose a centered vertical anchor for the search box.',
             modalDescSearchIconPosition: 'Place the search icon or web engine logo on either side.',
             modalDescSearchWidth: 'Set how much horizontal room the search box takes.',
@@ -413,7 +419,11 @@
             modalDescEngine: 'Web mode can switch engines; extension mode uses the browser default.',
             modalDescHotkey: 'Open the command palette and quick entries.',
             modalDescHiddenHotkey: 'Open hidden shortcut management directly.',
-            modalDescRecommend: 'Keep the high-frequency recommendations area.'
+            modalDescRecommend: 'Keep the high-frequency recommendations area.',
+            modalDescDataJson: 'Readable JSON is convenient for archives and troubleshooting.',
+            modalDescDataEncrypted: 'Password-protected backup, compressed before encryption.',
+            modalDescDataImport: 'Import JSON or encrypted PlainTab backup files.',
+            modalDescDataImportPass: 'Required only for encrypted backup files.'
         };
         return lang[key] || en[key] || (currentLang.indexOf('zh') === 0 ? fallback : (enFallback[key] || fallback));
     }
@@ -885,6 +895,11 @@
             '<option value="always"' + (searchMode === 'always' ? ' selected' : '') + '>' + (t('searchAlways') || '始终显示') + '</option>' +
             '<option value="never"' + (searchMode === 'never' ? ' selected' : '') + '>' + (t('searchNever') || '始终隐藏') + '</option>' +
             '</select>';
+        var searchHistoryControl = '<select id="modalSearchHistoryLimit">' +
+            '<option value="0"' + (searchHistoryLimit === 0 ? ' selected' : '') + '>' + tr('searchHistoryOff', '关闭') + '</option>' +
+            '<option value="5"' + (searchHistoryLimit === 5 ? ' selected' : '') + '>5</option>' +
+            '<option value="10"' + (searchHistoryLimit === 10 ? ' selected' : '') + '>10</option>' +
+            '</select>';
         var searchPosControl = '<select id="modalSearchPos">' +
             '<option value="edge-top"' + (searchPosition === 'edge-top' ? ' selected' : '') + '>' + tr('posEdgeTop', '贴近顶部') + '</option>' +
             '<option value="top"' + (searchPosition === 'top' ? ' selected' : '') + '>' + tr('posHigh', '居上') + '</option>' +
@@ -949,6 +964,7 @@
             settingItem(t('themeEnableLabel') || '壁纸主题色', modalCopy('modalDescTheme', '从当前壁纸提取表面、描边、强调和文字色。'), themeControl, 'setting-compact')) +
             settingGroup(tr('settingsGroupSearch', '搜索栏'),
             settingItem(t('searchLabel') || '搜索栏显示', modalCopy('modalDescSearchMode', '设定搜索框出现的时机。'), searchModeControl) +
+            settingItem(tr('searchHistory', '搜索历史'), modalCopy('modalDescSearchHistory', '在搜索栏下方保留最近搜索。'), searchHistoryControl) +
             settingItem(t('searchPosition') || '搜索栏位置', modalCopy('modalDescSearchPosition', '选择搜索框在画面中轴上的高度。'), searchPosControl) +
             settingItem(tr('searchWidth', '搜索栏宽度'), modalCopy('modalDescSearchWidth', '调整搜索框占据的横向空间。'), searchWidthControl) +
             settingItem(t('searchRadius') || '搜索栏圆角', modalCopy('modalDescSearchRadius', '让搜索框形态匹配当前壁纸氛围。'), radiusControl) +
@@ -972,6 +988,7 @@
 
     function bindAppearanceEvents() {
         var selMode = document.getElementById('modalSearchMode');
+        var selHistoryLimit = document.getElementById('modalSearchHistoryLimit');
         var selPos = document.getElementById('modalSearchPos');
         var selIconPosition = document.getElementById('modalSearchIconPosition');
         var selRadius = document.getElementById('modalSearchRadius');
@@ -997,6 +1014,7 @@
         var resetBtn = document.getElementById('modalResetBtn');
 
         if (selMode) selMode.addEventListener('change', function () { applySearchMode(this.value); });
+        if (selHistoryLimit) selHistoryLimit.addEventListener('change', function () { applySearchHistoryLimit(this.value); });
         if (selPos) selPos.addEventListener('change', function () { applySearchPosition(this.value); });
         if (selIconPosition) selIconPosition.addEventListener('change', function () { applySearchIconPosition(this.value); });
         if (selRadius) selRadius.addEventListener('change', function () { applySearchRadius(this.value); });
@@ -1553,6 +1571,241 @@
         });
     }
 
+    function buildDataHTML() {
+        var jsonControl = '<button class="primary-action" id="dataExportJsonBtn" type="button">' + tr('dataExportJson', '导出 JSON') + '</button>';
+        var encryptedControl = '<div class="data-inline-control"><input id="dataExportPass" type="password" autocomplete="new-password" placeholder="' + tr('dataPassphrase', '口令') + '"><button class="primary-action" id="dataExportEncryptedBtn" type="button">' + tr('dataExportEncrypted', '导出加密文件') + '</button></div>';
+        var importControl = '<button class="primary-action" id="dataImportChooseBtn" type="button">' + tr('dataChooseFile', '选择文件') + '</button><span class="data-file-name" id="dataImportFileName"></span>';
+        var importPassControl = '<input id="dataImportPass" type="password" autocomplete="current-password" placeholder="' + tr('dataPassphrase', '口令') + '">';
+        var body = settingGroup(tr('dataExport', '导出'),
+            settingItem('JSON', modalCopy('modalDescDataJson', 'JSON 方便留存和排查。'), jsonControl, 'setting-compact') +
+            settingItem(tr('dataEncrypted', '加密'), modalCopy('modalDescDataEncrypted', '加密文件会先压缩再加密，体积通常更小。'), encryptedControl)) +
+            settingGroup(tr('dataImport', '导入'),
+            settingItem(tr('dataBackupFile', '备份文件'), modalCopy('modalDescDataImport', '支持 JSON 或加密备份文件。'), importControl, 'setting-compact') +
+            settingItem(tr('dataImportPass', '导入口令'), modalCopy('modalDescDataImportPass', '仅导入加密文件时需要。'), importPassControl, 'setting-compact')) +
+            '<div class="data-status" id="dataStatus" hidden></div>';
+        return buildPageShell(tr('tabData', '数据'), modalCopy('modalSubtitleData', '导出或恢复 PlainTab 的完整用户配置。'), body);
+    }
+
+    function bindDataEvents() {
+        var jsonBtn = document.getElementById('dataExportJsonBtn');
+        var encryptedBtn = document.getElementById('dataExportEncryptedBtn');
+        var chooseBtn = document.getElementById('dataImportChooseBtn');
+        var fileName = document.getElementById('dataImportFileName');
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,.ptab,application/json';
+        if (_tabPages.data) _tabPages.data.appendChild(input);
+
+        if (jsonBtn) jsonBtn.addEventListener('click', exportPlainDataBackup);
+        if (encryptedBtn) encryptedBtn.addEventListener('click', exportEncryptedDataBackup);
+        if (chooseBtn) chooseBtn.addEventListener('click', function () { input.click(); });
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            input.value = '';
+            if (!file) return;
+            if (fileName) fileName.textContent = file.name;
+            importDataBackup(file);
+        });
+    }
+
+    function setDataStatus(message, type) {
+        var el = document.getElementById('dataStatus');
+        if (!el) return;
+        el.textContent = message || '';
+        el.dataset.type = type || 'info';
+        el.hidden = !message;
+    }
+
+    function backupDateStamp() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    function downloadText(filename, text, type) {
+        var blob = new Blob([text], { type: type || 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+    }
+
+    function readFileAsText(file) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function () { resolve(String(reader.result || '')); };
+            reader.onerror = function () { reject(reader.error || new Error('file read failed')); };
+            reader.readAsText(file);
+        });
+    }
+
+    function bytesToBase64(bytes) {
+        var binary = '';
+        var chunk = 0x8000;
+        for (var i = 0; i < bytes.length; i += chunk) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+        }
+        return btoa(binary);
+    }
+
+    function base64ToBytes(value) {
+        var binary = atob(String(value || ''));
+        var bytes = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+    }
+
+    function compressBackupBytes(bytes) {
+        if (!window.CompressionStream) return Promise.resolve({ bytes: bytes, compression: 'none' });
+        try {
+            var stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'));
+            return new Response(stream).arrayBuffer().then(function (buffer) {
+                return { bytes: new Uint8Array(buffer), compression: 'gzip' };
+            }).catch(function () {
+                return { bytes: bytes, compression: 'none' };
+            });
+        } catch (e) {
+            return Promise.resolve({ bytes: bytes, compression: 'none' });
+        }
+    }
+
+    function decompressBackupBytes(bytes, compression) {
+        if (!compression || compression === 'none') return Promise.resolve(bytes);
+        if (compression !== 'gzip' || !window.DecompressionStream) return Promise.reject(new Error('unsupported compression'));
+        try {
+            var stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+            return new Response(stream).arrayBuffer().then(function (buffer) {
+                return new Uint8Array(buffer);
+            });
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+
+    function deriveBackupKey(passphrase, salt, iterations) {
+        var encoded = new TextEncoder().encode(passphrase);
+        return crypto.subtle.importKey('raw', encoded, 'PBKDF2', false, ['deriveKey']).then(function (baseKey) {
+            return crypto.subtle.deriveKey({
+                name: 'PBKDF2',
+                salt: salt,
+                iterations: iterations,
+                hash: 'SHA-256'
+            }, baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        });
+    }
+
+    function exportPlainDataBackup() {
+        try {
+            var payload = D.exportUserData();
+            downloadText('plaintab-config-' + backupDateStamp() + '.json', JSON.stringify(payload, null, 2), 'application/json');
+            setDataStatus(tr('dataExportOk', '导出完成'), 'success');
+        } catch (e) {
+            setDataStatus(tr('dataExportFailed', '导出失败：') + (e && e.message ? e.message : String(e)), 'error');
+        }
+    }
+
+    function exportEncryptedDataBackup() {
+        var pass = (document.getElementById('dataExportPass') || {}).value || '';
+        if (!pass) {
+            setDataStatus(tr('dataPassRequired', '请输入加密口令'), 'error');
+            return;
+        }
+        if (!window.crypto || !crypto.subtle || !window.TextEncoder) {
+            setDataStatus(tr('dataCryptoUnsupported', '当前浏览器不支持加密备份'), 'error');
+            return;
+        }
+        setDataStatus(tr('dataExporting', '正在导出...'), 'info');
+        var payload = D.exportUserData();
+        var json = JSON.stringify(payload);
+        var bytes = new TextEncoder().encode(json);
+        var salt = crypto.getRandomValues(new Uint8Array(16));
+        var iv = crypto.getRandomValues(new Uint8Array(12));
+        var iterations = 150000;
+        compressBackupBytes(bytes).then(function (compressed) {
+            return deriveBackupKey(pass, salt, iterations).then(function (key) {
+                return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, compressed.bytes).then(function (cipherBuffer) {
+                    var wrapper = {
+                        app: 'PlainTab',
+                        format: 'plaintab-user-config',
+                        formatVersion: 1,
+                        encrypted: true,
+                        algorithm: 'AES-GCM',
+                        kdf: 'PBKDF2-SHA256',
+                        iterations: iterations,
+                        compression: compressed.compression,
+                        exportedAt: payload.exportedAt,
+                        salt: bytesToBase64(salt),
+                        iv: bytesToBase64(iv),
+                        data: bytesToBase64(new Uint8Array(cipherBuffer))
+                    };
+                    downloadText('plaintab-config-' + backupDateStamp() + '.ptab', JSON.stringify(wrapper), 'application/octet-stream');
+                    setDataStatus(tr('dataExportOk', '导出完成'), 'success');
+                });
+            });
+        }).catch(function (e) {
+            setDataStatus(tr('dataExportFailed', '导出失败：') + (e && e.message ? e.message : String(e)), 'error');
+        });
+    }
+
+    function decryptDataBackup(wrapper, passphrase) {
+        if (!passphrase) return Promise.reject(new Error(tr('dataPassRequired', '请输入加密口令')));
+        if (!window.crypto || !crypto.subtle || !window.TextDecoder) return Promise.reject(new Error(tr('dataCryptoUnsupported', '当前浏览器不支持加密备份')));
+        var salt = base64ToBytes(wrapper.salt);
+        var iv = base64ToBytes(wrapper.iv);
+        var cipher = base64ToBytes(wrapper.data);
+        var iterations = parseInt(wrapper.iterations, 10) || 150000;
+        return deriveBackupKey(passphrase, salt, iterations).then(function (key) {
+            return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, cipher);
+        }).then(function (plainBuffer) {
+            return decompressBackupBytes(new Uint8Array(plainBuffer), wrapper.compression);
+        }).then(function (plainBytes) {
+            return JSON.parse(new TextDecoder().decode(plainBytes));
+        });
+    }
+
+    function validateBackupPayload(payload) {
+        if (!payload || typeof payload !== 'object') throw new Error(tr('dataInvalidBackup', '备份文件无效'));
+        if (payload.app && payload.app !== 'PlainTab') throw new Error(tr('dataInvalidBackup', '备份文件无效'));
+        if (!payload.data || typeof payload.data !== 'object') throw new Error(tr('dataInvalidBackup', '备份文件无效'));
+        return payload;
+    }
+
+    function refreshAfterDataImport() {
+        currentMode = D.compatMode ? D.compatMode(D.getActiveSource()) : D.getActiveSource();
+        currentLang = D.loadLocale() || currentLang;
+        if (!I18N[currentLang]) currentLang = 'en';
+        loadSettings();
+        updateLangUI();
+        refreshGallery();
+        Object.keys(_tabPages).forEach(function (tabName) {
+            if (tabName === activeTab) return;
+            _tabPages[tabName].remove();
+            delete _tabPages[tabName];
+            _tabEventBound[tabName] = false;
+        });
+        if (window.Palette && window.Palette.refresh) window.Palette.refresh();
+        if (window.reloadWallpaper) window.reloadWallpaper();
+    }
+
+    function importDataBackup(file) {
+        setDataStatus(tr('dataImporting', '正在导入...'), 'info');
+        readFileAsText(file).then(function (text) {
+            var parsed = JSON.parse(text);
+            if (parsed && parsed.encrypted === true) {
+                var pass = (document.getElementById('dataImportPass') || {}).value || '';
+                return decryptDataBackup(parsed, pass);
+            }
+            return parsed;
+        }).then(function (payload) {
+            validateBackupPayload(payload);
+            D.importUserData(payload);
+            refreshAfterDataImport();
+            setDataStatus(tr('dataImportOk', '导入完成'), 'success');
+        }).catch(function (e) {
+            setDataStatus(tr('dataImportFailed', '导入失败：') + (e && e.message ? e.message : String(e)), 'error');
+        });
+    }
+
     function buildAboutHTML() {
         return buildPageShell(tr('tabAbout', '关于'), modalCopy('modalSubtitleAbout', '一个静静待在新标签页背后的 PlainTab。'),
             '<div class="about-section">' +
@@ -1630,6 +1883,18 @@
         searchMode = validValue(mode, ['hover', 'always', 'never'], DEFAULT_SEARCH_MODE);
         searchBar.classList.toggle('visible', searchMode === 'always');
         searchBar.setAttribute('data-visibility', searchMode);
+        saveAllSettings();
+    }
+
+    function applySearchHistoryLimit(value) {
+        searchHistoryLimit = D.normalizeSearchHistoryLimit ? D.normalizeSearchHistoryLimit(value) : (parseInt(value, 10) === 10 ? 10 : (parseInt(value, 10) === 0 ? 0 : 5));
+        if (isHydratingSettings) return;
+        var ui = D.loadUI();
+        if (!ui.search) ui.search = {};
+        ui.search.historyLimit = searchHistoryLimit;
+        if (searchHistoryLimit === 0) ui.search.historyItems = [];
+        else if (D.normalizeSearchHistory) ui.search.historyItems = D.normalizeSearchHistory(ui.search.historyItems, searchHistoryLimit);
+        D.saveUI(ui);
         saveAllSettings();
     }
 
@@ -1888,6 +2153,7 @@
         ui.search.width = searchWidth;
         ui.search.backgroundOpacity = searchBackgroundOpacity;
         ui.search.blur = searchBlur;
+        ui.search.historyLimit = searchHistoryLimit;
         ui.wallpaper.overlayOpacity = overlayOpacity;
         ui.wallpaper.themeEnabled = themeEnabled;
         ui.wallpaper.fit = wallpaperFit;
@@ -1916,6 +2182,7 @@
         searchWidth = search.width !== undefined ? search.width : DEFAULT_SEARCH_WIDTH;
         searchBackgroundOpacity = search.backgroundOpacity !== undefined ? search.backgroundOpacity : DEFAULT_SEARCH_BG_OPACITY;
         searchBlur = search.blur !== undefined ? search.blur : DEFAULT_SEARCH_BLUR;
+        searchHistoryLimit = D.normalizeSearchHistoryLimit ? D.normalizeSearchHistoryLimit(search.historyLimit) : DEFAULT_SEARCH_HISTORY_LIMIT;
         currentOpacity = icon.opacity !== undefined ? parseFloat(icon.opacity) : DEFAULT_OPACITY;
         overlayOpacity = wallpaper.overlayOpacity !== undefined ? parseFloat(wallpaper.overlayOpacity) : DEFAULT_OVERLAY_OPACITY;
         panelOpacity = panel.opacity !== undefined ? parseFloat(panel.opacity) : DEFAULT_PANEL_OPACITY;
@@ -1934,6 +2201,7 @@
             applySearchWidth(searchWidth);
             applySearchBackgroundOpacity(searchBackgroundOpacity);
             applySearchBlur(searchBlur);
+            applySearchHistoryLimit(searchHistoryLimit);
             applySearchRadius(searchRadius);
             applyOpacity(currentOpacity);
             applyWallpaperFit(wallpaperFit);
@@ -1956,6 +2224,7 @@
         applySearchWidth(DEFAULT_SEARCH_WIDTH);
         applySearchBackgroundOpacity(DEFAULT_SEARCH_BG_OPACITY);
         applySearchBlur(DEFAULT_SEARCH_BLUR);
+        applySearchHistoryLimit(DEFAULT_SEARCH_HISTORY_LIMIT);
         applySearchRadius(DEFAULT_SEARCH_RADIUS);
         applyOpacity(DEFAULT_OPACITY);
         applyWallpaperFit(DEFAULT_WALLPAPER_FIT);
@@ -1979,6 +2248,7 @@
         el = document.getElementById('modalSearchBgNum'); if (el) el.value = DEFAULT_SEARCH_BG_OPACITY;
         el = document.getElementById('modalSearchBlurRange'); if (el) el.value = DEFAULT_SEARCH_BLUR;
         el = document.getElementById('modalSearchBlurNum'); if (el) el.value = DEFAULT_SEARCH_BLUR;
+        el = document.getElementById('modalSearchHistoryLimit'); if (el) el.value = DEFAULT_SEARCH_HISTORY_LIMIT;
         el = document.getElementById('modalWallpaperFit'); if (el) el.value = DEFAULT_WALLPAPER_FIT;
         el = document.getElementById('modalWallpaperPosition'); if (el) el.value = DEFAULT_WALLPAPER_POSITION;
         el = document.getElementById('modalWallpaperBlurRange'); if (el) el.value = DEFAULT_WALLPAPER_BLUR;

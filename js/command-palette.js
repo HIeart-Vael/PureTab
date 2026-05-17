@@ -1409,6 +1409,22 @@
         bindPaletteEvents();
     }
 
+    function refreshPaletteData() {
+        _shortcutsCache = null;
+        _iconsCache = null;
+        _recentsCache = null;
+        _hiddenCache = null;
+        cpViewMode = loadShortcutSettings().viewMode || 'list';
+        if (!isPaletteOpen) return;
+        renderPinnedBar();
+        if (cpCurrentMode === 'recent') renderRecentList();
+        else if (cpCurrentMode === 'deleteGrid') renderGrid('delete', cpCurrentPage);
+        else if (cpCurrentMode === 'editGrid') renderGrid('edit', cpCurrentPage);
+        else if (cpCurrentMode === 'hideGrid') renderHideGrid(cpCurrentPage);
+        else if (cpCurrentMode === 'unhideGrid') renderUnhideGrid(cpCurrentPage);
+        else renderShortcutList(cpSearchTerm || '');
+    }
+
     // ================================================================
     // 公开 API
     // ================================================================
@@ -1429,7 +1445,8 @@
         loadHiddenHotkey: loadHiddenHotkey,
         saveHiddenHotkey: saveHiddenHotkey,
         loadRecommend: loadRecommend,
-        saveRecommend: saveRecommend
+        saveRecommend: saveRecommend,
+        refresh: refreshPaletteData
     };
 
 })();

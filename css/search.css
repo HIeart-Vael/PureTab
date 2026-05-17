@@ -23,6 +23,56 @@
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
+.search-history-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: 4px;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    background: rgba(20, 20, 22, 0.72);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(var(--search-blur, 24px));
+    -webkit-backdrop-filter: blur(var(--search-blur, 24px));
+}
+
+.search-history-panel[hidden] {
+    display: none;
+}
+
+.search-history-item {
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.76);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: background 0.14s ease, color 0.14s ease;
+}
+
+.search-history-item:hover,
+.search-history-item.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.search-bar[data-position="lower"] .search-history-panel,
+.search-bar[data-position="bottom"] .search-history-panel,
+.search-bar[data-position="edge-bottom"] .search-history-panel {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
 .search-bar[data-visibility="hover"] {
     --search-hover-blur: 0px;
     visibility: visible;

@@ -35,7 +35,20 @@
 2. 按 Enter。
 3. 去除首尾空格。
 4. 关键词为空则不跳转。
-5. 使用当前引擎 URL 模板拼接 `encodeURIComponent(query)`，在当前页面 `_self` 跳转。
+5. 按配置写入搜索历史。
+6. 使用当前引擎 URL 模板拼接 `encodeURIComponent(query)`，在当前页面 `_self` 跳转。
+
+### 搜索历史
+
+搜索历史保存在 `ptab_ui.search.historyItems`，数量配置保存在 `ptab_ui.search.historyLimit`。
+
+| 配置 | 行为 |
+|------|------|
+| `0` | 不保存、不展示历史 |
+| `5` | 保存并展示最近 5 条 |
+| `10` | 保存并展示最近 10 条 |
+
+默认值为 `5`。历史记录只保存去除首尾空格后的搜索词，大小写不敏感去重，最新记录排在最前。输入框聚焦或输入时在搜索栏下方展示匹配项；方向键切换选中项，Enter 搜索选中项，Escape 关闭候选面板。
 
 ### 可自定义外观
 
@@ -51,6 +64,7 @@
 | 圆角 | `search.radius` | `capsule` / `rounded` / `sharp` |
 | 搜索框背景 | `search.backgroundOpacity` | 0.04-0.32 |
 | 搜索框模糊 | `search.blur` | 0-40px backdrop blur |
+| 搜索历史 | `search.historyLimit` / `search.historyItems` | 0 / 5 / 10 条 |
 | 壁纸遮罩 | `wallpaper.overlayOpacity` | 0-0.6 |
 | 壁纸适配 | `wallpaper.fit` | `cover` / `contain` / `100% 100%` |
 | 壁纸焦点 | `wallpaper.position` | `center` / `top` / `bottom` / `left` / `right` |
@@ -76,6 +90,8 @@
 - 空关键词不跳转。
 - URL 拼接必须使用 `encodeURIComponent`。
 - 扩展模式隐藏引擎切换入口；若未来改为浏览器默认搜索 API，必须同步更新本规则和权限说明。
+- 搜索历史关闭时不得保留旧历史；数量降低时必须裁剪到新上限。
+- 搜索历史候选面板不得影响 `never` 模式，也不得阻塞命令面板快捷键。
 
 ### 外观
 

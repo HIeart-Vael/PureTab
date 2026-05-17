@@ -60,6 +60,10 @@
 
     var isMouseInSearchZone = false;
     var searchHideTimer = null;
+    var searchHistoryPanel = null;
+    var searchHistoryVisible = false;
+    var searchHistoryMatches = [];
+    var searchHistoryIndex = -1;
     var paletteLoadPromise = null;
     var folderRescannedThisSession = false;
 
@@ -759,10 +763,107 @@
     // 搜索执行
     // ================================================================
 
+    function ensureSearchHistoryPanel() {
+        if (searchHistoryPanel || !searchBar) return searchHistoryPanel;
+        searchHistoryPanel = document.createElement('div');
+        searchHistoryPanel.id = 'searchHistoryPanel';
+        searchHistoryPanel.className = 'search-history-panel';
+        searchHistoryPanel.hidden = true;
+        searchHistoryPanel.addEventListener('mousedown', function (e) {
+            var item = e.target.closest('[data-search-history]');
+            if (!item) return;
+            e.preventDefault();
+            doSearch(item.dataset.searchHistory || item.textContent);
+        });
+        searchBar.appendChild(searchHistoryPanel);
+        return searchHistoryPanel;
+    }
+
+    function hideSearchHistory() {
+        if (!searchHistoryPanel) return;
+        searchHistoryVisible = false;
+        searchHistoryMatches = [];
+        searchHistoryIndex = -1;
+        searchHistoryPanel.hidden = true;
+        searchHistoryPanel.innerHTML = '';
+    }
+
+    function renderSearchHistory() {
+        var panel = ensureSearchHistoryPanel();
+        if (!panel || !D || !D.loadSearchHistory || !D.loadSearchHistoryLimit) return;
+        if (D.loadSearchHistoryLimit() <= 0) {
+            hideSearchHistory();
+            return;
+        }
+        var query = (searchInput.value || '').trim().toLowerCase();
+        var items = D.loadSearchHistory().filter(function (item) {
+            return !query || item.toLowerCase().indexOf(query) !== -1;
+        });
+        searchHistoryMatches = items;
+        searchHistoryIndex = items.length ? Math.min(Math.max(searchHistoryIndex, -1), items.length - 1) : -1;
+        if (!items.length || document.activeElement !== searchInput) {
+            hideSearchHistory();
+            return;
+        }
+        panel.innerHTML = items.map(function (item, index) {
+            return '<button type="button" class="search-history-item' + (index === searchHistoryIndex ? ' active' : '') + '" data-search-history="' + escapeAttr(item) + '">' + escapeHtml(item) + '</button>';
+        }).join('');
+        panel.hidden = false;
+        searchHistoryVisible = true;
+    }
+
+    function moveSearchHistory(delta) {
+        if (!searchHistoryVisible || !searchHistoryMatches.length) {
+            renderSearchHistory();
+            if (!searchHistoryMatches.length) return;
+        }
+        searchHistoryIndex = (searchHistoryIndex + delta + searchHistoryMatches.length) % searchHistoryMatches.length;
+        renderSearchHistory();
+    }
+
+    function handleSearchInputKeydown(e) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+            moveSearchHistory(1);
+            return;
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            e.stopPropagation();
+            moveSearchHistory(-1);
+            return;
+        }
+        if (e.key === 'Escape' && searchHistoryVisible) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideSearchHistory();
+            return;
+        }
+        if (e.key === 'Enter' && searchHistoryVisible && searchHistoryIndex >= 0 && searchHistoryMatches[searchHistoryIndex]) {
+            e.preventDefault();
+            e.stopPropagation();
+            doSearch(searchHistoryMatches[searchHistoryIndex]);
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value).replace(/`/g, '&#96;');
+    }
+
     var doSearch = function (query) {
-        if (!query.trim()) return;
+        var term = String(query || '').trim();
+        if (!term) return;
         var urls = { google: 'https://www.google.com/search?q=', bing: 'https://www.bing.com/search?q=', baidu: 'https://www.baidu.com/s?wd=', duckduckgo: 'https://duckduckgo.com/?q=' };
-        window.open(urls[SP.getEngine()] + encodeURIComponent(query), '_self');
+        if (D && D.addSearchHistory) D.addSearchHistory(term);
+        hideSearchHistory();
+        window.open(urls[SP.getEngine()] + encodeURIComponent(term), '_self');
     };
 
     // ================================================================
@@ -913,8 +1014,17 @@
             }
             searchBar.classList.add('visible');
             clearTimeout(searchHideTimer);
+            renderSearchHistory();
         });
-        searchInput.addEventListener('blur', function () { hideSearch(); });
+        searchInput.addEventListener('input', function () {
+            searchHistoryIndex = -1;
+            renderSearchHistory();
+        });
+        searchInput.addEventListener('keydown', handleSearchInputKeydown);
+        searchInput.addEventListener('blur', function () {
+            setTimeout(hideSearchHistory, 120);
+            hideSearch();
+        });
 
         // --- 键盘快捷键 ---
 

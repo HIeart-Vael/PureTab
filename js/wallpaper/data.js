@@ -208,7 +208,9 @@
             radius: 'capsule',
             width: 560,
             backgroundOpacity: 0.1,
-            blur: 24
+            blur: 24,
+            historyLimit: 5,
+            historyItems: []
         },
         wallpaper: {
             overlayOpacity: 0,
@@ -629,7 +631,81 @@
 
     function saveUI(ui) {
         _uiCache = mergeDefaults(ui, DEFAULT_UI);
+        _uiCache.search.historyLimit = normalizeSearchHistoryLimit(_uiCache.search.historyLimit);
+        _uiCache.search.historyItems = normalizeSearchHistory(_uiCache.search.historyItems, _uiCache.search.historyLimit);
         return writeJSON(KEYS.UI, _uiCache);
+    }
+
+    function normalizeSearchHistoryLimit(value) {
+        var n = parseInt(value, 10);
+        return n === 10 ? 10 : (n === 0 ? 0 : 5);
+    }
+
+    function normalizeSearchHistory(items, limit) {
+        limit = normalizeSearchHistoryLimit(limit);
+        if (!Array.isArray(items) || limit <= 0) return [];
+        var seen = {};
+        var result = [];
+        items.forEach(function (item) {
+            var text = String(item || '').trim();
+            var key = text.toLowerCase();
+            if (!text || seen[key]) return;
+            seen[key] = true;
+            result.push(text.slice(0, 180));
+        });
+        return result.slice(0, limit);
+    }
+
+    function loadSearchHistoryLimit() {
+        var ui = loadUI();
+        return normalizeSearchHistoryLimit(ui.search && ui.search.historyLimit);
+    }
+
+    function loadSearchHistory() {
+        var ui = loadUI();
+        var limit = loadSearchHistoryLimit();
+        var items = normalizeSearchHistory(ui.search && ui.search.historyItems, limit);
+        if (!ui.search) ui.search = {};
+        if (ui.search.historyLimit !== limit || JSON.stringify(ui.search.historyItems || []) !== JSON.stringify(items)) {
+            ui.search.historyLimit = limit;
+            ui.search.historyItems = items;
+            saveUI(ui);
+        }
+        return items;
+    }
+
+    function saveSearchHistory(items) {
+        var ui = loadUI();
+        if (!ui.search) ui.search = {};
+        ui.search.historyLimit = normalizeSearchHistoryLimit(ui.search.historyLimit);
+        ui.search.historyItems = normalizeSearchHistory(items, ui.search.historyLimit);
+        return saveUI(ui);
+    }
+
+    function addSearchHistory(query) {
+        var text = String(query || '').trim();
+        if (!text) return false;
+        var ui = loadUI();
+        if (!ui.search) ui.search = {};
+        var limit = normalizeSearchHistoryLimit(ui.search.historyLimit);
+        if (limit <= 0) {
+            ui.search.historyItems = [];
+            saveUI(ui);
+            return false;
+        }
+        var items = normalizeSearchHistory(ui.search.historyItems, limit).filter(function (item) {
+            return item.toLowerCase() !== text.toLowerCase();
+        });
+        items.unshift(text.slice(0, 180));
+        ui.search.historyItems = normalizeSearchHistory(items, limit);
+        return saveUI(ui);
+    }
+
+    function clearSearchHistory() {
+        var ui = loadUI();
+        if (!ui.search) ui.search = {};
+        ui.search.historyItems = [];
+        return saveUI(ui);
     }
 
     function loadShortcutsModel() {
@@ -927,6 +1003,55 @@
     }
 
     // ================================================================
+    // 用户配置备份
+    // ================================================================
+
+    function exportUserData() {
+        return {
+            app: 'PlainTab',
+            format: 'plaintab-user-config',
+            formatVersion: 1,
+            appVersion: BASELINE_APP_VERSION,
+            schemaVersion: LS_VERSION,
+            exportedAt: new Date().toISOString(),
+            data: {
+                locale: loadLocale() || '',
+                wallpaper: clone(loadWallpaper()),
+                wallpaperThumbs: clone(loadThumbs()),
+                wallpaperBlurThumbs: clone(loadBlurThumbs()),
+                wallpaperPreview: loadPreview() || '',
+                ui: clone(loadUI()),
+                shortcuts: clone(loadShortcutsModel()),
+                shortcutIcons: readJSON(KEYS.SHORTCUT_ICONS, {})
+            }
+        };
+    }
+
+    function importUserData(payload) {
+        if (!payload || typeof payload !== 'object') throw new Error('invalid backup');
+        var data = payload.data && typeof payload.data === 'object' ? payload.data : payload;
+        var ok = true;
+
+        if ('locale' in data) {
+            try {
+                if (data.locale) localStorage.setItem(KEYS.LOCALE, String(data.locale));
+                else localStorage.removeItem(KEYS.LOCALE);
+            } catch (e) { ok = false; }
+        }
+        if ('wallpaper' in data) ok = saveWallpaper(data.wallpaper) && ok;
+        if ('wallpaperThumbs' in data) { saveThumbs(data.wallpaperThumbs || {}); }
+        if ('wallpaperBlurThumbs' in data) { saveBlurThumbs(data.wallpaperBlurThumbs || {}); }
+        if ('wallpaperPreview' in data) savePreview(data.wallpaperPreview || null);
+        if ('ui' in data) ok = saveUI(data.ui || {}) && ok;
+        if ('shortcuts' in data) ok = saveShortcutsModel(data.shortcuts || {}) && ok;
+        if ('shortcutIcons' in data) ok = writeJSON(KEYS.SHORTCUT_ICONS, data.shortcutIcons || {}) && ok;
+        try { localStorage.setItem(KEYS.SCHEMA_VERSION, LS_VERSION); } catch (e) { ok = false; }
+        clearCaches();
+        if (!ok) throw new Error('import write failed');
+        return true;
+    }
+
+    // ================================================================
     // 存储基线
     // ================================================================
 
@@ -1017,10 +1142,18 @@
         resetWallpaperDefaults: resetWallpaperDefaults,
         loadUI: loadUI,
         saveUI: saveUI,
+        normalizeSearchHistoryLimit: normalizeSearchHistoryLimit,
+        loadSearchHistoryLimit: loadSearchHistoryLimit,
+        loadSearchHistory: loadSearchHistory,
+        saveSearchHistory: saveSearchHistory,
+        addSearchHistory: addSearchHistory,
+        clearSearchHistory: clearSearchHistory,
         loadShortcutsModel: loadShortcutsModel,
         saveShortcutsModel: saveShortcutsModel,
         loadLocale: loadLocale,
         saveLocale: saveLocale,
+        exportUserData: exportUserData,
+        importUserData: importUserData,
 
         // Bing 元数据
         loadBingMeta: loadBingMeta,
