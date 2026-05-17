@@ -674,23 +674,6 @@
         cpViewMode = loadShortcutSettings().viewMode || 'list';
     }
 
-    function suspendWallpaperBlurForUi() {
-        clearTimeout(window.__wallpaperBlurUiResumeTimer);
-        if (document.documentElement && document.documentElement.classList) {
-            document.documentElement.classList.add('wallpaper-blur-ui-open');
-        }
-    }
-
-    function resumeWallpaperBlurForUi() {
-        clearTimeout(window.__wallpaperBlurUiResumeTimer);
-        window.__wallpaperBlurUiResumeTimer = setTimeout(function () {
-            if (document.querySelector('.settings-panel.active, .modal-overlay.active, .cmd-palette-overlay.active')) return;
-            if (document.documentElement && document.documentElement.classList) {
-                document.documentElement.classList.remove('wallpaper-blur-ui-open');
-            }
-        }, 240);
-    }
-
     function openPalette() {
         if (isPaletteOpen && isHiddenMode) {
             showPaletteHint(t('hiddenModeHint'));
@@ -700,7 +683,6 @@
         isPaletteOpen = true;
         isHiddenMode = false;
         refreshShortcutSettings();
-        suspendWallpaperBlurForUi();
         cmdOverlay.classList.add('active');
         cmdPalette.classList.remove('hidden-mode');
         cmdPalette.classList.add('normal-mode');
@@ -723,7 +705,6 @@
         isPaletteOpen = true;
         isHiddenMode = true;
         refreshShortcutSettings();
-        suspendWallpaperBlurForUi();
         cmdOverlay.classList.add('active');
         cmdPalette.classList.remove('normal-mode');
         cmdPalette.classList.add('hidden-mode');
@@ -741,7 +722,6 @@
         if (!isPaletteOpen) return;
         isPaletteOpen = false;
         isHiddenMode = false;
-        resumeWallpaperBlurForUi();
         cmdOverlay.classList.remove('active');
         cpSearchTerm = '';
         cpKeyIndex = 0;

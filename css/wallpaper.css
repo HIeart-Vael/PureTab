@@ -28,12 +28,6 @@
 }
 
 .wallpaper-blur-active .wallpaper-layer {
-    filter: blur(var(--wallpaper-blur, 0px));
-    will-change: filter;
-}
-
-.wallpaper-blur-active.wallpaper-blur-ui-open .wallpaper-layer {
-    filter: none;
     will-change: transform;
 }
 

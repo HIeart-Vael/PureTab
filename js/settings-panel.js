@@ -130,6 +130,7 @@
     var _keepGalleryOpen = false;
     var wallpaperBlurApplyTimer = null;
     var wallpaperBlurSaveTimer = null;
+    var wallpaperBlurPreviewToken = 0;
     var activeCustomSelect = null;
     var fullInitialized = false;
     var useBootstrapShell = false;
@@ -188,7 +189,6 @@
         if (isLangPanelOpen) closeLangPanel();
         if (isOpen) return;
         isOpen = true;
-        suspendWallpaperBlurForUi();
         settingsPanel.classList.add('active');
         settingsBtn.classList.add('panel-open');
         clearTimeout(cornerHideTimer);
@@ -218,7 +218,6 @@
         isOpen = false;
         settingsPanel.classList.remove('active');
         settingsBtn.classList.remove('panel-open');
-        if (!isModalOpen) resumeWallpaperBlurForUi();
         revokeGalleryUrls();
         maybePromptEmptyLocalUpload(options);
     }
@@ -251,23 +250,6 @@
         if (fileInput) fileInput.click();
     }
 
-    function suspendWallpaperBlurForUi() {
-        clearTimeout(window.__wallpaperBlurUiResumeTimer);
-        if (document.documentElement && document.documentElement.classList) {
-            document.documentElement.classList.add('wallpaper-blur-ui-open');
-        }
-    }
-
-    function resumeWallpaperBlurForUi() {
-        clearTimeout(window.__wallpaperBlurUiResumeTimer);
-        window.__wallpaperBlurUiResumeTimer = setTimeout(function () {
-            if (document.querySelector('.settings-panel.active, .modal-overlay.active, .cmd-palette-overlay.active')) return;
-            if (document.documentElement && document.documentElement.classList) {
-                document.documentElement.classList.remove('wallpaper-blur-ui-open');
-            }
-        }, 240);
-    }
-
     // ================================================================
     // L2 模态窗口 开/关
     // ================================================================
@@ -275,7 +257,6 @@
         if (isModalOpen) return;
         if (isOpen) closeSettings({ skipEmptyLocalPicker: true });
         isModalOpen = true;
-        suspendWallpaperBlurForUi();
         renderTabContent();
         modalOverlay.classList.add('active');
     }
@@ -285,7 +266,6 @@
         isModalOpen = false;
         closeCustomSelects();
         modalOverlay.classList.remove('active');
-        if (!isOpen) resumeWallpaperBlurForUi();
         maybePromptEmptyLocalUpload(options);
     }
 
@@ -630,9 +610,6 @@
             '<option value="left"' + (wallpaperPosition === 'left' ? ' selected' : '') + '>' + tr('alignLeft', '靠左') + '</option>' +
             '<option value="right"' + (wallpaperPosition === 'right' ? ' selected' : '') + '>' + tr('alignRight', '靠右') + '</option>' +
             '</select>';
-        var wallpaperBlurHint = '<span class="setting-warning' + (wallpaperBlur > 5 ? '' : ' hidden') + '" id="wallpaperBlurPerfHint">' +
-            tr('wallpaperBlurPerfHint', '背景模糊超过 5 时，打开面板会临时暂停壁纸模糊以保持动画流畅。') +
-            '</span>';
         var wallpaperBlurControl = '<input type="range" id="modalWallpaperBlurRange" min="0" max="15" step="1" value="' + wallpaperBlur + '">' +
             '<input type="number" id="modalWallpaperBlurNum" class="input-w-55" min="0" max="15" step="1" value="' + wallpaperBlur + '">';
         var overlayControl = '<input type="range" id="modalOverlayRange" min="0" max="0.6" step="0.01" value="' + overlayOpacity + '">' +
@@ -669,7 +646,7 @@
             settingGroup(tr('settingsGroupWallpaper', '壁纸'),
             settingItem(tr('wallpaperFit', '壁纸适配'), modalCopy('modalDescWallpaperFit', '选择壁纸如何填充整个视口。'), wallpaperFitControl) +
             settingItem(tr('wallpaperPosition', '壁纸焦点'), modalCopy('modalDescWallpaperPosition', '当壁纸被裁切时选择画面锚点。'), wallpaperPositionControl) +
-            settingItem(tr('wallpaperBlur', '背景模糊'), modalCopy('modalDescWallpaperBlur', '柔化壁纸本身，前景控件保持清晰。'), wallpaperBlurControl, '', wallpaperBlurHint) +
+            settingItem(tr('wallpaperBlur', '背景模糊'), modalCopy('modalDescWallpaperBlur', '柔化壁纸本身，前景控件保持清晰。'), wallpaperBlurControl) +
             settingItem(t('overlayLabel') || '壁纸遮罩', modalCopy('modalDescOverlay', '加深背景，提升前景元素识别度。'), overlayControl)) +
             settingGroup(tr('settingsGroupSurface', '界面'),
             settingItem(t('opacityLabel') || '图标透明度', modalCopy('modalDescIconOpacity', '控制角落按钮和搜索引擎图标的存在感。'), opacityControl) +
@@ -718,7 +695,7 @@
         if (searchBlurNum) searchBlurNum.addEventListener('change', function () { applySearchBlur(this.value); if (searchBlurRange) searchBlurRange.value = searchBlur; this.value = searchBlur; });
         if (wallpaperFitSel) wallpaperFitSel.addEventListener('change', function () { applyWallpaperFit(this.value); });
         if (wallpaperPositionSel) wallpaperPositionSel.addEventListener('change', function () { applyWallpaperPosition(this.value); });
-        if (wallpaperBlurRange) wallpaperBlurRange.addEventListener('input', function () { applyWallpaperBlur(this.value, { preview: true }); if (wallpaperBlurNum) wallpaperBlurNum.value = wallpaperBlur; });
+        if (wallpaperBlurRange) wallpaperBlurRange.addEventListener('input', function () { applyWallpaperBlur(this.value, { preview: true }); this.value = wallpaperBlur; if (wallpaperBlurNum) wallpaperBlurNum.value = wallpaperBlur; });
         if (wallpaperBlurRange) wallpaperBlurRange.addEventListener('change', function () { applyWallpaperBlur(this.value); if (wallpaperBlurNum) wallpaperBlurNum.value = wallpaperBlur; this.value = wallpaperBlur; });
         if (wallpaperBlurNum) wallpaperBlurNum.addEventListener('change', function () { applyWallpaperBlur(this.value); if (wallpaperBlurRange) wallpaperBlurRange.value = wallpaperBlur; this.value = wallpaperBlur; });
         if (overlayRange) overlayRange.addEventListener('input', function () { applyOverlayOpacity(this.value); if (overlayNum) overlayNum.value = this.value; });
@@ -974,7 +951,9 @@
     }
 
     function normalizeWallpaperBlur(value) {
-        return clampInteger(value, 0, DEFAULT_WALLPAPER_BLUR_MAX, DEFAULT_WALLPAPER_BLUR);
+        var normalized = clampInteger(value, 0, DEFAULT_WALLPAPER_BLUR_MAX, DEFAULT_WALLPAPER_BLUR);
+        if (normalized > 0 && normalized < 5) return 5;
+        return normalized;
     }
 
     function setWallpaperBlurCss(value) {
@@ -982,13 +961,10 @@
     }
 
     function syncWallpaperBlurPerformanceMode() {
-        var active = wallpaperBlur > 0;
-        var shouldWarn = wallpaperBlur > 5;
+        var active = wallpaperBlur >= 5;
         if (document.documentElement && document.documentElement.classList) {
             document.documentElement.classList.toggle('wallpaper-blur-active', active);
         }
-        var hint = document.getElementById('wallpaperBlurPerfHint');
-        if (hint) hint.classList.toggle('hidden', !shouldWarn);
     }
 
     function queueWallpaperBlurApply() {
@@ -1012,6 +988,11 @@
         if (options && options.preview) {
             setWallpaperBlurCss(wallpaperBlur);
             syncWallpaperBlurPerformanceMode();
+            if (!isHydratingSettings) {
+                refreshVisibleBlurPreview();
+                saveNextPreviewFromOrder(D.loadOrder(), D.loadThumbs());
+                scheduleNextBlurPreviewFromOrder(D.loadOrder());
+            }
             queueWallpaperBlurSave();
             return;
         }
@@ -1021,6 +1002,11 @@
         wallpaperBlurSaveTimer = null;
         setWallpaperBlurCss(wallpaperBlur);
         syncWallpaperBlurPerformanceMode();
+        if (!isHydratingSettings) {
+            refreshVisibleBlurPreview();
+            saveNextPreviewFromOrder(D.loadOrder(), D.loadThumbs());
+            scheduleNextBlurPreviewFromOrder(D.loadOrder());
+        }
         saveAllSettings();
     }
 
@@ -1364,12 +1350,190 @@
 
     function saveNextPreviewFromOrder(order, thumbs) {
         if (!order || !order.length) {
-            D.savePreview(null);
             return;
         }
         var nextId = order[D.getActiveIndex() % order.length];
-        if (thumbs[nextId]) D.savePreview(thumbs[nextId]);
-        else D.savePreview(null);
+        var preview = wallpaperBlur >= 5 && D.blurThumbFor ? D.blurThumbFor(nextId, wallpaperBlur) : null;
+        if (!preview) preview = thumbs[nextId] || null;
+        D.savePreview(preview);
+    }
+
+    function saveBlurThumbFromImage(id, img, blur) {
+        if (!id || !img || !S.blurredThumbnail || !D.saveBlurThumb) return Promise.resolve(null);
+        blur = D.normalizeWallpaperBlur ? D.normalizeWallpaperBlur(blur) : normalizeWallpaperBlur(blur);
+        if (blur < 5) return Promise.resolve(null);
+        return S.blurredThumbnail(img, blur).then(function (thumb) {
+            if (thumb) D.saveBlurThumb(id, blur, thumb);
+            return thumb;
+        }).catch(function () { return null; });
+    }
+
+    function scheduleBlurThumbForId(id, blur) {
+        if (!id || !S.blurredThumbnail || !D.saveBlurThumb) return;
+        blur = D.normalizeWallpaperBlur ? D.normalizeWallpaperBlur(blur) : normalizeWallpaperBlur(blur);
+        if (blur < 5) return;
+        if (D.blurThumbFor && D.blurThumbFor(id, blur)) return;
+
+        var run = function () {
+            D.idbGet(D.imgKey(id)).then(function (record) {
+                if (!record || !record.blob) return;
+                var blob = record.blob;
+                if ((!blob.type || blob.type === '') && record.mime) {
+                    try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+                }
+                var url = URL.createObjectURL(blob);
+                return S.blurredThumbnail(url, blur).then(function (thumb) {
+                    URL.revokeObjectURL(url);
+                    if (thumb) D.saveBlurThumb(id, blur, thumb);
+                    return thumb;
+                }, function () {
+                    URL.revokeObjectURL(url);
+                    return null;
+                });
+            }).then(function () {
+                saveNextPreviewFromOrder(D.loadOrder(), D.loadThumbs());
+            }).catch(function () { });
+        };
+
+        if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 1600 });
+        else setTimeout(run, 300);
+    }
+
+    function scheduleNextBlurPreviewFromOrder(order) {
+        if (!order || !order.length || wallpaperBlur < 5) return;
+        var nextId = order[D.getActiveIndex() % order.length];
+        scheduleBlurThumbForId(nextId, wallpaperBlur);
+    }
+
+    function isLocalWallpaperMode() {
+        var source = D.compatMode ? D.compatMode(D.getActiveSource()) : currentMode;
+        return source === 'local' || currentMode === 'local' || currentMode === 'upload';
+    }
+
+    function currentWallpaperId() {
+        var source = D.compatMode ? D.compatMode(D.getActiveSource()) : currentMode;
+        if (source === 'bing' || source === 'api') return source;
+        var order = D.loadOrder();
+        if (!order.length) return null;
+        var index = D.getActiveIndex();
+        var currentIndex = isLocalWallpaperMode() ? (index - 1 + order.length) % order.length : index % order.length;
+        return order[currentIndex];
+    }
+
+    function updateStoredPreviewAfterBlurChange(id, preview) {
+        if (isLocalWallpaperMode()) {
+            saveNextPreviewFromOrder(D.loadOrder(), D.loadThumbs());
+            scheduleNextBlurPreviewFromOrder(D.loadOrder());
+            return;
+        }
+        if (preview && D.savePreview) D.savePreview(preview);
+    }
+
+    function showBlurThumb(id, blur, thumb, token, saveBlurThumb) {
+        if (token !== wallpaperBlurPreviewToken || !thumb || !S.showPreparedPreview) return;
+        if (saveBlurThumb && D.saveBlurThumb) D.saveBlurThumb(id, blur, thumb);
+        S.showPreparedPreview(thumb, { keepCurrentUrl: true });
+        updateStoredPreviewAfterBlurChange(id, thumb);
+    }
+
+    function showBlurFromSource(id, blur, source, token, saveBlurThumb) {
+        if (!source || !S.blurredThumbnail) return Promise.resolve(false);
+        return S.blurredThumbnail(source, blur).then(function (thumb) {
+            if (token !== wallpaperBlurPreviewToken || !thumb) return false;
+            showBlurThumb(id, blur, thumb, token, saveBlurThumb);
+            return true;
+        }).catch(function () { return false; });
+    }
+
+    function refreshVisibleBlurPreview() {
+        var id = currentWallpaperId();
+        if (!id) return;
+        var token = ++wallpaperBlurPreviewToken;
+        if (wallpaperBlur >= 5) {
+            showCurrentWallpaperBlur(id, wallpaperBlur, token);
+            return;
+        }
+        showCurrentWallpaperOriginal(id, token);
+    }
+
+    function showCurrentWallpaperBlur(id, blur, token) {
+        if (D.blurThumbFor && S.showPreparedPreview) {
+            var cached = D.blurThumbFor(id, blur);
+            if (cached) {
+                showBlurThumb(id, blur, cached, token, false);
+                return;
+            }
+        }
+
+        var quickThumb = D.loadThumbs()[id] || null;
+        var originalReady = S.currentOriginalUrl && S.currentOriginalId === id;
+        if (quickThumb) {
+            showBlurFromSource(id, blur, quickThumb, token, false);
+            if (originalReady) {
+                showBlurFromSource(id, blur, S.currentOriginalUrl, token, true);
+                return;
+            }
+        } else if (originalReady) {
+            showBlurFromSource(id, blur, S.currentOriginalUrl, token, true);
+            return;
+        }
+
+        if (S.currentDisplaySource) {
+            var currentSource = S.currentDisplaySource();
+            if (currentSource) {
+                showBlurFromSource(id, blur, currentSource, token, true);
+                return;
+            }
+        }
+
+        D.idbGet(D.imgKey(id)).then(function (record) {
+            if (token !== wallpaperBlurPreviewToken || !record || !record.blob || !S.blurredThumbnail) return;
+            var blob = record.blob;
+            if ((!blob.type || blob.type === '') && record.mime) {
+                try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+            }
+            var url = URL.createObjectURL(blob);
+            return S.blurredThumbnail(url, blur).then(function (thumb) {
+                URL.revokeObjectURL(url);
+                showBlurThumb(id, blur, thumb, token, true);
+            }, function () {
+                URL.revokeObjectURL(url);
+            });
+        }).catch(function () { });
+    }
+
+    function showCurrentWallpaperOriginal(id, token) {
+        if (S.currentOriginalUrl && S.currentOriginalId === id && S.showPreparedUrl) {
+            S.showPreparedUrl(S.currentOriginalUrl, id);
+            if (isLocalWallpaperMode()) saveNextPreviewFromOrder(D.loadOrder(), D.loadThumbs());
+            return;
+        }
+
+        var quickThumb = D.loadThumbs()[id] || null;
+        if (quickThumb && S.showPreparedPreview) {
+            S.showPreparedPreview(quickThumb);
+        }
+
+        D.idbGet(D.imgKey(id)).then(function (record) {
+            if (token !== wallpaperBlurPreviewToken || !record || !record.blob || !S.showPreparedUrl) return;
+            var blob = record.blob;
+            if ((!blob.type || blob.type === '') && record.mime) {
+                try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+            }
+            var url = URL.createObjectURL(blob);
+            S.showPreparedUrl(url, id);
+            if (isLocalWallpaperMode()) {
+                saveNextPreviewFromOrder(D.loadOrder(), D.loadThumbs());
+            } else if (S.thumbnail && D.savePreview) {
+                S.thumbnail(url).then(function (thumb) {
+                    if (token === wallpaperBlurPreviewToken && thumb) D.savePreview(thumb);
+                }).catch(function () { });
+            }
+        }).catch(function () {
+            if (token !== wallpaperBlurPreviewToken) return;
+            var preview = D.loadThumbs()[id] || null;
+            if (preview && S.showPreparedPreview) S.showPreparedPreview(preview);
+        });
     }
 
     function syncNextUploadPosition(displayedId) {
@@ -1379,6 +1543,7 @@
         currentMode = 'local';
         D.saveActiveIndex(nextGalleryIndexAfterDisplayedId(order, displayedId));
         saveNextPreviewFromOrder(order, D.loadThumbs());
+        scheduleNextBlurPreviewFromOrder(order);
     }
 
     function displayMode() {
@@ -1728,9 +1893,8 @@
                             var idx = D.getActiveIndex();
                             var thumbs = D.loadThumbs();
                             var nextId = newOrder[idx % newOrder.length];
-                            if (thumbs[nextId]) {
-                                D.savePreview(thumbs[nextId]);
-                            }
+                            saveNextPreviewFromOrder(newOrder, thumbs);
+                            scheduleBlurThumbForId(nextId, wallpaperBlur);
                         }
                     }, 240);
 
@@ -1793,11 +1957,27 @@
 
         var start = show
             ? S.apply(blobUrl, 'local').then(function (img) {
-                return img ? S.thumbnail(img) : null;
+                if (!img) return null;
+                return Promise.all([
+                    S.thumbnail(img),
+                    saveBlurThumbFromImage(id, img, wallpaperBlur)
+                ]).then(function (results) { return results[0]; });
               })
             : S.thumbnail(blobUrl).then(function (thumb) {
-                URL.revokeObjectURL(blobUrl);
                 return thumb;
+              }).then(function (thumb) {
+                if (wallpaperBlur < 5) {
+                    URL.revokeObjectURL(blobUrl);
+                    return thumb;
+                }
+                return S.blurredThumbnail(blobUrl, wallpaperBlur).then(function (blurThumb) {
+                    URL.revokeObjectURL(blobUrl);
+                    if (blurThumb) D.saveBlurThumb(id, wallpaperBlur, blurThumb);
+                    return thumb;
+                }, function () {
+                    URL.revokeObjectURL(blobUrl);
+                    return thumb;
+                });
               });
 
         return start.then(function (thumb) {
@@ -1830,6 +2010,7 @@
         var thumbs = D.loadThumbs();
         delete thumbs[id];
         D.saveThumbs(thumbs);
+        if (D.deleteBlurThumb) D.deleteBlurThumb(id);
 
         var meta = D.loadMeta();
         delete meta[id];
@@ -1848,11 +2029,8 @@
         }
 
         var nextId = newOrder[D.getActiveIndex() % newOrder.length];
-        if (thumbs[nextId]) {
-            D.savePreview(thumbs[nextId]);
-        } else {
-            D.savePreview(null);
-        }
+        saveNextPreviewFromOrder(newOrder, thumbs);
+        scheduleBlurThumbForId(nextId, wallpaperBlur);
 
         return D.idbDelete(D.imgKey(id)).then(function () {
             refreshGallery();
@@ -1868,6 +2046,7 @@
         removeGallery();
         D.savePreview(null);
         D.saveThumbs({});
+        if (D.saveBlurThumbs) D.saveBlurThumbs({});
         D.clearCaches();
         D.saveMeta({ bing: {} });
         D.saveOrder([]);

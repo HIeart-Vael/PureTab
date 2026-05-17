@@ -71,10 +71,106 @@
         F.fetchBingUrl(SP.getCurrentLang()).then(function (r) {
             return F.cacheBingBlob(r.url, r.api, today).then(function (blob) {
                 if (blob && SP.getCurrentMode() === 'bing') {
-                    S.applyAndSavePreview(URL.createObjectURL(blob));
+                    applyWallpaperRespectingBlur(URL.createObjectURL(blob), 'bing');
                 }
             });
         }).catch(function () { warn('Bing', 'background: failed, will retry later'); });
+    }
+
+    function getWallpaperBlur() {
+        var ui = D.loadUI ? D.loadUI() : null;
+        var blur = ui && ui.wallpaper ? ui.wallpaper.blur : 0;
+        return D.normalizeWallpaperBlur ? D.normalizeWallpaperBlur(blur) : 0;
+    }
+
+    function saveNextPreview(nextId, blur) {
+        var thumbs = D.loadThumbs();
+        var preview = blur >= 5 && D.blurThumbFor ? D.blurThumbFor(nextId, blur) : null;
+        if (!preview) preview = thumbs[nextId] || null;
+        D.savePreview(preview);
+    }
+
+    function scheduleNextBlurPreview(nextId, blur) {
+        if (!nextId || blur < 5 || !S.blurredThumbnail || !D.saveBlurThumb) return;
+        if (D.blurThumbFor && D.blurThumbFor(nextId, blur)) return;
+
+        var run = function () {
+            D.idbGet(D.imgKey(nextId)).then(function (record) {
+                if (!record || !record.blob) return;
+                var blob = record.blob;
+                if ((!blob.type || blob.type === '') && record.mime) {
+                    try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+                }
+                var url = URL.createObjectURL(blob);
+                return S.blurredThumbnail(url, blur).then(function (thumb) {
+                    URL.revokeObjectURL(url);
+                    if (thumb) {
+                        D.saveBlurThumb(nextId, blur, thumb);
+                        saveNextPreview(nextId, blur);
+                    }
+                }, function () {
+                    URL.revokeObjectURL(url);
+                });
+            }).catch(function () { });
+        };
+
+        if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 1600 });
+        else setTimeout(run, 300);
+    }
+
+    function isCurrentOriginalId(id) {
+        var source = D.compatMode(D.getActiveSource());
+        if (source === 'bing' || source === 'api') return id === source;
+        var order = D.loadOrder();
+        if (!order.length) return false;
+        var currentIndex = (D.getActiveIndex() - 1 + order.length) % order.length;
+        return order[currentIndex] === id;
+    }
+
+    function prepareCurrentOriginalUrl(id) {
+        if (!id || !S.keepCurrentUrl) return;
+        D.idbGet(D.imgKey(id)).then(function (record) {
+            if (!record || !record.blob) return;
+            var blob = record.blob;
+            if ((!blob.type || blob.type === '') && record.mime) {
+                try { blob = new Blob([blob], { type: record.mime }); } catch (e) { }
+            }
+            var url = URL.createObjectURL(blob);
+            if (!isCurrentOriginalId(id)) {
+                URL.revokeObjectURL(url);
+                return;
+            }
+            S.keepCurrentUrl(url, id);
+        }).catch(function () { });
+    }
+
+    function applyWallpaperRespectingBlur(url, sourceId) {
+        var blur = getWallpaperBlur();
+        if (blur < 5 || !S.blurredThumbnail || !S.showPreparedPreview) {
+            return S.applyAndSavePreview(url);
+        }
+
+        return S.preloadImage(url).then(function (img) {
+            if (!img) return S.applyAndSavePreview(url);
+            return Promise.all([
+                S.thumbnail(img),
+                S.blurredThumbnail(img, blur)
+            ]).then(function (results) {
+                var thumb = results[0];
+                var blurThumb = results[1];
+                if (sourceId && blurThumb && D.saveBlurThumb) D.saveBlurThumb(sourceId, blur, blurThumb);
+                if (blurThumb) {
+                    D.savePreview(blurThumb);
+                    if (S.keepCurrentUrl) S.keepCurrentUrl(url, sourceId);
+                    S.showPreparedPreview(blurThumb, { keepCurrentUrl: true });
+                } else if (thumb) {
+                    D.savePreview(thumb);
+                    if (S.keepCurrentUrl) S.keepCurrentUrl(url, sourceId);
+                    S.showPreparedPreview(thumb, { keepCurrentUrl: true });
+                }
+                return img;
+            });
+        });
     }
 
     function tryLoadLocalWallpaper(order) {
@@ -84,6 +180,21 @@
 
         var idx = D.getActiveIndex() % order.length;
         var id = order[idx];
+        var blur = getWallpaperBlur();
+        var nextIdx = (idx + 1) % order.length;
+        var nextId = order[nextIdx];
+        var blurPreview = blur >= 5 && D.blurThumbFor ? D.blurThumbFor(id, blur) : null;
+
+        if (blurPreview && S.showPreparedPreview) {
+            D.saveActiveIndex((idx + 1) % order.length);
+            saveNextPreview(nextId, blur);
+            scheduleNextBlurPreview(nextId, blur);
+            log('Local', 'blur preview ' + (idx + 1) + '/' + order.length);
+            S.showPreparedPreview(blurPreview, { keepCurrentUrl: true });
+            prepareCurrentOriginalUrl(id);
+            cacheBingInBackground();
+            return Promise.resolve(true);
+        }
 
         return D.idbGet(D.imgKey(id)).then(function (img) {
             if (!img || !img.blob) { warn('Local', 'image ' + id + ' missing, skipping'); return false; }
@@ -95,16 +206,32 @@
 
             D.saveActiveIndex((idx + 1) % order.length);
 
-            var nextIdx = (idx + 1) % order.length;
-            var nextId = order[nextIdx];
-            var previewThumbs = D.loadThumbs();
-            if (previewThumbs[nextId]) {
-                D.savePreview(previewThumbs[nextId]);
-            } else {
-                D.savePreview(null);
-            }
+            saveNextPreview(nextId, blur);
+            scheduleNextBlurPreview(nextId, blur);
 
             log('Local', 'image ' + (idx + 1) + '/' + order.length + (img.name ? '  ·  ' + img.name : ''));
+
+            if (blur >= 5 && S.blurredThumbnail && D.saveBlurThumb && S.showPreparedPreview) {
+                var currentUrl = URL.createObjectURL(blob);
+                return S.blurredThumbnail(currentUrl, blur).then(function (thumb) {
+                    if (thumb) {
+                        D.saveBlurThumb(id, blur, thumb);
+                        if (S.keepCurrentUrl) S.keepCurrentUrl(currentUrl, id);
+                        S.showPreparedPreview(thumb, { keepCurrentUrl: true });
+                        cacheBingInBackground();
+                        return true;
+                    }
+                    return S.apply(currentUrl, 'local').then(function () {
+                        cacheBingInBackground();
+                        return true;
+                    });
+                }, function () {
+                    return S.apply(currentUrl, 'local').then(function () {
+                        cacheBingInBackground();
+                        return true;
+                    });
+                });
+            }
 
             return S.apply(URL.createObjectURL(blob), 'local').then(function () {
                 cacheBingInBackground();
@@ -117,7 +244,7 @@
         if (!bingBlob || meta.date !== today) return Promise.resolve(false);
 
         log('Bing', 'wallpaper is fresh  ·  date: ' + meta.date + ', nothing to do');
-        return S.applyAndSavePreview(URL.createObjectURL(bingBlob)).then(function () { return true; });
+        return applyWallpaperRespectingBlur(URL.createObjectURL(bingBlob), 'bing').then(function () { return true; });
     }
 
     function loadBingFromNetwork(meta, today) {
@@ -127,7 +254,7 @@
         log('Bing', meta.date ? 'wallpaper is old (cache: ' + meta.date + ', today: ' + today + '), fetching...' : 'no wallpaper cached, fetching...');
 
         if (meta.src && meta.date === today) {
-            return S.applyAndSavePreview(meta.src).then(function () {
+            return applyWallpaperRespectingBlur(meta.src, 'bing').then(function () {
                 return F.cacheBingBlob(meta.src, meta.provider || 'primary', today);
             });
         }
@@ -137,7 +264,7 @@
         }
 
         return F.fetchBingUrl(SP.getCurrentLang()).then(function (r) {
-            return S.applyAndSavePreview(r.url).then(function () {
+            return applyWallpaperRespectingBlur(r.url, 'bing').then(function () {
                 return F.cacheBingBlob(r.url, r.api, today);
             });
         }).catch(function () {

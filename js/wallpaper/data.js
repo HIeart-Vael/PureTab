@@ -18,6 +18,7 @@
         LOCALE: 'ptab_locale',
         WALLPAPER: 'ptab_wallpaper',
         WALLPAPER_THUMBS: 'ptab_wallpaper_thumbs',
+        WALLPAPER_BLUR_THUMBS: 'ptab_wallpaper_blur_thumbs',
         WALLPAPER_PREVIEW: 'ptab_wallpaper_preview',
         UI: 'ptab_ui',
         SHORTCUTS: 'ptab_shortcuts',
@@ -213,6 +214,7 @@
     }
 
     var _thumbsCache = null;
+    var _blurThumbsCache = null;
     var _wallpaperCache = null;
     var _uiCache = null;
     var _shortcutsCache = null;
@@ -315,6 +317,48 @@
         writeJSON(KEYS.WALLPAPER_THUMBS, thumbs);
     }
 
+    function normalizeWallpaperBlur(value) {
+        var n = parseInt(value, 10);
+        if (isNaN(n) || n <= 0) return 0;
+        if (n < 5) return 5;
+        return Math.max(5, Math.min(15, n));
+    }
+
+    function loadBlurThumbs() {
+        if (_blurThumbsCache !== null) return _blurThumbsCache;
+        _blurThumbsCache = readJSON(KEYS.WALLPAPER_BLUR_THUMBS, {});
+        return _blurThumbsCache;
+    }
+
+    function saveBlurThumbs(thumbs) {
+        _blurThumbsCache = thumbs || {};
+        writeJSON(KEYS.WALLPAPER_BLUR_THUMBS, _blurThumbsCache);
+    }
+
+    function blurThumbFor(id, blur) {
+        var entry = loadBlurThumbs()[id];
+        var normalized = normalizeWallpaperBlur(blur);
+        if (!entry || !normalized) return null;
+        if (typeof entry === 'string') return entry;
+        return entry.blur === normalized && entry.thumb ? entry.thumb : null;
+    }
+
+    function saveBlurThumb(id, blur, thumb) {
+        if (!id || !thumb) return;
+        var normalized = normalizeWallpaperBlur(blur);
+        if (!normalized) return;
+        var thumbs = loadBlurThumbs();
+        thumbs[id] = { blur: normalized, thumb: thumb };
+        saveBlurThumbs(thumbs);
+    }
+
+    function deleteBlurThumb(id) {
+        var thumbs = loadBlurThumbs();
+        if (!thumbs[id]) return;
+        delete thumbs[id];
+        saveBlurThumbs(thumbs);
+    }
+
     function loadMeta() {
         return loadWallpaper().cache.meta || {};
     }
@@ -414,6 +458,12 @@
         saveOrder: saveOrder,
         loadThumbs: loadThumbs,
         saveThumbs: saveThumbs,
+        loadBlurThumbs: loadBlurThumbs,
+        saveBlurThumbs: saveBlurThumbs,
+        blurThumbFor: blurThumbFor,
+        saveBlurThumb: saveBlurThumb,
+        deleteBlurThumb: deleteBlurThumb,
+        normalizeWallpaperBlur: normalizeWallpaperBlur,
         loadMeta: loadMeta,
         saveMeta: saveMeta,
         legacyUploadId: legacyUploadId,
@@ -444,6 +494,7 @@
         // 缓存清空（源切换时调用）
         clearCaches: function () {
             _thumbsCache = null;
+            _blurThumbsCache = null;
             _wallpaperCache = null;
             _uiCache = null;
             _shortcutsCache = null;

@@ -11,11 +11,36 @@
 
     // 追踪当前壁纸的 blob URL，用于在切换壁纸时 revoke 旧 URL 释放内存
     var _currentWallpaperBlobUrl = null;
+    var _currentWallpaperSourceUrl = null;
+    var _currentWallpaperSourceId = null;
     var _themeLoadPromise = null;
+    var BLUR_THUMB_MAX_W = 960;
 
     // DOM 元素（在脚本加载时获取一次）
     var wallpaperBackEl = document.getElementById('wallpaperBack');
     var wallpaperFrontEl = document.getElementById('wallpaperFront');
+
+    function imageSourceFromCssValue(value) {
+        if (typeof value !== 'string') return value;
+        var match = value.match(/^url\(["']?(.*?)["']?\)$/);
+        return match && match[1] ? match[1] : value;
+    }
+
+    function trackCurrentWallpaperUrl(url, id) {
+        var oldUrl = _currentWallpaperBlobUrl;
+        _currentWallpaperSourceUrl = url || null;
+        _currentWallpaperSourceId = id || null;
+        _currentWallpaperBlobUrl = url && url.indexOf('blob:') === 0 ? url : null;
+        if (oldUrl && oldUrl !== url) {
+            try { URL.revokeObjectURL(oldUrl); } catch (e) { }
+        }
+    }
+
+    function currentDisplaySource() {
+        var background = (wallpaperFrontEl && wallpaperFrontEl.style.backgroundImage) ||
+            (wallpaperBackEl && wallpaperBackEl.style.backgroundImage);
+        return imageSourceFromCssValue(background);
+    }
 
     // ================================================================
     // 壁纸核心 — 双图层零白屏系统
@@ -32,7 +57,7 @@
                 img.decode().then(function () { resolve(img); }, function () { resolve(img); });
             };
             img.onerror = function () { resolve(null); };
-            img.src = url;
+            img.src = imageSourceFromCssValue(url);
         });
     }
 
@@ -113,7 +138,6 @@
      */
     function applyWallpaper(url, transitionMs) {
         if (typeof transitionMs !== 'number' || !isFinite(transitionMs)) transitionMs = 200;
-        var isBlobUrl = url.indexOf('blob:') === 0;
 
         return preloadImage(url).then(function (img) {
             var themeEnabled = false;
@@ -147,18 +171,7 @@
                 window.setTimeout(finishTransition, transitionMs + 100);
             });
         }).then(function (img) {
-            if (isBlobUrl) {
-                var oldUrl = _currentWallpaperBlobUrl;
-                _currentWallpaperBlobUrl = url;
-                if (oldUrl && oldUrl !== url) {
-                    try { URL.revokeObjectURL(oldUrl); } catch (e) { }
-                }
-            } else {
-                if (_currentWallpaperBlobUrl) {
-                    try { URL.revokeObjectURL(_currentWallpaperBlobUrl); } catch (e) { }
-                    _currentWallpaperBlobUrl = null;
-                }
-            }
+            trackCurrentWallpaperUrl(url);
             return img;
         });
     }
@@ -189,7 +202,62 @@
             img.crossOrigin = 'anonymous';
             img.onload = function () { var r = processImage(img); img.src = ''; resolve(r); };
             img.onerror = function () { resolve(null); };
-            img.src = source;
+            img.src = imageSourceFromCssValue(source);
+        });
+    }
+
+    function normalizeBlur(value) {
+        if (window.WallpaperData && window.WallpaperData.normalizeWallpaperBlur) {
+            return window.WallpaperData.normalizeWallpaperBlur(value);
+        }
+        var n = parseInt(value, 10);
+        if (isNaN(n) || n <= 0) return 0;
+        if (n < 5) return 5;
+        return Math.max(5, Math.min(15, n));
+    }
+
+    function drawImageCover(ctx, img, width, height, overscan) {
+        var scale = Math.max((width + overscan * 2) / img.width, (height + overscan * 2) / img.height);
+        var drawW = img.width * scale;
+        var drawH = img.height * scale;
+        var x = (width - drawW) / 2;
+        var y = (height - drawH) / 2;
+        ctx.drawImage(img, x, y, drawW, drawH);
+    }
+
+    function generateBlurredThumbnail(source, blur) {
+        blur = normalizeBlur(blur);
+        if (!blur) return generateThumbnail(source);
+
+        function processImage(img) {
+            var scale = Math.min(1, BLUR_THUMB_MAX_W / img.width);
+            var width = Math.max(1, Math.round(img.width * scale));
+            var height = Math.max(1, Math.round(img.height * scale));
+            var pad = Math.ceil(blur * 3);
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            ctx.save();
+            ctx.filter = 'blur(' + blur + 'px)';
+            drawImageCover(ctx, img, width, height, pad);
+            ctx.restore();
+            var thumb = 'url(' + canvas.toDataURL('image/jpeg', 0.62) + ')';
+            canvas.width = 0;
+            canvas.height = 0;
+            return thumb;
+        }
+
+        if (source && typeof source !== 'string') {
+            return Promise.resolve(processImage(source));
+        }
+
+        return new Promise(function (resolve) {
+            var img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function () { var r = processImage(img); img.src = ''; resolve(r); };
+            img.onerror = function () { resolve(null); };
+            img.src = imageSourceFromCssValue(source);
         });
     }
 
@@ -212,25 +280,58 @@
         });
     }
 
+    function showPreparedPreview(preview, options) {
+        if (!preview || !wallpaperBackEl) return;
+        wallpaperBackEl.style.backgroundImage = preview;
+        wallpaperFrontEl.classList.remove('active');
+        wallpaperFrontEl.style.backgroundImage = '';
+        if (!(options && options.keepCurrentUrl)) {
+            if (_currentWallpaperBlobUrl) {
+                try { URL.revokeObjectURL(_currentWallpaperBlobUrl); } catch (e) { }
+            }
+            _currentWallpaperBlobUrl = null;
+            _currentWallpaperSourceUrl = null;
+            _currentWallpaperSourceId = null;
+        }
+    }
+
+    function showPreparedUrl(url, id) {
+        if (!url || !wallpaperBackEl) return;
+        wallpaperBackEl.style.backgroundImage = 'url(' + url + ')';
+        wallpaperFrontEl.classList.remove('active');
+        wallpaperFrontEl.style.backgroundImage = '';
+        trackCurrentWallpaperUrl(url, id);
+    }
+
     window.WallpaperShow = {
         TRANSITION_MS: TRANSITION_MS,
         THUMB_MAX_W: THUMB_MAX_W,
+        BLUR_THUMB_MAX_W: BLUR_THUMB_MAX_W,
 
         apply: applyWallpaper,
         applyAndSavePreview: applyAndSavePreview,
         thumbnail: generateThumbnail,
+        blurredThumbnail: generateBlurredThumbnail,
+        showPreparedPreview: showPreparedPreview,
+        showPreparedUrl: showPreparedUrl,
+        currentDisplaySource: currentDisplaySource,
+        keepCurrentUrl: trackCurrentWallpaperUrl,
         preloadImage: preloadImage,
         ensureTheme: ensureThemeModule,
         refreshTheme: refreshThemeFromCurrentWallpaper,
 
         get currentBlobUrl() { return _currentWallpaperBlobUrl; },
         set currentBlobUrl(v) { _currentWallpaperBlobUrl = v; },
+        get currentOriginalUrl() { return _currentWallpaperSourceUrl || _currentWallpaperBlobUrl; },
+        get currentOriginalId() { return _currentWallpaperSourceId; },
 
         revokeBlobUrls: function () {
             if (_currentWallpaperBlobUrl) {
                 try { URL.revokeObjectURL(_currentWallpaperBlobUrl); } catch (e) { }
                 _currentWallpaperBlobUrl = null;
             }
+            _currentWallpaperSourceUrl = null;
+            _currentWallpaperSourceId = null;
         }
     };
 

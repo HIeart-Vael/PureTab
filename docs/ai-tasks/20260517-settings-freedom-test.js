@@ -106,10 +106,11 @@ const settingsCss = fs.readFileSync('css/settings.css', 'utf8');
 [
   '--wallpaper-fit',
   '--wallpaper-position',
-  '--wallpaper-blur',
 ].forEach((token) => {
   assert.ok(wallpaperCss.includes(token), `wallpaper.css should include ${token}`);
 });
+
+assert.ok(settings.includes('--wallpaper-blur'), 'settings should still persist the wallpaper blur value');
 
 [
   'rgba(var(--surface-base-rgb), var(--panel-opacity))',
@@ -129,12 +130,29 @@ const settingsCss = fs.readFileSync('css/settings.css', 'utf8');
 
 [
   '.wallpaper-blur-active',
-  '.wallpaper-blur-active.wallpaper-blur-ui-open .wallpaper-layer',
 ].forEach((token) => {
   assert.ok(wallpaperCss.includes(token), `wallpaper.css should include ${token}`);
 });
 
-assert.ok(settings.includes('wallpaperBlurPerfHint'), 'settings should render a red performance hint for wallpaper blur');
+assert.strictEqual(wallpaperCss.includes('filter: blur(var(--wallpaper-blur'), false, 'wallpaper blur should not use live full-screen CSS filters');
+assert.strictEqual(wallpaperCss.includes('wallpaper-blur-ui-open'), false, 'wallpaper blur should stay visually stable while UI is open');
+assert.strictEqual(settings.includes('suspendWallpaperBlurForUi'), false, 'settings panel should not pause wallpaper blur while UI is open');
+assert.strictEqual(settings.includes('wallpaperBlurPerfHint'), false, 'settings should not expose implementation-specific wallpaper blur warnings');
+assert.ok(settings.includes('wallpaperBlurPreviewToken'), 'wallpaper blur preview changes should guard stale async updates');
+assert.ok(settings.includes('function showCurrentWallpaperBlur'), 'enabling strong blur should update the currently visible wallpaper immediately');
+assert.ok(settings.includes('function showCurrentWallpaperOriginal'), 'disabling wallpaper blur should restore the currently visible original immediately');
+assert.ok(settings.includes('S.showPreparedUrl'), 'disabling wallpaper blur should restore a full image URL without advancing rotation');
+assert.ok(settings.includes('S.currentOriginalUrl'), 'blur toggles should first reuse the visible full image URL');
+assert.ok(settings.includes('S.currentOriginalId === id'), 'blur toggles should not reuse an original URL from a different wallpaper');
+assert.ok(settings.includes('S.currentDisplaySource'), 'enabling blur should derive from the currently visible image when possible');
+assert.ok(settings.includes('showBlurFromSource(id, blur, quickThumb'), 'enabling blur should have an immediate thumbnail fallback');
+assert.ok(settings.includes('S.showPreparedPreview(quickThumb)'), 'disabling blur should visually clear blur before the full image read finishes');
+assert.ok(settings.includes('keepCurrentUrl: true'), 'blurred previews should preserve the original URL for instant unblur');
+const refreshBlurStart = settings.indexOf('function refreshVisibleBlurPreview');
+const refreshBlurEnd = settings.indexOf('function syncNextUploadPosition', refreshBlurStart);
+assert.ok(refreshBlurStart >= 0 && refreshBlurEnd > refreshBlurStart, 'refreshVisibleBlurPreview should be inspectable');
+assert.strictEqual(settings.slice(refreshBlurStart, refreshBlurEnd).includes('window.reloadWallpaper'), false, 'realtime blur changes must not reload and advance wallpaper rotation');
+assert.ok(settings.includes('this.value = wallpaperBlur'), 'wallpaper blur range should visually snap 1-4 to the optimized blur floor');
 assert.ok(settings.includes('settingGroup('), 'appearance settings should be grouped');
 assert.ok(settings.includes("select.classList.add('custom-select-native')"), 'native selects should be hidden after custom select enhancement');
 assert.ok(settings.includes("dispatchEvent(new Event('change'"), 'custom select should keep the existing select change flow');
@@ -149,8 +167,8 @@ assert.strictEqual(resetBody.includes('saveHiddenHotkey'), false, 'appearance re
 assert.strictEqual(resetBody.includes('saveRecommend'), false, 'appearance reset should not reset command palette recommendation setting');
 assert.ok(settings.includes('min="0" max="15"'), 'wallpaper blur slider should use a continuous 0-15 range');
 assert.strictEqual(settings.includes('max="24"'), false, 'wallpaper blur should not allow expensive 24px values');
-assert.ok(settings.includes('wallpaperBlur > 5'), 'wallpaper blur should still warn above 5');
-assert.ok(settings.includes('suspendWallpaperBlurForUi()'), 'settings panel should pause full-screen wallpaper blur while UI is open');
+assert.ok(settings.includes('wallpaperBlur >= 5'), 'wallpaper blur should switch to optimized preview mode at 5');
+assert.ok(settings.includes('if (normalized > 0 && normalized < 5) return 5;'), 'wallpaper blur values 1-4 should snap to the optimized blur floor');
 assert.ok(settings.includes('document.addEventListener(\'keydown\', handleRecording'), 'shortcut recorder should listen for keydown');
 assert.ok(settings.includes('e.key.toUpperCase()'), 'shortcut recorder should accept lowercase letter keys');
 assert.ok(settings.includes('e.preventDefault()'), 'shortcut recorder should prevent browser shortcuts while recording');
