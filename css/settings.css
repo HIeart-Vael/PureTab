@@ -1438,31 +1438,3 @@ input[type="file"] {
         transition-duration: 0.01ms !important;
     }
 }
-
-.wallpaper-blur-active *,
-.wallpaper-blur-active *::before,
-.wallpaper-blur-active *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0s !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0s !important;
-    scroll-behavior: auto !important;
-}
-
-.wallpaper-blur-active .settings-panel,
-.wallpaper-blur-active .modal-overlay,
-.wallpaper-blur-active .modal-window,
-.wallpaper-blur-active .tab-page.active,
-.wallpaper-blur-active .wallpaper-thumb,
-.wallpaper-blur-active .source-drawer-body,
-.wallpaper-blur-active .l1-adv-btn,
-.wallpaper-blur-active .l1-gh-btn svg {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-}
-
-.wallpaper-blur-active .wallpaper-thumb:hover,
-.wallpaper-blur-active .l1-adv-btn:hover,
-.wallpaper-blur-active .l1-gh-btn:hover svg {
-    transform: none;
-}

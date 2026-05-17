@@ -8,10 +8,9 @@
     background-size: var(--wallpaper-fit, cover);
     background-position: var(--wallpaper-position, center);
     background-repeat: no-repeat;
-    filter: blur(var(--wallpaper-blur, 0px));
     z-index: 0;
     contain: layout style paint;
-    will-change: transform, filter;
+    will-change: transform;
     transform: translateZ(0);
 }
 
@@ -21,11 +20,16 @@
     transition: opacity 0.5s ease;
     pointer-events: none;
     contain: layout style paint;
-    will-change: transform, filter;
+    will-change: opacity;
 }
 
 .wallpaper-layer-front.active {
     opacity: 1;
+}
+
+.wallpaper-blur-active .wallpaper-layer {
+    filter: blur(var(--wallpaper-blur, 0px));
+    will-change: filter;
 }
 
 /* ========== 本地壁纸画廊 ========== */

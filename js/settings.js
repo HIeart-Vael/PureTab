@@ -196,18 +196,20 @@
         root.setProperty('--panel-opacity', clampNumber(panel.opacity, 0.3, 1, DEFAULT_PANEL_OPACITY).toFixed(2));
         root.setProperty('--wallpaper-fit', validValue(wallpaper.fit || DEFAULT_WALLPAPER_FIT, ['cover', 'contain', '100% 100%'], DEFAULT_WALLPAPER_FIT));
         root.setProperty('--wallpaper-position', validValue(wallpaper.position || DEFAULT_WALLPAPER_POSITION, ['center', 'top', 'bottom', 'left', 'right'], DEFAULT_WALLPAPER_POSITION));
-        root.setProperty('--wallpaper-blur', clampInteger(wallpaper.blur, 0, 15, DEFAULT_WALLPAPER_BLUR) + 'px');
+        var wallpaperBlur = clampInteger(wallpaper.blur, 0, 15, DEFAULT_WALLPAPER_BLUR);
+        root.setProperty('--wallpaper-blur', wallpaperBlur + 'px');
         root.setProperty('--radius-sm', preset.sm);
         root.setProperty('--radius-md', preset.md);
         root.setProperty('--radius-lg', preset.lg);
-        document.documentElement.classList.toggle('wallpaper-blur-active', clampInteger(wallpaper.blur, 0, 15, DEFAULT_WALLPAPER_BLUR) > 5);
+        document.documentElement.classList.toggle('wallpaper-blur-active', wallpaperBlur > 0);
         applyOverlayOpacity(wallpaper.overlayOpacity);
         applyThemeMode(wallpaper.themeEnabled === true);
         if (!IS_EXTENSION) applyEngine(currentEngine);
     }
 
     function updateLangUI() {
-        document.title = t('extName');
+        var nextTitle = t('extName');
+        if (document.title !== nextTitle) document.title = nextTitle;
         var searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.placeholder = t('searchPlaceholder');
         if (settingsBtn) settingsBtn.title = t('settingsTitle');

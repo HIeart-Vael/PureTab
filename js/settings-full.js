@@ -138,7 +138,8 @@
     // 语言面板
     // ================================================================
     function updateLangUI() {
-        document.title = t('extName');
+        var nextTitle = t('extName');
+        if (document.title !== nextTitle) document.title = nextTitle;
         var searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.placeholder = t('searchPlaceholder');
         if (engineIcon) engineIcon.setAttribute('title', t('engineTitle'));
@@ -960,12 +961,13 @@
     }
 
     function syncWallpaperBlurPerformanceMode() {
-        var active = wallpaperBlur > 5;
+        var active = wallpaperBlur > 0;
+        var shouldWarn = wallpaperBlur > 5;
         if (document.documentElement && document.documentElement.classList) {
             document.documentElement.classList.toggle('wallpaper-blur-active', active);
         }
         var hint = document.getElementById('wallpaperBlurPerfHint');
-        if (hint) hint.classList.toggle('hidden', !active);
+        if (hint) hint.classList.toggle('hidden', !shouldWarn);
     }
 
     function queueWallpaperBlurApply() {
