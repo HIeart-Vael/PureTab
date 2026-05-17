@@ -172,8 +172,15 @@
                 state: { lastCheckedAt: 0, lastSuccessAt: 0, lastImageUrl: '', lastError: '', lastTestAt: 0, lastTestMessage: '' }
             },
             api: {
-                config: { url: '', jsonPath: '', refreshIntervalMs: 300000 },
-                state: { lastCheckedAt: 0, lastSuccessAt: 0, lastImageUrl: '', lastError: '' }
+                config: {
+                    apiType: 'image',
+                    activeImageSourceId: '',
+                    activeJsonSourceId: '',
+                    refreshIntervalMs: 86400000,
+                    imageSources: [],
+                    jsonSources: []
+                },
+                state: { lastCheckedAt: 0, lastSuccessAt: 0, lastError: '', lastSourceId: '', lastImageUrl: '' }
             }
         },
         cache: {
@@ -317,8 +324,49 @@
             id: id,
             name: String(source.name || source.url || 'RSS').trim().slice(0, 80),
             url: String(source.url || '').trim(),
-            builtIn: source.builtIn === true
+            builtIn: source.builtIn === true,
+            test: sourceTest(
+                source.test && source.test.status,
+                source.test && source.test.fieldHash,
+                source.test && source.test.testedAt,
+                source.test && source.test.imageUrl,
+                source.test && source.test.error
+            )
         };
+    }
+
+    function sourceTest(status, fieldHash, testedAt, imageUrl, error) {
+        return {
+            status: status === 'passed' || status === 'failed' ? status : 'untested',
+            fieldHash: String(fieldHash || ''),
+            testedAt: parseInt(testedAt, 10) || 0,
+            imageUrl: String(imageUrl || ''),
+            error: String(error || '')
+        };
+    }
+
+    function stableHash(value) {
+        var str = String(value || '');
+        var hash = 0;
+        for (var i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash).toString(36);
+    }
+
+    function rssFieldHash(source) {
+        return stableHash(String(source && source.url || '').trim());
+    }
+
+    function apiFieldHash(source, apiType) {
+        var url = String(source && source.url || '').trim();
+        var path = apiType === 'json' ? String(source && source.jsonPath || '').trim() : '';
+        return stableHash(apiType + '|' + url + '|' + path);
+    }
+
+    function isTestPassed(source, expectedHash) {
+        return !!(source && source.test && source.test.status === 'passed' && source.test.fieldHash === expectedHash);
     }
 
     function normalizeRssConfig(config) {
@@ -330,7 +378,7 @@
             seen[source.id] = true;
             return true;
         }).slice(0, 5);
-        if (!merged.sources.length) merged.sources = defaults.sources;
+        if (!merged.sources.length) merged.sources = defaults.sources.map(normalizeRssSource);
         if (!merged.sources.some(function (source) { return source.id === merged.activeSourceId; })) {
             merged.activeSourceId = merged.sources[0].id;
         }
@@ -343,16 +391,89 @@
         return merged;
     }
 
+    function normalizeApiSource(source, index, apiType) {
+        source = source || {};
+        var id = String(source.id || ('api-' + apiType + '-' + index)).trim();
+        var normalized = {
+            id: id,
+            name: String(source.name || source.url || (apiType === 'json' ? 'JSON API' : 'Image API')).trim().slice(0, 80),
+            url: String(source.url || '').trim(),
+            test: sourceTest(
+                source.test && source.test.status,
+                source.test && source.test.fieldHash,
+                source.test && source.test.testedAt,
+                source.test && source.test.imageUrl,
+                source.test && source.test.error
+            )
+        };
+        if (apiType === 'json') normalized.jsonPath = String(source.jsonPath || '').trim();
+        return normalized;
+    }
+
+    function normalizeApiConfig(config) {
+        var defaults = clone(DEFAULT_WALLPAPER.providers.api.config);
+        var merged = mergeDefaults(config || {}, defaults);
+        merged.apiType = merged.apiType === 'json' ? 'json' : 'image';
+        var legacyUrl = String(merged.url || '').trim();
+        var legacyJsonPath = String(merged.jsonPath || '').trim();
+        merged.imageSources = (merged.imageSources || []).map(function (source, index) {
+            return normalizeApiSource(source, index, 'image');
+        }).filter(function (source, index, list) {
+            return source.id && source.url && list.findIndex(function (item) { return item.id === source.id; }) === index;
+        }).slice(0, 5);
+        merged.jsonSources = (merged.jsonSources || []).map(function (source, index) {
+            return normalizeApiSource(source, index, 'json');
+        }).filter(function (source, index, list) {
+            return source.id && source.url && list.findIndex(function (item) { return item.id === source.id; }) === index;
+        }).slice(0, 5);
+        if (legacyUrl && !merged.imageSources.length && !merged.jsonSources.length) {
+            if (legacyJsonPath) {
+                merged.jsonSources = [normalizeApiSource({
+                    id: 'api-json-legacy',
+                    name: legacyUrl,
+                    url: legacyUrl,
+                    jsonPath: legacyJsonPath
+                }, 0, 'json')];
+                merged.apiType = 'json';
+                merged.activeJsonSourceId = merged.jsonSources[0].id;
+            } else {
+                merged.imageSources = [normalizeApiSource({
+                    id: 'api-image-legacy',
+                    name: legacyUrl,
+                    url: legacyUrl
+                }, 0, 'image')];
+                merged.apiType = 'image';
+                merged.activeImageSourceId = merged.imageSources[0].id;
+            }
+        }
+        var allowedIntervals = [-1, 0, 86400000, 259200000, 604800000];
+        if (allowedIntervals.indexOf(parseInt(merged.refreshIntervalMs, 10)) === -1) merged.refreshIntervalMs = defaults.refreshIntervalMs;
+        else merged.refreshIntervalMs = parseInt(merged.refreshIntervalMs, 10);
+        if (!merged.imageSources.some(function (source) { return source.id === merged.activeImageSourceId; })) {
+            merged.activeImageSourceId = merged.imageSources[0] ? merged.imageSources[0].id : '';
+        }
+        if (!merged.jsonSources.some(function (source) { return source.id === merged.activeJsonSourceId; })) {
+            merged.activeJsonSourceId = merged.jsonSources[0] ? merged.jsonSources[0].id : '';
+        }
+        delete merged.url;
+        delete merged.jsonPath;
+        return merged;
+    }
+
     function loadWallpaper() {
         if (_wallpaperCache !== null) return _wallpaperCache;
         _wallpaperCache = mergeDefaults(readJSON(KEYS.WALLPAPER, DEFAULT_WALLPAPER), DEFAULT_WALLPAPER);
         _wallpaperCache.activeSource = normalizeSource(_wallpaperCache.activeSource);
         _wallpaperCache.providers.rss.config = normalizeRssConfig(_wallpaperCache.providers.rss.config);
+        _wallpaperCache.providers.api.config = normalizeApiConfig(_wallpaperCache.providers.api.config);
         return _wallpaperCache;
     }
 
     function saveWallpaper(model) {
         _wallpaperCache = mergeDefaults(model, DEFAULT_WALLPAPER);
+        _wallpaperCache.activeSource = normalizeSource(_wallpaperCache.activeSource);
+        _wallpaperCache.providers.rss.config = normalizeRssConfig(_wallpaperCache.providers.rss.config);
+        _wallpaperCache.providers.api.config = normalizeApiConfig(_wallpaperCache.providers.api.config);
         return writeJSON(KEYS.WALLPAPER, _wallpaperCache);
     }
 
@@ -371,6 +492,23 @@
         updateWallpaper(function (model) {
             model.providers.rss.config = normalizeRssConfig(config);
         });
+    }
+
+    function loadApiConfig() {
+        return loadWallpaper().providers.api.config;
+    }
+
+    function saveApiConfig(config) {
+        updateWallpaper(function (model) {
+            model.providers.api.config = normalizeApiConfig(config);
+        });
+    }
+
+    function activeApiSource(config) {
+        config = normalizeApiConfig(config || loadApiConfig());
+        var list = config.apiType === 'json' ? config.jsonSources : config.imageSources;
+        var activeId = config.apiType === 'json' ? config.activeJsonSourceId : config.activeImageSourceId;
+        return list.filter(function (source) { return source.id === activeId; })[0] || list[0] || null;
     }
 
     function loadUI() {
@@ -639,8 +777,16 @@
         saveWallpaper: saveWallpaper,
         updateWallpaper: updateWallpaper,
         defaultRssConfig: defaultRssConfig,
+        rssFieldHash: rssFieldHash,
+        apiFieldHash: apiFieldHash,
+        isTestPassed: isTestPassed,
+        normalizeSource: normalizeSource,
         loadRssConfig: loadRssConfig,
         saveRssConfig: saveRssConfig,
+        loadApiConfig: loadApiConfig,
+        saveApiConfig: saveApiConfig,
+        activeApiSource: activeApiSource,
+        normalizeApiConfig: normalizeApiConfig,
         isRssId: isRssId,
         rssBlobKey: rssBlobKey,
         activeRssOrder: activeRssOrder,

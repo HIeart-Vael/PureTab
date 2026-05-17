@@ -31,8 +31,15 @@
 
     function finish() {
         var failed = results.filter(function (r) { return !r.passed; });
+        var summary = {
+            total: results.length,
+            passed: results.length - failed.length,
+            failed: failed.length,
+            ok: failed.length === 0
+        };
         window.__apiWallpaperTestResults = results;
-        console.log('[API wallpaper test] ' + (failed.length ? 'FAILED ' + failed.length : 'ALL PASSED'));
+        window.__apiWallpaperTestSummary = summary;
+        console.log('[API wallpaper test] ' + (summary.ok ? 'ALL PASSED' : 'FAILED ' + summary.failed) + ' (' + summary.passed + '/' + summary.total + ')');
     }
 
     async function run() {
@@ -53,6 +60,79 @@
             assert('default API type is image', api.apiType === 'image', JSON.stringify(api));
             assert('default API has source arrays', Array.isArray(api.imageSources) && Array.isArray(api.jsonSources));
             assert('API refresh supports every-new-tab sentinel', [-1, 0, 86400000, 259200000, 604800000].indexOf(api.refreshIntervalMs) !== -1);
+        }
+
+        if (D && D.normalizeApiConfig) {
+            var legacyJsonApi = D.normalizeApiConfig({
+                url: ' https://example.com/wallpaper.json ',
+                jsonPath: ' data.image.url ',
+                refreshIntervalMs: -1
+            });
+            assert('legacy JSON API config migrates to json source', legacyJsonApi.apiType === 'json' &&
+                legacyJsonApi.jsonSources.length === 1 &&
+                legacyJsonApi.jsonSources[0].url === 'https://example.com/wallpaper.json' &&
+                legacyJsonApi.jsonSources[0].jsonPath === 'data.image.url' &&
+                legacyJsonApi.activeJsonSourceId === legacyJsonApi.jsonSources[0].id &&
+                legacyJsonApi.refreshIntervalMs === -1, JSON.stringify(legacyJsonApi));
+            assert('legacy JSON API config drops top-level fields', !Object.prototype.hasOwnProperty.call(legacyJsonApi, 'url') &&
+                !Object.prototype.hasOwnProperty.call(legacyJsonApi, 'jsonPath'), JSON.stringify(legacyJsonApi));
+
+            var legacyImageApi = D.normalizeApiConfig({
+                url: 'https://example.com/wallpaper.jpg',
+                jsonPath: '',
+                refreshIntervalMs: 259200000
+            });
+            assert('legacy image API config migrates to image source', legacyImageApi.apiType === 'image' &&
+                legacyImageApi.imageSources.length === 1 &&
+                legacyImageApi.imageSources[0].url === 'https://example.com/wallpaper.jpg' &&
+                legacyImageApi.activeImageSourceId === legacyImageApi.imageSources[0].id &&
+                legacyImageApi.refreshIntervalMs === 259200000, JSON.stringify(legacyImageApi));
+            assert('legacy image API config drops top-level fields', !Object.prototype.hasOwnProperty.call(legacyImageApi, 'url') &&
+                !Object.prototype.hasOwnProperty.call(legacyImageApi, 'jsonPath'), JSON.stringify(legacyImageApi));
+
+            var clearedLegacyApi = D.normalizeApiConfig(Object.assign({}, legacyJsonApi, {
+                imageSources: [],
+                jsonSources: [],
+                activeImageSourceId: '',
+                activeJsonSourceId: ''
+            }));
+            assert('cleared migrated API config does not recreate legacy source', clearedLegacyApi.imageSources.length === 0 &&
+                clearedLegacyApi.jsonSources.length === 0, JSON.stringify(clearedLegacyApi));
+
+            assert('active API source is null without configured sources', D.activeApiSource({
+                apiType: 'image',
+                imageSources: [],
+                jsonSources: []
+            }) === null);
+        }
+
+        if (D && D.loadWallpaper && D.clearCaches && D.isTestPassed && D.rssFieldHash && D.KEYS) {
+            var beforeWallpaper = null;
+            try {
+                beforeWallpaper = localStorage.getItem(D.KEYS.WALLPAPER);
+                D.clearCaches();
+                localStorage.setItem(D.KEYS.WALLPAPER, JSON.stringify({
+                    providers: {
+                        rss: {
+                            config: {
+                                sources: [{ id: '', name: 'Invalid', url: '', test: { status: 'passed', fieldHash: 'stale' } }]
+                            }
+                        }
+                    }
+                }));
+                var fallbackRssConfig = D.loadWallpaper().providers.rss.config;
+                var fallbackSource = fallbackRssConfig.sources[0];
+                assert('RSS fallback sources are normalized with test state', !!(fallbackSource &&
+                    fallbackSource.test &&
+                    D.isTestPassed(fallbackSource, D.rssFieldHash(fallbackSource)) === false &&
+                    fallbackSource.test.status === 'untested'), JSON.stringify(fallbackSource));
+            } catch (err) {
+                assert('RSS fallback sources are normalized with test state', false, err && (err.code || err.message || String(err)));
+            } finally {
+                if (beforeWallpaper === null) localStorage.removeItem(D.KEYS.WALLPAPER);
+                else localStorage.setItem(D.KEYS.WALLPAPER, beforeWallpaper);
+                D.clearCaches();
+            }
         }
 
         if (F && F.resolveJsonPath) {
