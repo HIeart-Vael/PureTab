@@ -2,14 +2,14 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
-const code = fs.readFileSync('js/settings-full.js', 'utf8');
+const code = fs.readFileSync('js/settings-panel.js', 'utf8');
 const match = code.match(/function galleryColumnCount\(count\) \{([\s\S]*?)\n    \}/);
 const nextIndexMatch = code.match(/function nextGalleryIndexAfterDisplayed\(displayedIndex, count\) \{([\s\S]*?)\n    \}/);
 const nextIdIndexMatch = code.match(/function nextGalleryIndexAfterDisplayedId\(order, displayedId\) \{([\s\S]*?)\n    \}/);
 
-assert.ok(match, 'galleryColumnCount(count) should exist in js/settings-full.js');
-assert.ok(nextIndexMatch, 'nextGalleryIndexAfterDisplayed(displayedIndex, count) should exist in js/settings-full.js');
-assert.ok(nextIdIndexMatch, 'nextGalleryIndexAfterDisplayedId(order, displayedId) should exist in js/settings-full.js');
+assert.ok(match, 'galleryColumnCount(count) should exist in js/settings-panel.js');
+assert.ok(nextIndexMatch, 'nextGalleryIndexAfterDisplayed(displayedIndex, count) should exist in js/settings-panel.js');
+assert.ok(nextIdIndexMatch, 'nextGalleryIndexAfterDisplayedId(order, displayedId) should exist in js/settings-panel.js');
 const switchBlock = code.match(/currentMode = nextMode;[\s\S]*?if \(window\.reloadWallpaper\) window\.reloadWallpaper\(\);/);
 assert.ok(switchBlock, 'source switching should update mode, refresh gallery, then optionally reload wallpaper');
 assert.ok(

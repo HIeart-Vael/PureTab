@@ -12,12 +12,14 @@ function count(haystack, needle) {
 const index = read('index.html');
 const preload = read('js/preload.js');
 const data = read('js/wallpaper/data.js');
-const settingsBootstrap = read('js/settings.js');
-const settingsFull = read('js/settings-full.js');
+const settingsBootstrap = read('js/settings-bootstrap.js');
+const settingsPanel = read('js/settings-panel.js');
+const commandPalette = read('js/command-palette.js');
 const show = read('js/wallpaper/show.js');
 const searchCss = read('css/search.css');
 const wallpaperCss = read('css/wallpaper.css');
 const settingsCss = read('css/settings.css');
+const baseCss = read('css/base.css');
 
 function testStorageStartsAtV320Baseline() {
   assert.ok(data.includes("BASELINE_APP_VERSION = '3.2.0'"), 'storage should document v3.2.0 as the migration baseline');
@@ -58,49 +60,68 @@ function testWallpaperFilterStaysOffTheDefaultCompositePath() {
   assert.ok(wallpaperCss.includes('will-change: opacity'), 'front wallpaper layer should hint the opacity fade path');
   assert.strictEqual(settingsCss.includes('.wallpaper-blur-active *'), false, 'wallpaper blur must not globally disable unrelated UI animations');
   assert.ok(settingsBootstrap.includes('> 0'), 'startup settings should enable blur compositing only when wallpaper blur is non-zero');
-  assert.ok(settingsFull.includes('wallpaperBlur > 0'), 'full settings should enable blur compositing only when wallpaper blur is non-zero');
-  assert.ok(settingsFull.includes('wallpaperBlur > 5'), 'full settings should keep the heavy-blur warning threshold separate from blur activation');
+  assert.ok(settingsPanel.includes('wallpaperBlur > 0'), 'settings panel should enable blur compositing only when wallpaper blur is non-zero');
+  assert.ok(settingsPanel.includes('wallpaperBlur > 5'), 'settings panel should keep the heavy-blur warning threshold separate from blur activation');
+  assert.ok(settingsPanel.includes('suspendWallpaperBlurForUi()'), 'settings UI should pause expensive wallpaper blur while panels are visible');
+  assert.ok(settingsPanel.includes('__wallpaperBlurUiResumeTimer'), 'settings UI should restore wallpaper blur after close transitions settle');
+  assert.ok(commandPalette.includes('suspendWallpaperBlurForUi()'), 'command palette should pause expensive wallpaper blur while open');
+  assert.ok(commandPalette.includes('__wallpaperBlurUiResumeTimer'), 'command palette should restore wallpaper blur after close transitions settle');
+  assert.ok(wallpaperCss.includes('.wallpaper-blur-active.wallpaper-blur-ui-open .wallpaper-layer'), 'UI-open blur override should be explicit wallpaper CSS, not global animation disabling');
+  assert.strictEqual(settingsCss.includes('.wallpaper-blur-active *'), false, 'wallpaper blur must not disable panel transitions globally');
 }
 
 function testColdPaletteIsNotLoadedByIndex() {
-  assert.strictEqual(index.includes('js/palette.js'), false, 'command palette implementation should be loaded on demand');
-  assert.strictEqual(index.includes('css/palette.css'), false, 'command palette CSS should be loaded on demand');
+  assert.strictEqual(index.includes('js/command-palette.js'), false, 'command palette implementation should not be parser-loaded by index');
+  assert.strictEqual(index.includes('css/command-palette.css'), false, 'command palette CSS should not be parser-loaded by index');
+  assert.strictEqual(index.includes('js/palette.js'), false, 'legacy palette filename should not stay in index');
+  assert.strictEqual(index.includes('css/palette.css'), false, 'legacy palette stylesheet filename should not stay in index');
   assert.ok(index.includes('js/newtab.js'), 'newtab orchestrator should remain in the startup path');
   const newtab = read('js/newtab.js');
+  assert.ok(baseCss.includes('.cmd-palette-overlay'), 'startup CSS must hide the command palette shell before lazy palette CSS arrives');
+  assert.ok(baseCss.includes('visibility: hidden'), 'startup command palette shell must not flash visible before lazy CSS arrives');
+  assert.ok(baseCss.includes('opacity: 0'), 'startup command palette shell must not flash opaque before lazy CSS arrives');
+  assert.ok(baseCss.includes('pointer-events: none'), 'hidden command palette shell must not intercept first-load clicks');
   assert.ok(newtab.includes('function ensurePalette()'), 'newtab should provide a lazy palette loader');
-  assert.ok(newtab.includes("ensureStylesheet('css/palette.css')"), 'palette CSS should load through the lazy loader');
-  assert.ok(newtab.includes("ensureScript('js/palette.js')"), 'palette JS should load through the lazy loader');
+  assert.ok(newtab.includes("ensureStylesheet('css/command-palette.css')"), 'command palette CSS should load through the lazy loader');
+  assert.ok(newtab.includes("ensureScript('js/command-palette.js')"), 'command palette JS should load through the lazy loader');
+  assert.ok(newtab.includes('schedulePanelWarmup'), 'cold panel modules should be warmed after startup idle time');
+  assert.ok(newtab.includes('requestIdleCallback'), 'panel warmup must use idle time instead of the first-paint path');
+  assert.strictEqual(commandPalette.includes('.animate('), false, 'command palette open/close should use CSS transitions instead of allocating Web Animations per open');
+  assert.ok(commandPalette.includes("cmdOverlay.classList.add('active')"), 'command palette should open through a CSS state class');
+  assert.ok(commandPalette.includes("cmdOverlay.classList.remove('active')"), 'command palette should close through a CSS state class');
 }
 
 function testSettingsShortcutTabUsesDataModelWithoutPaletteScript() {
-  assert.strictEqual(settingsFull.includes('window.Palette ? window.Palette.loadHotkey()'), false, 'settings should not need palette.js to read normal hotkey');
-  assert.strictEqual(settingsFull.includes('window.Palette ? window.Palette.loadHiddenHotkey()'), false, 'settings should not need palette.js to read hidden hotkey');
-  assert.strictEqual(settingsFull.includes('window.Palette.saveHotkey'), false, 'settings should not need palette.js to save normal hotkey');
-  assert.strictEqual(settingsFull.includes('window.Palette.saveHiddenHotkey'), false, 'settings should not need palette.js to save hidden hotkey');
-  assert.strictEqual(settingsFull.includes('window.Palette.saveRecommend'), false, 'settings should not need palette.js to save recommendation preference');
-  assert.ok(settingsFull.includes('function loadPaletteHotkey()'), 'settings should read hotkeys through the shortcut model');
-  assert.ok(settingsFull.includes('function savePaletteRecommend'), 'settings should write palette settings through the shortcut model');
+  assert.strictEqual(settingsPanel.includes('window.Palette ? window.Palette.loadHotkey()'), false, 'settings should not need command-palette.js to read normal hotkey');
+  assert.strictEqual(settingsPanel.includes('window.Palette ? window.Palette.loadHiddenHotkey()'), false, 'settings should not need command-palette.js to read hidden hotkey');
+  assert.strictEqual(settingsPanel.includes('window.Palette.saveHotkey'), false, 'settings should not need command-palette.js to save normal hotkey');
+  assert.strictEqual(settingsPanel.includes('window.Palette.saveHiddenHotkey'), false, 'settings should not need command-palette.js to save hidden hotkey');
+  assert.strictEqual(settingsPanel.includes('window.Palette.saveRecommend'), false, 'settings should not need command-palette.js to save recommendation preference');
+  assert.ok(settingsPanel.includes('function loadPaletteHotkey()'), 'settings should read hotkeys through the shortcut model');
+  assert.ok(settingsPanel.includes('function savePaletteRecommend'), 'settings should write palette settings through the shortcut model');
 }
 
 function testSettingsLoadDoesNotPersistDuringHydration() {
-  assert.ok(settingsFull.includes('isHydratingSettings'), 'settings hydration should be tracked');
-  const loadStart = settingsFull.indexOf('function loadSettings()');
-  const resetStart = settingsFull.indexOf('function resetAppearanceDefaults()', loadStart);
+  assert.ok(settingsPanel.includes('isHydratingSettings'), 'settings hydration should be tracked');
+  const loadStart = settingsPanel.indexOf('function loadSettings()');
+  const resetStart = settingsPanel.indexOf('function resetAppearanceDefaults()', loadStart);
   assert.ok(loadStart >= 0 && resetStart > loadStart, 'loadSettings should exist before resetAppearanceDefaults');
-  const body = settingsFull.slice(loadStart, resetStart);
+  const body = settingsPanel.slice(loadStart, resetStart);
   assert.ok(body.includes('isHydratingSettings = true'), 'loadSettings should suppress persistence before applying values');
   assert.ok(body.includes('isHydratingSettings = false'), 'loadSettings should re-enable persistence after applying values');
-  assert.ok(settingsFull.includes('if (isHydratingSettings) return true;'), 'saveAllSettings should skip startup writes');
+  assert.ok(settingsPanel.includes('if (isHydratingSettings) return true;'), 'saveAllSettings should skip startup writes');
 }
 
 function testFullSettingsIsLoadedOnDemand() {
-  assert.ok(index.includes('js/settings.js'), 'settings bootstrap should stay in the startup path');
-  assert.strictEqual(index.includes('js/settings-full.js'), false, 'full settings should be loaded on demand');
+  assert.ok(index.includes('js/settings-bootstrap.js'), 'settings bootstrap should stay in the startup path');
+  assert.strictEqual(index.includes('js/settings-panel.js'), false, 'settings panel should not be parser-loaded by index');
+  assert.strictEqual(index.includes('js/settings.js'), false, 'legacy settings filename should not stay in index');
+  assert.strictEqual(index.includes('js/settings-full.js'), false, 'legacy full-settings filename should not stay in index');
   assert.ok(settingsBootstrap.includes('function ensureFullSettings()'), 'settings bootstrap should expose a lazy full-settings loader');
-  assert.ok(settingsBootstrap.includes("script.src = 'js/settings-full.js'"), 'settings bootstrap should load the full module lazily');
+  assert.ok(settingsBootstrap.includes("script.src = 'js/settings-panel.js'"), 'settings bootstrap should load the full module lazily');
   assert.ok(settingsBootstrap.includes('window.SettingsPanel = {'), 'settings bootstrap should own window.SettingsPanel');
-  assert.ok(settingsFull.includes('window.SettingsPanelFull = {'), 'full settings should export a secondary API');
-  assert.strictEqual(settingsFull.includes('window.SettingsPanel = {'), false, 'full settings must not replace the startup SettingsPanel facade');
+  assert.ok(settingsPanel.includes('window.SettingsPanelFull = {'), 'settings panel should export a secondary API');
+  assert.strictEqual(settingsPanel.includes('window.SettingsPanel = {'), false, 'settings panel must not replace the startup SettingsPanel facade');
 }
 
 function testWallpaperThemeExtractionIsGatedBeforeCanvasWork() {
@@ -122,7 +143,7 @@ function testWallpaperThemeExtractionIsGatedBeforeCanvasWork() {
   assert.ok(show.includes('function refreshThemeFromCurrentWallpaper'), 'WallpaperShow should be able to theme the already visible wallpaper');
   assert.ok(show.includes('refreshTheme: refreshThemeFromCurrentWallpaper'), 'settings should request current-wallpaper theme refresh after toggling theme on');
   assert.ok(settingsBootstrap.includes('WallpaperShow.refreshTheme(true)'), 'startup settings should force-refresh the current wallpaper theme when enabling theme mode');
-  assert.ok(settingsFull.includes('WallpaperShow.refreshTheme(true)'), 'full settings should force-refresh the current wallpaper theme before saved UI catches up');
+  assert.ok(settingsPanel.includes('WallpaperShow.refreshTheme(true)'), 'settings panel should force-refresh the current wallpaper theme before saved UI catches up');
   assert.ok(show.includes('function afterAnimationFrame'), 'WallpaperShow should be able to schedule post-paint follow-up work');
   assert.ok(show.includes('function scheduleIdle'), 'WallpaperShow should defer non-visual follow-up work off the fade frame');
   assert.ok(show.includes('scheduleThemeExtraction(img);'), 'theme extraction should be scheduled after the wallpaper fade is underway');
@@ -150,7 +171,7 @@ function testSearchVisibilityModesStayAuthoritative() {
   assert.ok(searchCss.includes('visibility: hidden'), 'never mode should stay visually hidden even if stale classes remain');
   assert.ok(searchCss.includes('pointer-events: none'), 'never mode should not leave an invisible interactive search bar');
   assert.ok(settingsBootstrap.includes('applyUi(D.loadUI())'), 'settings facade refresh should re-apply persisted search visibility');
-  assert.ok(settingsFull.includes('loadSettings();'), 'full settings refresh should re-apply persisted UI state');
+  assert.ok(settingsPanel.includes('loadSettings();'), 'settings panel refresh should re-apply persisted UI state');
 }
 
 function run() {

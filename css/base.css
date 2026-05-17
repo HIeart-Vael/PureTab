@@ -194,6 +194,14 @@ body {
     transform: translateY(0);
 }
 
+.cmd-palette-overlay {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .lang-title {
     color: var(--text-secondary);
     font-size: 12px;

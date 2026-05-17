@@ -674,6 +674,23 @@
         cpViewMode = loadShortcutSettings().viewMode || 'list';
     }
 
+    function suspendWallpaperBlurForUi() {
+        clearTimeout(window.__wallpaperBlurUiResumeTimer);
+        if (document.documentElement && document.documentElement.classList) {
+            document.documentElement.classList.add('wallpaper-blur-ui-open');
+        }
+    }
+
+    function resumeWallpaperBlurForUi() {
+        clearTimeout(window.__wallpaperBlurUiResumeTimer);
+        window.__wallpaperBlurUiResumeTimer = setTimeout(function () {
+            if (document.querySelector('.settings-panel.active, .modal-overlay.active, .cmd-palette-overlay.active')) return;
+            if (document.documentElement && document.documentElement.classList) {
+                document.documentElement.classList.remove('wallpaper-blur-ui-open');
+            }
+        }, 240);
+    }
+
     function openPalette() {
         if (isPaletteOpen && isHiddenMode) {
             showPaletteHint(t('hiddenModeHint'));
@@ -683,7 +700,8 @@
         isPaletteOpen = true;
         isHiddenMode = false;
         refreshShortcutSettings();
-        cmdOverlay.style.visibility = 'visible';
+        suspendWallpaperBlurForUi();
+        cmdOverlay.classList.add('active');
         cmdPalette.classList.remove('hidden-mode');
         cmdPalette.classList.add('normal-mode');
         renderPinnedBar();
@@ -694,8 +712,6 @@
         cpKeyIndex = 0;
         renderShortcutList('');
         cpSearchInput.focus();
-        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
     }
 
     function openHiddenPalette() {
@@ -707,7 +723,8 @@
         isPaletteOpen = true;
         isHiddenMode = true;
         refreshShortcutSettings();
-        cmdOverlay.style.visibility = 'visible';
+        suspendWallpaperBlurForUi();
+        cmdOverlay.classList.add('active');
         cmdPalette.classList.remove('normal-mode');
         cmdPalette.classList.add('hidden-mode');
         renderPinnedBar();
@@ -718,16 +735,14 @@
         cpKeyIndex = 0;
         renderShortcutList('');
         cpSearchInput.focus();
-        cmdOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        cmdPalette.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
     }
 
     function closePalette() {
         if (!isPaletteOpen) return;
         isPaletteOpen = false;
         isHiddenMode = false;
-        var overlayAnim = cmdOverlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
-        overlayAnim.onfinish = function () { cmdOverlay.style.visibility = 'hidden'; };
+        resumeWallpaperBlurForUi();
+        cmdOverlay.classList.remove('active');
         cpSearchTerm = '';
         cpKeyIndex = 0;
         cpCurrentPage = 1;

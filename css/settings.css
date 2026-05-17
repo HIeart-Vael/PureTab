@@ -394,6 +394,7 @@ input[type="file"] {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.18s ease;
+    will-change: opacity;
 }
 
 .modal-overlay.active {
@@ -418,6 +419,7 @@ input[type="file"] {
     transform: translateY(-12px);
     transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
     opacity: 0;
+    will-change: transform, opacity;
 }
 
 .modal-overlay.active .modal-window {

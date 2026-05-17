@@ -1,6 +1,6 @@
 /**
  * Settings bootstrap —— startup-only settings surface.
- * Keeps first-load UI cheap, then loads settings-full.js on demand.
+ * Keeps first-load UI cheap, then loads settings-panel.js on demand.
  */
 (function () {
     'use strict';
@@ -274,9 +274,9 @@
         if (!fullLoadPromise) {
             fullLoadPromise = new Promise(function (resolve, reject) {
                 var script = document.createElement('script');
-                script.src = 'js/settings-full.js';
+                script.src = 'js/settings-panel.js';
                 script.onload = function () { resolve(window.SettingsPanelFull); };
-                script.onerror = function () { reject(new Error('failed to load settings-full.js')); };
+                script.onerror = function () { reject(new Error('failed to load settings-panel.js')); };
                 document.body.appendChild(script);
             }).then(function (full) {
                 if (full && full.init) full.init({

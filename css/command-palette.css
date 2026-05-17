@@ -10,6 +10,14 @@
     opacity: 0;
     visibility: hidden;
     background: rgba(var(--surface-base-rgb), 0.58);
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+    will-change: opacity;
+}
+
+.cmd-palette-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .cmd-palette {
@@ -36,6 +44,15 @@
     flex-direction: column;
     overflow: hidden;
     color: var(--text-primary);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: opacity, transform;
+}
+
+.cmd-palette-overlay.active .cmd-palette {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .cp-pinned-bar {

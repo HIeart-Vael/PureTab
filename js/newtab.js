@@ -274,8 +274,8 @@
         if (window.Palette) return Promise.resolve(window.Palette);
         if (!paletteLoadPromise) {
             paletteLoadPromise = Promise.all([
-                ensureStylesheet('css/palette.css'),
-                ensureScript('js/palette.js')
+                ensureStylesheet('css/command-palette.css'),
+                ensureScript('js/command-palette.js')
             ]).then(function () { return window.Palette; });
         }
         return paletteLoadPromise;
@@ -289,6 +289,18 @@
         }).catch(function (e) {
             warn('Palette', e.message || 'failed to load command palette');
         });
+    }
+
+    function schedulePanelWarmup() {
+        var warm = function () {
+            if (SP && SP.ensureFull) SP.ensureFull().catch(function () { });
+            ensurePalette().catch(function () { });
+        };
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(warm, { timeout: 2500 });
+        } else {
+            setTimeout(warm, 1200);
+        }
     }
 
     function bindGlobalEvents() {
@@ -398,6 +410,7 @@
             log('PlainTab', 'PlainTab started  ·  ' + (IS_EXTENSION ? 'extension' : 'web') + '  ·  ' + SP.getCurrentLang());
             loadWallpaper();
             bindGlobalEvents();
+            schedulePanelWarmup();
         });
     }
 

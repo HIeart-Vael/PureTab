@@ -32,6 +32,11 @@
     will-change: filter;
 }
 
+.wallpaper-blur-active.wallpaper-blur-ui-open .wallpaper-layer {
+    filter: none;
+    will-change: transform;
+}
+
 /* ========== 本地壁纸画廊 ========== */
 .local-gallery {
     margin-bottom: 14px;

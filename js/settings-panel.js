@@ -188,6 +188,7 @@
         if (isLangPanelOpen) closeLangPanel();
         if (isOpen) return;
         isOpen = true;
+        suspendWallpaperBlurForUi();
         settingsPanel.classList.add('active');
         settingsBtn.classList.add('panel-open');
         clearTimeout(cornerHideTimer);
@@ -217,6 +218,7 @@
         isOpen = false;
         settingsPanel.classList.remove('active');
         settingsBtn.classList.remove('panel-open');
+        if (!isModalOpen) resumeWallpaperBlurForUi();
         revokeGalleryUrls();
         maybePromptEmptyLocalUpload(options);
     }
@@ -249,6 +251,23 @@
         if (fileInput) fileInput.click();
     }
 
+    function suspendWallpaperBlurForUi() {
+        clearTimeout(window.__wallpaperBlurUiResumeTimer);
+        if (document.documentElement && document.documentElement.classList) {
+            document.documentElement.classList.add('wallpaper-blur-ui-open');
+        }
+    }
+
+    function resumeWallpaperBlurForUi() {
+        clearTimeout(window.__wallpaperBlurUiResumeTimer);
+        window.__wallpaperBlurUiResumeTimer = setTimeout(function () {
+            if (document.querySelector('.settings-panel.active, .modal-overlay.active, .cmd-palette-overlay.active')) return;
+            if (document.documentElement && document.documentElement.classList) {
+                document.documentElement.classList.remove('wallpaper-blur-ui-open');
+            }
+        }, 240);
+    }
+
     // ================================================================
     // L2 模态窗口 开/关
     // ================================================================
@@ -256,6 +275,7 @@
         if (isModalOpen) return;
         if (isOpen) closeSettings({ skipEmptyLocalPicker: true });
         isModalOpen = true;
+        suspendWallpaperBlurForUi();
         renderTabContent();
         modalOverlay.classList.add('active');
     }
@@ -265,6 +285,7 @@
         isModalOpen = false;
         closeCustomSelects();
         modalOverlay.classList.remove('active');
+        if (!isOpen) resumeWallpaperBlurForUi();
         maybePromptEmptyLocalUpload(options);
     }
 
@@ -610,7 +631,7 @@
             '<option value="right"' + (wallpaperPosition === 'right' ? ' selected' : '') + '>' + tr('alignRight', '靠右') + '</option>' +
             '</select>';
         var wallpaperBlurHint = '<span class="setting-warning' + (wallpaperBlur > 5 ? '' : ' hidden') + '" id="wallpaperBlurPerfHint">' +
-            tr('wallpaperBlurPerfHint', '背景模糊超过 5 后会自动关闭面板动画，避免设置面板卡顿。') +
+            tr('wallpaperBlurPerfHint', '背景模糊超过 5 时，打开面板会临时暂停壁纸模糊以保持动画流畅。') +
             '</span>';
         var wallpaperBlurControl = '<input type="range" id="modalWallpaperBlurRange" min="0" max="15" step="1" value="' + wallpaperBlur + '">' +
             '<input type="number" id="modalWallpaperBlurNum" class="input-w-55" min="0" max="15" step="1" value="' + wallpaperBlur + '">';

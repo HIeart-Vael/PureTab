@@ -1,8 +1,8 @@
 const assert = require('assert');
 const fs = require('fs');
 
-const settingsBootstrap = fs.readFileSync('js/settings.js', 'utf8');
-const settings = fs.readFileSync('js/settings-full.js', 'utf8');
+const settingsBootstrap = fs.readFileSync('js/settings-bootstrap.js', 'utf8');
+const settings = fs.readFileSync('js/settings-panel.js', 'utf8');
 const newtab = fs.readFileSync('js/newtab.js', 'utf8');
 const data = fs.readFileSync('js/wallpaper/data.js', 'utf8');
 const searchCss = fs.readFileSync('css/search.css', 'utf8');
@@ -36,7 +36,7 @@ const settingsCss = fs.readFileSync('css/settings.css', 'utf8');
   'function syncCustomSelects',
   'function applyUiRadius',
 ].forEach((token) => {
-  assert.ok(settings.includes(token), `settings.js should include ${token}`);
+  assert.ok(settings.includes(token), `settings-panel.js should include ${token}`);
 });
 
 [
@@ -114,8 +114,6 @@ const settingsCss = fs.readFileSync('css/settings.css', 'utf8');
 [
   'rgba(var(--surface-base-rgb), var(--panel-opacity))',
   'rgba(var(--surface-elevated-rgb), var(--panel-opacity))',
-  '.wallpaper-blur-active',
-  '.wallpaper-blur-active *',
   '.setting-warning',
   '.setting-group',
   '.settings-page-body',
@@ -127,6 +125,13 @@ const settingsCss = fs.readFileSync('css/settings.css', 'utf8');
   'mask-image',
 ].forEach((token) => {
   assert.ok(settingsCss.includes(token), `settings.css should use panel opacity token ${token}`);
+});
+
+[
+  '.wallpaper-blur-active',
+  '.wallpaper-blur-active.wallpaper-blur-ui-open .wallpaper-layer',
+].forEach((token) => {
+  assert.ok(wallpaperCss.includes(token), `wallpaper.css should include ${token}`);
 });
 
 assert.ok(settings.includes('wallpaperBlurPerfHint'), 'settings should render a red performance hint for wallpaper blur');
@@ -144,7 +149,8 @@ assert.strictEqual(resetBody.includes('saveHiddenHotkey'), false, 'appearance re
 assert.strictEqual(resetBody.includes('saveRecommend'), false, 'appearance reset should not reset command palette recommendation setting');
 assert.ok(settings.includes('min="0" max="15"'), 'wallpaper blur slider should use a continuous 0-15 range');
 assert.strictEqual(settings.includes('max="24"'), false, 'wallpaper blur should not allow expensive 24px values');
-assert.ok(settings.includes('wallpaperBlur > 5'), 'wallpaper blur should only disable animations above 5');
+assert.ok(settings.includes('wallpaperBlur > 5'), 'wallpaper blur should still warn above 5');
+assert.ok(settings.includes('suspendWallpaperBlurForUi()'), 'settings panel should pause full-screen wallpaper blur while UI is open');
 assert.ok(settings.includes('document.addEventListener(\'keydown\', handleRecording'), 'shortcut recorder should listen for keydown');
 assert.ok(settings.includes('e.key.toUpperCase()'), 'shortcut recorder should accept lowercase letter keys');
 assert.ok(settings.includes('e.preventDefault()'), 'shortcut recorder should prevent browser shortcuts while recording');
@@ -169,7 +175,7 @@ assert.ok(newtab.includes('window.Palette.loadHotkey()'), 'newtab should read th
 assert.ok(newtab.includes('window.Palette.loadHiddenHotkey()'), 'newtab should read the saved hidden palette hotkey');
 assert.strictEqual(newtab.includes("e.key.toLowerCase() === 'k' && !e.shiftKey"), false, 'newtab should not hardcode Ctrl+K for the normal palette');
 assert.strictEqual(newtab.includes("e.key.toLowerCase() === 'k'"), false, 'newtab should not hardcode K for palette shortcuts');
-assert.ok(settingsBootstrap.includes("script.src = 'js/settings-full.js'"), 'settings bootstrap should lazy-load the full settings module');
-assert.ok(settings.includes('window.SettingsPanelFull = {'), 'settings-full should export the complete settings API');
+assert.ok(settingsBootstrap.includes("script.src = 'js/settings-panel.js'"), 'settings bootstrap should lazy-load the full settings module');
+assert.ok(settings.includes('window.SettingsPanelFull = {'), 'settings-panel should export the complete settings API');
 
 console.log('settings freedom behavior hooks ok');
