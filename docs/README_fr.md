@@ -33,6 +33,16 @@
 </p>
 
 <p align="center">
+  <a href="technical/README_en.md">Documentation technique</a>
+  ·
+  <a href="changelog-i18n/fr.txt">Journal des modifications</a>
+  ·
+  <a href="https://plaintab.kaininx.workers.dev">Démo en ligne</a>
+  ·
+  <a href="https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo">Chrome Web Store</a>
+</p>
+
+<p align="center">
   <img src="../icon/icon2048.png" alt="PlainTab Logo" width="92">
 </p>
 

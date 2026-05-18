@@ -43,6 +43,16 @@
 </p>
 
 <p align="center">
+  <a href="technical/README_en.md">技術文件</a>
+  ·
+  <a href="changelog-i18n/zh-TW.txt">更新日誌</a>
+  ·
+  <a href="https://plaintab.kaininx.workers.dev">線上體驗</a>
+  ·
+  <a href="https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo">Chrome 線上應用程式商店</a>
+</p>
+
+<p align="center">
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-4285f4?style=flat-square&logo=googlechrome" alt="Manifest V3">
   <img src="https://img.shields.io/badge/AI-Collaboration-7c3aed?style=flat-square" alt="AI Collaboration">

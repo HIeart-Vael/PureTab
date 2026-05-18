@@ -9,8 +9,40 @@
 </p>
 
 <p align="center">
+  English
+  ·
   <a href="docs/README_zh-CN.md">简体中文</a>
   ·
+  <a href="docs/README_zh-TW.md">繁體中文</a>
+  ·
+  <a href="docs/README_hi.md">हिन्दी</a>
+  ·
+  <a href="docs/README_es.md">Español</a>
+  ·
+  <a href="docs/README_ar.md">العربية</a>
+  ·
+  <a href="docs/README_fr.md">Français</a>
+  ·
+  <a href="docs/README_pt_BR.md">Português</a>
+  ·
+  <a href="docs/README_ru.md">Русский</a>
+  ·
+  <a href="docs/README_de.md">Deutsch</a>
+  ·
+  <a href="docs/README_ja.md">日本語</a>
+  ·
+  <a href="docs/README_it.md">Italiano</a>
+  ·
+  <a href="docs/README_tr.md">Türkçe</a>
+  ·
+  <a href="docs/README_vi.md">Tiếng Việt</a>
+  ·
+  <a href="docs/README_ko.md">한국어</a>
+  ·
+  <a href="docs/README_pl.md">Polski</a>
+</p>
+
+<p align="center">
   <a href="docs/technical/README_en.md">Technical Docs</a>
   ·
   <a href="docs/changelog-i18n/en.txt">Changelog</a>

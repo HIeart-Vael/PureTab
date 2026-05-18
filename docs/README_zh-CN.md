@@ -11,15 +11,45 @@
 <p align="center">
   <a href="../README.md">English</a>
   ·
-  <a href="README_zh-CN.md">简体中文</a>
+  简体中文
   ·
+  <a href="README_zh-TW.md">繁體中文</a>
+  ·
+  <a href="README_hi.md">हिन्दी</a>
+  ·
+  <a href="README_es.md">Español</a>
+  ·
+  <a href="README_ar.md">العربية</a>
+  ·
+  <a href="README_fr.md">Français</a>
+  ·
+  <a href="README_pt_BR.md">Português</a>
+  ·
+  <a href="README_ru.md">Русский</a>
+  ·
+  <a href="README_de.md">Deutsch</a>
+  ·
+  <a href="README_ja.md">日本語</a>
+  ·
+  <a href="README_it.md">Italiano</a>
+  ·
+  <a href="README_tr.md">Türkçe</a>
+  ·
+  <a href="README_vi.md">Tiếng Việt</a>
+  ·
+  <a href="README_ko.md">한국어</a>
+  ·
+  <a href="README_pl.md">Polski</a>
+</p>
+
+<p align="center">
   <a href="technical/README_zh-CN.md">技术文档</a>
   ·
   <a href="changelog-i18n/zh-CN.txt">更新日志</a>
   ·
   <a href="https://plaintab.kaininx.workers.dev">在线体验</a>
   ·
-  <a href="https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo">Chrome Web Store</a>
+  <a href="https://chromewebstore.google.com/detail/plaintab-%C2%B7-minimal-new-ta/jhpfjcefcmooplmaimgdafohdlhacjdo">Chrome 网上应用店</a>
 </p>
 
 <p align="center">
